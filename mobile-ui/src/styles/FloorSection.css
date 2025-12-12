@@ -1,0 +1,109 @@
+/* new css */
+.add-floor-button {
+  display: flex;
+  align-items: center;
+  background: #F7E4DB;
+  color: #6D4531;
+  border: none;
+  border-radius: 12px;
+  padding: 8px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.add-floor-icon {
+  color: #6D4531;
+}
+
+.clone-section {
+  background: #ededed;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.clone-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.clone-label {
+  color: #43290D;
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.clone-dropdown {
+  margin-top: 8px;
+  position: relative;
+  width:95%;
+  /* width: 320px;  */
+  /* Change according to mediumInputStyle.width or use a class */
+}
+
+button.dropdown-button {
+  border: 1px solid #5b5a59;
+  border-radius: 8px;
+  height: 40px;
+  background: #FFF;
+  outline: none;
+  padding-left: 12px;
+  font-size: 16px;
+  color: #36210A;
+  appearance: none;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dropdown-arrow {
+  margin-left: 8px;
+}
+
+.clone-dropdown-menu {
+  position: absolute;
+  z-index: 2;
+  background: #FFF;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  margin-top: 4px;
+  border: 1px solid #5c5b5b;
+  width: 100%;
+}
+
+.dropdown-option {
+  padding: 8px 16px;
+  cursor: pointer;
+  background: #FFF;
+  color: #36210A;
+  border-radius: 8px;
+}
+
+.dropdown-option.selected,
+.dropdown-option:hover {
+  background: #EDE9E6;
+}
+
+.floor-card {
+  position: relative;
+}
+
+.edit-floor-button-container {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: calc(100% - 32px); /* 16px top + 16px bottom */
+}

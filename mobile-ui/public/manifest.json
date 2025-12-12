@@ -1,0 +1,29 @@
+{
+  "name": "Property Form Mobile App",
+  "short_name": "PropertyForm",
+  "description": "Mobile application for property form management",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#d2691e",
+  "background_color": "#f9f1f0",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "prefer_related_applications": false,
+  "screenshots": [
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ]
+}

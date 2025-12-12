@@ -1,0 +1,233 @@
+.property-form-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  /* background-color: #F5F5F5;  */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.property-form-header {
+  background-color: #F9E6E0; /* Primary 1 (bg) from palette */
+  padding: 16px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.back-button,
+.close-button {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  color: #333333; /* Primary text color */
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.back-button:hover,
+.close-button:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+  text-align: left;
+  margin: 0;
+}
+
+
+
+.form-content {
+  flex: 1;
+  padding: 24px 16px;
+  background-color: #FFFFFF; /* Paper Primary */
+}
+
+.form-field {
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.field-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333333; /* Primary text color */
+  margin-bottom: 8px;
+}
+
+button.add-owner-tag-button {
+  display: flex;
+  align-items: center;
+  /* gap: 8px; */
+  /* padding: 3% 4%; */
+  background-color: #f7e4db; /* Success (BG) */
+  border-radius: 12px;
+  color: #333333;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  width: fit-content;
+}
+
+
+div.form-submit {
+  /* padding: 10% 0% 0% 30%; */
+  background-color: #FFFFFF;
+  margin-right:0%;
+}
+
+button.verify-button {
+  width: 60%;
+  padding: 4%, 5%;
+  margin-left: 40%;
+  background-color: #c84c03;
+  border: none;
+  border-radius: 8px;
+  color: #FFFFFF;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-right:0%;
+  letter-spacing: 5%;
+}
+
+.verify-button:hover {
+  background-color: #c84c03;
+}
+
+.verify-button:active {
+  background-color: #c84c03;
+}
+
+
+.tabs-group{
+  display: flex;
+  flex-direction: row;
+  justify-content:space-around;
+  align-items: center;
+  background-color: #F9E6E0;
+  padding: 0% 10% 5% 3%;
+}
+
+.tab{
+  width: 8%;
+  height: 0px;
+  border: 2px solid #00000033;
+  border-radius: 0%;
+}
+
+.active{
+  background-color:#C8504B;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 800px) {
+  .form-content {
+    padding: 20px 12px;
+  }
+  
+  .property-form-header {
+    padding: 12px;
+  }
+  
+  .form-title {
+    font-size: 16px;
+  }
+  
+  .form-subtitle {
+    font-size: 12px;
+  }
+}
+
+.single-button {
+  background-color: #F9E6E0; /* Your background color */
+  border: none;
+  border-radius: 35%;
+  padding: 20%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+
+.button-container{
+  padding: 0% 5%;
+  margin-top: 3%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  background-color: #fff;
+}
+
+/* ...existing code... */
+
+.field-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 400; /* Changed from 500 to 400 (not bold) */
+  color: #333333; /* Primary text color */
+  margin-bottom: 8px;
+  text-align: left; /* Explicitly set left alignment */
+}
+
+.required-asterisk {
+  color: #C8504B; /* Primary 1 color from palette */
+  margin-left: 2px;
+  font-weight: 400; /* Keep consistent with label weight */
+}
+
+.colon {
+  margin-left: 4px;
+  color: #333333;
+  font-weight: 400; /* Keep consistent with label weight */
+}
+
+.input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.user-input {
+  padding-right: 50px !important; /* Make space for voice icon */
+}
+
+.voice-input-icon {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9E9E9E; /* Disabled color */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.voice-input-icon:hover {
+  color: #0F6CC0; /* Primary 2 color */
+}
+
+/* Focus within container */
+.input-wrapper:focus-within .voice-input-icon {
+  color: #0F6CC0; /* Primary 2 color */
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 480px) {
+  .voice-input-icon {
+    right: 12px;
+  }
+}
+
+/* ...existing code... */

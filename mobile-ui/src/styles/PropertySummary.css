@@ -1,0 +1,546 @@
+/* Clean, mobile-first Property Summary styles
+   - Card sections with warm orange headings
+   - Documents thumbnails shown below the "Documents uploaded" heading, wrapping to new lines (no horizontal scroller)
+   - Notes box, photos area, and a centered Confirm button
+*/
+ 
+:root{
+  --orange: #d76a2e;
+  --peach: #fbefe9;
+  --muted: #6b6b6b;
+  --card-bg: #fff;
+  --content-max-width: 420px; /* reduce overall content width */
+}
+
+.summary-page{
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: 9px 16px 7px 16px;
+  box-sizing: border-box;
+  background-color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  color: #222;
+ 
+}
+ 
+.summary-header{
+  margin-bottom: 12px;
+}
+ 
+.summary-header h1{
+ 
+  font-size: 20px;
+  font-weight: 700;
+  color: #111;
+}
+ 
+.summary-subtitle{
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-style: italic;
+}
+ 
+.summary-content{
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+ 
+.summary-section{
+  background: var(--peach);
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+  border: 1px solid rgba(0,0,0,0.04);
+}
+ 
+.section-header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* margin-bottom: 12px; */
+}
+
+.section-title{
+  font-size: 18px;
+  color: #C84C0E;
+  font-weight: 700;
+}
+ 
+.edit-btn{
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: black;
+  font-size: 16px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+ 
+.edit-btn:hover {
+  background-color: rgba(215, 106, 46, 0.1);
+}
+ 
+.location-btn {
+  font-size: 14px;
+}
+ 
+.location-missing {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+ 
+.location-missing:hover {
+  background-color: rgba(220, 53, 69, 0.2);
+}
+ 
+.location-missing-info {
+  border-left: 3px solid #ffc107;
+  padding-left: 8px;
+  background-color: rgba(255, 193, 7, 0.1);
+}
+ 
+.missing-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+ 
+.missing-value span {
+  color: #6c757d;
+  font-style: italic;
+}
+ 
+.add-location-btn {
+  background: var(--orange);
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+ 
+.add-location-btn:hover {
+  background: #bf5a26;
+}
+ 
+.section-content{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+ 
+.detail-row{
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  flex-wrap: nowrap;
+}
+ 
+.detail-label{
+  font-weight: 700;
+  color: #333;
+  min-width: 140px;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+ 
+.detail-value{
+  font-size: 14px;
+  color: #333;
+  flex: 1 1 auto;
+  word-wrap: break-word;
+}
+ 
+.property-tax-zone{
+  display: inline-block;
+  background: #f7d9cb;
+  color: var(--orange);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 13px;
+}
+ 
+.notes-section .notes-text{
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+ 
+.documents-section{
+  background: transparent;
+  padding: 0;
+  border-radius: 8px;
+}
+ 
+.documents-title{
+  font-size: 14px;
+  margin: 6px 0 10px 0;
+  color: #333;
+}
+ 
+/* Documents thumbnails: show below heading, wrap to new lines, no horizontal scroll */
+.document-icons{
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap; /* wrap instead of scroll */
+  overflow-x: visible;
+  /* add extra top spacing so icons sit slightly lower under the heading */
+  padding: 12px 0 2px 0;
+  justify-content: flex-start;
+}
+ 
+.document-icon{
+  font-size: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 84px;
+}
+ 
+.doc-icon{
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--card-bg);
+  border: 1px solid #e6e6e6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  color: var(--orange);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+}
+ 
+.doc-label{
+  margin-top: 6px;
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+}
+ 
+.important-notes{
+  background: #fafafa;
+  border-radius: 12px;
+  padding: 12px;
+  border: 1px solid #f0f0f0;
+}
+ 
+.notes-title{
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #333;
+  font-weight: 700;
+}
+ 
+.notes-content{
+  min-height: 86px;
+  background: var(--card-bg);
+  border-radius: 8px;
+  border: 1px solid #eee;
+  padding: 12px;
+}
+ 
+.photo-upload{
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+ 
+.add-photo{
+  width: 86px;
+  height: 86px;
+  border-radius: 12px;
+  background: var(--card-bg);
+  border: 1px dashed #e6e6e6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-size: 14px;
+}
+ 
+.uploaded-photos{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+ 
+.photo-item{
+  background: var(--card-bg);
+  border: 1px solid #eee;
+  padding: 8px 10px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+ 
+.photo-name{
+  font-size: 13px;
+  color: #333;
+}
+ 
+.photo-date{
+  font-size: 12px;
+  color: #888;
+}
+ 
+.confirm-section{
+  display: flex;
+  justify-content: center;
+  /* padding: 18px 0 28px 0; */
+}
+ 
+.confirm-btn{
+  background-color: var(--orange);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 36px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(215,106,46,0.18);
+}
+.document-icons{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));  /* ✅ Max 3 items per row */
+  gap: 20px;
+  padding: 12px 0;
+}
+ 
+/* === Important Note Section === */
+.important-note-section {
+  background: #f5f5f5;                    /* ✅ Gray background */
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+ 
+.note-header {
+  display: flex;
+  align-items: center;
+  /* margin-bottom: 16px; */
+  padding-bottom: 8px;
+  /* border-bottom: 2px solid #d0d0d0; */
+}
+ 
+.note-label {
+  font-size: 18px;
+  font-weight: 600;
+  color: #222;
+  margin: 0;
+}
+ 
+.note-input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+  resize: vertical;
+  transition: all 0.3s ease;
+  color: #222;
+  background: #f5f5f5;
+}
+ 
+/* ✅ Static state - no border */
+.note-input.static-note {
+  /* border: 1px solid transparent; */
+  background: transparent;
+}
+ 
+/* ✅ Active state - has border when user types */
+.note-input.active-note {
+  /* border: 1.5px solid #C8504B; */
+  background: #fff;
+}
+ 
+.note-input::placeholder {
+  color: #9b9b9b;
+}
+ 
+.note-character-count {
+  font-size: 12px;
+  color: #7b7b7b;
+  margin-top: 8px;
+  text-align: right;
+}
+/* === Confirm Section === */
+.confirm-section {
+  display: flex;                          /* ✅ Flexbox layout */
+  align-items: center;
+  justify-content: center;
+  gap: 16px;                              /* ✅ Space between camera and submit button */
+  /* margin-top: 30px;
+  margin-bottom: 20px; */
+}
+ 
+/* ✅ Camera button styling */
+.camera-btn-summary {
+  border-radius: 8px;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  padding: 0;
+  box-shadow: none;
+}
+ 
+/* .camera-btn-summary:hover {
+  background: #FFD4BB;
+  border-color: #FFD4BB;
+  transform: scale(1.05);
+} */
+ 
+.camera-btn-summary:active {
+  transform: scale(0.95);
+}
+ 
+.camera-icon {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+}
+ 
+/* Confirm button styling */
+.confirm-btn {
+  width: auto !important;
+  background: #C84C0E;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 12px 48px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+ 
+.confirm-btn:hover:not(:disabled) {
+  background: #A83A0A;
+  box-shadow: 0 4px 12px rgba(200, 76, 14, 0.2);
+}
+ 
+.confirm-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+ 
+.confirm-btn:disabled {
+  background: #e0e0e0;
+  color: #999;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+ 
+/* === Responsive Design === */
+@media (max-width: 768px) {
+  .confirm-section {
+    gap: 12px;
+    /* margin-top: 20px;
+    margin-bottom: 16px; */
+  }
+ 
+  .camera-btn-summary {
+    width: 45px;
+    height: 45px;
+  }
+ 
+  .camera-icon {
+    width: 22px;
+    height: 22px;
+  }
+ 
+  .confirm-btn {
+    font-size: 15px;
+    padding: 10px 40px;
+  }
+}
+ 
+@media (max-width: 480px) {
+  .confirm-section {
+    flex-wrap: wrap;
+    /* gap: 10px; */
+  }
+ 
+  .camera-btn-summary {
+    width: 40px;
+    height: 40px;
+  }
+ 
+  .camera-icon {
+    width: 20px;
+    height: 20px;
+  }
+ 
+  .confirm-btn {
+    font-size: 14px;
+    padding: 8px 32px;
+    flex: 1;
+    min-width: 150px;
+  }
+}
+/* === Responsive Design === */
+@media (max-width: 768px) {
+  .important-note-section {
+    background: #f5f5f5;
+    padding: 16px;
+    border-radius: 10px;
+  }
+ 
+  .note-label {
+    font-size: 16px;
+  }
+ 
+  .note-input {
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+}
+ 
+@media (max-width: 480px) {
+  .important-note-section {
+    background: #f5f5f5;
+    padding: 12px;
+    margin-bottom: 16px;
+  }
+ 
+  .note-label {
+    font-size: 14px;
+  }
+ 
+  .note-input {
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+ 
+  .note-character-count {
+    font-size: 10px;
+  }
+}
+/* Responsive adjustments for narrow mobile screens */
+  @media (max-width: 520px){
+      /* .summary-page{ padding: 16px 12px; } */
+      .detail-label{ min-width: 110px; font-size: 13px; }
+      .detail-value{ font-size: 13px; }
+      .section-title{ font-size: 16px; }
+      .doc-icon{ width: 60px; height: 56px; }
+      .document-icon{ width: 64px; }
+      /* slightly smaller top spacing on very small screens */
+      .document-icons{ padding-top: 8px; }
+      .confirm-btn{ width: 100%; padding: 12px 18px; }
+    }

@@ -1,0 +1,57 @@
+
+.map-tab {
+  background: #fff;
+  border: 1px solid #000000ff;
+  padding: 32px;
+  /* margin-left: 20px; */
+  border-radius: 10px 10px 6px 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: black;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.03);
+  margin-left: 30px;
+  margin-bottom: -9px;
+  z-index: 20;
+   height: 33px;
+  width: 96px;
+  display: inline-flex;
+}
+
+/* Active tab uses orange gradient and white text */
+.map-tab.active {
+  color: #e8723b;
+  background: white;
+  border: 2px solid #ff7a3d;
+  border-radius: 10px 10px 0 0;
+  box-shadow: 0 2px 0 rgba(0,0,0,0.06) inset;
+  z-index: 20; 
+
+}
+
+/* Marker and popup tweaks kept minimal to preserve behavior */
+.custom-property-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.custom-property-marker div {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,68,68,0.6); }
+  70% { transform: scale(1.08); box-shadow: 0 0 0 10px rgba(255,68,68,0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,68,68,0); }
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+}
+
+
+@media (max-width: 480px) {
+  .leaflet-map { height: 300px; }
+  .map-container::after { width: 60%; height: 60%; }
+  .map-tab-buttons { top: 6px; left: 20px; }
+}

@@ -1,0 +1,41 @@
+.custom-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page {
+  background: none;
+  border: none;
+  color: #c54b0c; /* orange */
+  padding: 0.7em 1.2em;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 400;
+  transition: background 0.2s;
+}
+
+.page.current {
+  background: #c54b0c;
+  color: #fff;
+}
+
+.arrow {
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.arrow:disabled {
+  color: #e0e0e0;
+  cursor: not-allowed;
+}
+
+.ellipsis {
+  color: #c54b0c;
+  font-weight: bold;
+}

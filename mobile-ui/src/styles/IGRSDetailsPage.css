@@ -1,0 +1,247 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto:300,400,500,600,700&display=swap');
+
+body {
+  font-family: 'Roboto', Arial, sans-serif;
+}
+
+.isgr-container {
+  font-family: 'Roboto', Arial, sans-serif;
+  width: 100%;
+  max-width: 412px;
+  margin: 0 auto;
+  padding: 0 1rem 1rem 1rem;
+  background-color: #ffffff;
+  min-height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Header Section */
+.isgr-header {
+  width: 100vw;
+  max-width: 412px;
+  min-width: 100%;
+  height: 142px;
+  background-color: #F7E4DB;
+  border-radius: 0;
+  box-sizing: border-box;
+  text-align: left;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 0;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  transform: translateX(-50%);
+  opacity: 1;
+}
+
+.main-title {
+  font-family: 'Roboto', Arial, sans-serif;
+  font-weight: 600;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 100%;
+  letter-spacing: 0;
+  color: #333;
+  margin: 0;
+  width: 209px;
+  height: 28px;
+  position: absolute;
+  top: 37px;
+  left: 32px;
+  opacity: 1;
+}
+
+.isgr-header .subheading {
+  font-family: 'Roboto', Arial, sans-serif;
+  font-weight: 300;
+  font-style: italic;
+  font-size: 16px;
+  line-height: 100%;
+  letter-spacing: 0px;
+  color: #666;
+  margin: 0;
+  width: 135px;
+  height: 19px;
+  position: absolute;
+  top: 75px;
+  left: 32px;
+  opacity: 1;
+}
+
+/* Progress Bar Section - Figma Spec, below header, above content */
+.progress-section {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-end;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  padding-left: 15px;
+  padding-bottom: 8px;
+  background: transparent;
+  z-index: 2;
+}
+
+.progress-bar {
+  width: 322px;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 12px;
+  height: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.step {
+  width: 35px;
+  height: 0;
+  border-top: 2px solid #d1d1d1;
+  border-radius: 2px;
+  margin: 0;
+  transition: border-color 0.2s;
+  background: none;
+}
+
+.step.filled {
+  border-top: 2px solid #C84C0E;
+}
+
+/* Navigation Buttons */
+.top-navigation {
+  display: flex;
+  justify-content: space-between;
+  width: 327px;
+  margin: 1rem auto;
+}
+
+.nav-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 35px;
+  background-color: #FBEEE8;
+  border: none;
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  opacity: 1;
+}
+
+.nav-save-draft {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.save-draft-label {
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 12px;
+  color: #C84C0E;
+  margin-top: 4px;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+}
+
+.nav-back {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.back-label {
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 12px;
+  color: #C84C0E;
+  margin-top: 4px;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+}
+
+/* Form Section */
+form {
+  width: 100%;
+  max-width: 327px;
+  margin: auto;
+  box-sizing: border-box;
+}
+
+.isgr-box {
+  padding: 1rem;
+  border-radius: 8px;
+  background-color: transparent;
+  margin-bottom: 1rem;
+}
+
+.isgr-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+label {
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 0.3rem;
+  text-align: left;
+  width: 100%;
+}
+
+label.required::after {
+  content: " *";
+  color: #B91900;
+}
+
+select {
+  font-family: 'Roboto', Arial, sans-serif;
+  width: 100%;
+  padding: 0.6rem;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.button-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.verify-button {
+  font-family: 'Roboto', Arial, sans-serif;
+  width: 139px;
+  height: 40px;
+  background-color: #c84c03;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 24px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-sizing: border-box;
+}
+
+.verify-button:hover {
+  background-color: #c84c03;
+}

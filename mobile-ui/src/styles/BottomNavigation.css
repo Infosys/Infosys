@@ -1,0 +1,394 @@
+/* ============================================
+   BOTTOM NAVIGATION - Base Styles
+   ============================================ */
+
+.bottom-navigation {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  display: flex;
+  /* justify-content: center; */
+  z-index: 1100;
+  background: #f7e4db;
+}
+
+.bottom-navigation .nav-inner {
+  width: 100%;
+  max-width: 412px;
+  margin: 0 auto;
+  padding: 17px 34px;
+  background: #f7e4db;
+  box-sizing: border-box;
+  display: flex;
+  gap: 77px;
+  align-items: center;
+  justify-content: space-between;
+  height: 80px;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06);
+  border-top: 1px solid var(--border-gray);
+  border-radius: 12px 12px 0 0;
+  transition: all 0.3s ease;
+}
+
+/* ============================================
+   NAV ITEMS
+   ============================================ */
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  min-height: 44px;
+  gap: 2px;
+  padding: 0;
+  margin-top: 3px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nav-item:hover {
+  background: transparent;
+}
+
+.nav-item:active {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Nav Icons */
+.nav-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--medium-gray);
+  transition: color 0.2s ease;
+}
+
+.nav-icon svg,
+.nav-icon .MuiSvgIcon-root {
+  width: 24px !important;
+  height: 24px !important;
+  display: block;
+}
+
+/* Nav Labels */
+.nav-label {
+  font-family: 'Roboto', sans-serif;
+  font-size: 10px;
+  line-height: 1;
+  color: var(--medium-gray);
+  font-weight: 500;
+  text-align: center;
+  margin-top: 6px;
+  padding-left: 3px;
+  transition: color 0.2s ease;
+}
+
+/* Active State */
+.nav-item.active .nav-icon {
+  color: black;
+}
+
+.nav-item.active .nav-label {
+  color: black;
+  font-weight: 600;
+  padding-left: 3px;
+  margin-top: 4px;
+  background: transparent;
+}
+
+/* ============================================
+   RESPONSIVE BREAKPOINTS
+   ============================================ */
+
+/* Small Phones: Full width, flush bottom */
+@media (max-width: 599px) {
+  .bottom-navigation,
+  .bottom-navigation .nav-inner {
+    left: 0 !important;
+    right: 0 !important;
+    transform: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .bottom-navigation .nav-inner {
+    padding: 12px 18px;
+    gap: 24px;
+    height: 72px;
+    border-radius: 0;
+  }
+
+  .nav-item {
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  .nav-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .nav-label {
+    font-size: var(--font-xs);
+  }
+}
+
+/* Extra Small Phones */
+@media (max-width: 360px) {
+  .bottom-navigation .nav-inner {
+    padding: 8px 12px;
+    gap: 18px;
+    height: 60px;
+  }
+
+  .nav-item {
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  .nav-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .nav-label {
+    font-size: 10px;
+  }
+}
+
+/* Tablets and up: Centered card */
+@media (min-width: 600px) {
+  .bottom-navigation {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    bottom: 16px;
+  }
+
+  .bottom-navigation .nav-inner {
+    max-width: min(720px, 92vw);
+    padding: 14px 28px;
+    height: 78px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  }
+
+  .nav-item {
+    min-width: 64px;
+    min-height: 56px;
+  }
+
+  .nav-label {
+    font-size: 12px;
+  }
+}
+
+/* Larger Screens */
+@media (min-width: 969px) {
+  .bottom-navigation .nav-inner {
+    max-width: min(900px, 90vw);
+    padding: 17px 40px;
+    height: 85px;
+  }
+
+  .nav-item {
+    min-width: 70px;
+    min-height: 60px;
+  }
+
+  .nav-icon svg,
+  .nav-icon .MuiSvgIcon-root {
+    width: 26px !important;
+    height: 26px !important;
+  }
+
+  .nav-label {
+    font-size: 13px;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  .bottom-navigation .nav-inner {
+    max-width: 900px;
+    padding: 16px 36px;
+    height: 84px;
+  }
+
+  .nav-item {
+    min-width: 80px;
+  }
+
+  .nav-icon svg,
+  .nav-icon .MuiSvgIcon-root {
+    width: 26px !important;
+    height: 26px !important;
+  }
+
+  .nav-label {
+    font-size: 13px;
+  }
+}
+
+/* Large Desktop */
+@media (min-width: 1400px) {
+  .bottom-navigation .nav-inner {
+    max-width: 900px;
+  }
+}
+
+/* Ultra-wide */
+@media (min-width: 1920px) {
+  .bottom-navigation .nav-inner {
+    max-width: 900px;
+    height: 90px;
+  }
+
+  .nav-item {
+    min-width: 90px;
+    min-height: 60px;
+  }
+
+  .nav-icon svg,
+  .nav-icon .MuiSvgIcon-root {
+    width: 30px !important;
+    height: 30px !important;
+  }
+
+  .nav-label {
+    font-size: var(--font-base);
+  }
+}
+
+/* ============================================
+   LANDSCAPE ORIENTATION
+   ============================================ */
+
+/* Small landscape devices */
+@media (max-height: 500px) and (orientation: landscape) {
+  .bottom-navigation .nav-inner {
+    height: 60px;
+    padding: 8px 16px;
+  }
+
+  .nav-item {
+    min-width: 40px;
+    min-height: 40px;
+    gap: 2px;
+  }
+
+  .nav-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .nav-label {
+    font-size: 10px;
+  }
+}
+
+/* Very small landscape */
+@media (max-width: 800px) and (max-height: 450px) and (orientation: landscape) {
+  .bottom-navigation .nav-inner {
+    height: 50px;
+    padding: 6px 12px;
+  }
+
+  .nav-item {
+    flex-direction: row;
+    gap: var(--spacing-xs);
+    min-width: auto;
+    min-height: 40px;
+  }
+
+  .nav-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .nav-label {
+    font-size: var(--font-xs);
+  }
+}
+
+/* Large landscape */
+@media (min-width: 600px) and (orientation: landscape) {
+  .bottom-navigation {
+    bottom: 20px;
+  }
+
+  .bottom-navigation .nav-inner {
+    width: min(720px, 88vw);
+  }
+}
+
+/* Wide landscape */
+@media (min-width: 1000px) and (max-height: 700px) and (orientation: landscape) {
+  .bottom-navigation .nav-inner {
+    width: 80%;
+    max-width: 800px;
+    height: 70px;
+  }
+
+  .nav-item {
+    flex-direction: row;
+    gap: var(--spacing-sm);
+    min-width: auto;
+  }
+
+  .nav-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .nav-label {
+    font-size: var(--font-base);
+  }
+}
+
+/* ============================================
+   LAYOUT INTEGRATION
+   ============================================ */
+
+/* When used with main-content container */
+.mobile-app .main-content.with-navigation + .bottom-navigation {
+  position: fixed;
+  bottom: 0 !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 100% !important;
+  padding: 0 !important;
+}
+
+.mobile-app .main-content.with-navigation + .bottom-navigation .nav-inner {
+  width: 100% !important;
+  max-width: 412px !important;
+  margin: 0 auto !important;
+  padding: 0 16px !important;
+  gap: 24px !important;
+  height: 72px !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 599px) {
+  .mobile-app .main-content.with-navigation + .bottom-navigation,
+  .mobile-app .main-content.with-navigation + .bottom-navigation .nav-inner {
+    left: 0 !important;
+    transform: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 12px !important;
+  }
+
+  .mobile-app .main-content.with-navigation + .bottom-navigation .nav-inner {
+    gap: 18px !important;
+    height: 68px !important;
+  }
+}

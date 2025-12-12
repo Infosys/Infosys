@@ -1,0 +1,152 @@
+/* Ensure labels are not bold */
+label,
+.input-wrapper label,
+.checkbox-label {
+  font-weight: normal !important;
+}
+
+/* Fix for document type select box */
+input[type="select"],
+select#documentType,
+.property-form-container select,
+.form-field select {
+  min-width: 0;
+  width: 100% !important;
+  box-sizing: border-box;
+  font-size: 16px;
+  padding: 10px 12px;
+  border-radius: 0px;
+  border: 1px solid #5F6368;
+  background-color: #fff;
+  color: #333;
+  font-weight: 400;
+}
+
+/* Fix for No and Construction Date row */
+.form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  align-items: center; /* Ensures inputs are aligned vertically */
+}
+
+/* Make No input narrower */
+.form-field-half:first-child .input-wrapper,
+.form-field-half:first-child input,
+.form-field-half:first-child .user-input {
+  width: 95% !important;
+  min-width: 150px;
+  max-width: 250px;
+  box-sizing: border-box;
+}
+
+/* Construction Date input should expand to fill remaining space */
+.form-field-half:last-child .input-wrapper,
+.form-field-half:last-child input,
+.form-field-half:last-child .user-input {
+  width: 100% !important;
+  min-width: 140px;
+  box-sizing: border-box;
+}
+
+/* All inputs consistent height */
+input[type="text"],
+input[type="date"],
+input[type="select"],
+select,
+.user-input {
+  height: 44px;
+  font-size: 16px;
+  padding: 10px 12px;
+  /* border-radius: 8px; */
+  /* border: 1px solid #5F6368; */
+  background-color: #fff;
+  color: #333;
+  box-sizing: border-box;
+  font-weight: 400;
+}
+
+/* Ensure dropdown arrow is not interfering */
+select#documentType {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23333' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px 12px;
+  padding-right: 32px;
+}
+
+/* .form-field select:focus {
+  outline: 2px solid #C8504B;
+} */
+
+/* Responsive tweaks */
+@media (max-width: 800px) {
+  .form-row {
+    gap: 10px;
+  }
+  .form-field-half:first-child .input-wrapper,
+  .form-field-half:first-child input {
+    min-width: 90px;
+    max-width: 120px;
+  }
+  .form-field-half:last-child .input-wrapper,
+  .form-field-half:last-child input {
+    min-width: 100px;
+  }
+}
+@media (max-width: 480px) {
+  .form-row {
+    gap: 4px;
+  }
+  .form-field-half:first-child .input-wrapper,
+  .form-field-half:first-child input {
+    min-width: 70px;
+    max-width: 100px;
+    font-size: 13px;
+  }
+  .form-field-half:last-child .input-wrapper,
+  .form-field-half:last-child input {
+    min-width: 80px;
+    font-size: 13px;
+  }
+}
+
+/* Validation error message */
+.error-message {
+  color: #d32f2f; /* red */
+  font-size: 14px;
+  margin-top: 8px;
+}
+/* PropertyAddress.css or your stylesheet */
+
+/* .custom-date-picker { */
+  /* This sets the field height */
+  /* height: 50px; */
+/* } */
+/* .custom-date-picker input { */
+  /* height: 50px !important; */
+/* } */
+
+.custom-date-picker fieldset {
+  /* height: 50px !important; */
+  max-height: 56px;
+  padding: auto;
+  border-color: #333;
+  border-radius: 5px;
+}
+
+
+.error-message {
+  color: #D32F2F; /* Red color */
+  font-size: 12px;
+  margin-top: 4px;
+  font-weight: 400;
+  display: block;
+}
+
+input:focus, select:focus, .user-input:focus {
+  outline: none !important;
+  border-color: #5F6368 !important; /* Same as normal border */
+  box-shadow: none;
+}

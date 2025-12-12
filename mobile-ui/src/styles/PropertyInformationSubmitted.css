@@ -1,0 +1,337 @@
+
+.property-info-submitted-root {
+  background: #FAFAFA;
+  min-height: 100vh;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  position: relative;
+}
+
+/* Header Section */
+.header-section {
+  padding: 24px 20px 20px 20px;
+  background: #FAFAFA;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Previous Button - matching ReviewedProperty */
+.previous-button {
+  background: transparent;
+  border: 1px solid #E0E0E0;
+  border-radius: 20px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  margin-bottom: 16px;
+  color: #C84C0E;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.previous-button:hover {
+  background: #f5f5f5;
+}
+
+/* Page Title */
+  .page-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #C84C0E;
+    margin: 0 0 8px 0;
+    line-height: 1.2;
+}
+
+/* Property ID Display */
+.property-id-display {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 16px;
+}
+
+.property-form-container {
+  padding: 0;
+  max-width: 600px;
+  margin: 0 auto;
+  /* background: transparent; */
+}
+
+/* Map Section Wrapper */
+.map-section {
+  padding: 0 20px;
+  background: transparent;
+}
+
+/* Map container */
+.map-container-main {
+  width: 100%;
+  height: 250px;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  box-shadow: none;
+  border: none;
+  background: transparent;
+}
+
+/* Hide zoom controls */
+.property-info-submitted-root .leaflet-control-zoom,
+.property-info-submitted-root .leaflet-control-zoom.leaflet-bar {
+  display: none !important;
+}
+
+/* Ensure leaflet container has no white background */
+.property-info-submitted-root .leaflet-container {
+  background: transparent !important;
+}
+
+/* Map provider buttons */
+.map-provider-buttons {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0 24px 0;
+  padding: 0;
+  width: 100%;
+}
+
+.map-provider-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 8px;
+  background: #F4F4F4;
+  border: 1px solid #E0E0E0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1;
+  min-width: 0;
+  max-width: 33%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.map-provider-btn:hover {
+  background: #FAFAFA;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  transform: translateY(-1px);
+}
+
+.map-icon {
+  font-size: 28px;
+  color: #C84C0E;
+}
+
+
+/* Lower part - from PropertySummary */
+:root {
+  --orange: #C84C0E;
+  --peach: #FFF5F0;
+  --muted: #6b6b6b;
+  --card-bg: #f4f4f4;
+  --content-max-width: 600px;
+}
+
+.summary-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.summary-section {
+  background: #F4F4F4;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  border: 1px solid #E0E0E0;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 6px;
+}
+
+.section-title {
+  font-size: 18px;
+  color: var(--orange);
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.section-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-row {
+  display: block;
+  padding: 2px 0;
+  line-height: 1.5;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+  display: inline;
+  margin-right: 8px;
+}
+
+.detail-value {
+  font-size: 14px;
+  color: #555;
+  font-weight: 400;
+  display: inline;
+}
+
+.property-tax-zone {
+  display: inline-block;
+  background: #FFDED1;
+  color: var(--orange);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+  .notes-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding-top: 8px;
+    margin-top: 4px;
+}
+
+.notes-section .detail-label {
+  min-width: auto;
+}
+
+.notes-section .notes-text {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+  font-style: italic;
+}
+
+/* Documents section */
+.documents-section {
+  background: transparent;
+  padding: 0;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.documents-title {
+  font-size: 16px;
+  margin: 0 0 16px 0;
+  color: #333;
+  font-weight: 400;
+}
+
+.document-icons {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  overflow-x: visible;
+  padding: 0;
+  justify-content: flex-start;
+}
+
+.document-icon {
+  font-size: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 90px;
+}
+
+.doc-icon {
+  width: 70px;
+  height: 70px;
+  border-radius: 12px;
+  background: white;
+  border: 1px solid #E0E0E0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  color: var(--orange);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  overflow: hidden;
+}
+
+.doc-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.doc-label {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+  word-break: break-word;
+  line-height: 1.3;
+}
+
+/* Action section */
+.action-section {
+  margin-top: 32px;
+  padding-bottom: 32px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+
+.back-button {
+  background: var(--orange);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(200, 76, 14, 0.3);
+  padding: 8px 48px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.back-button:hover {
+  background: #A53A0B;
+  box-shadow: 0 4px 12px rgba(200, 76, 14, 0.4);
+  transform: translateY(-1px);
+}
+
+.back-button:active {
+  transform: translateY(0);
+}
+
+.orange-btn {
+  background: var(--orange);
+  color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .property-form-container2 {
+    padding: 0 12px 24px 12px;
+  }
+  
+  .map-provider-btn {
+    padding: 10px 6px;
+    font-size: 11px;
+  }
+}

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/src/app/assets/propertyTaxLogo.svg" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="theme-color" content="#f9f1f0" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <title>Property Tax Portal</title>
+    <style>
+      /* Prevent content flash */
+      /* html, body, #root { height: 100%; }
+      *, *::before, *::after { box-sizing: border-box; } */
+
+      /* Center the app root in the viewport (horizontal + vertical).
+         If you only want horizontal centering, change `align-items` to `flex-start`. */
+      body {
+        margin: 0;
+        display: flex;
+        justify-content: center; /* horizontal */
+        align-items: center; /* vertical */
+        min-height: 100vh;
+        background: #ffffff;
+        opacity: 0;
+      }
+
+      /* Fade-in when the app is ready */
+      body.loaded { opacity: 1; transition: opacity 0.3s ease; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Add loaded class when DOM is ready
+      document.addEventListener('DOMContentLoaded', function() {
+        document.body.classList.add('loaded');
+      });
+      
+      // Prevent bounce scrolling on iOS
+      document.addEventListener('touchmove', function(e) {
+        if(e.target.closest('.property-form-container')) {
+          return;
+        }
+        e.preventDefault();
+      }, { passive: false });
+    </script>
+  </body>
+</html>

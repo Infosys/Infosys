@@ -1,0 +1,44 @@
+.details-card {
+  background: #fafafa;
+  border-radius: 12px;
+  padding: 24px 20px 20px 24px;
+  box-sizing: border-box;
+  min-width: 280px;
+  max-width: 340px;
+  font-family: 'Roboto', Arial, sans-serif;
+  box-shadow: none;
+}
+
+.details-card-heading {
+  color: #ca5800;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 18px;
+}
+
+.details-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.details-card-row {
+  display: flex;
+  align-items: flex-start;
+}
+
+.details-card-key {
+  font-weight: bold;
+  font-size: 1rem;
+  color: #1a1a1a;
+  margin-right: 6px;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.details-card-value {
+  font-size: 1rem;
+  color: #232323;
+  font-family: inherit;
+  word-break: break-word;
+}

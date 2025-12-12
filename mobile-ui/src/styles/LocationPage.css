@@ -1,0 +1,350 @@
+.location-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header for LocationPage (different from LocationSelection) */
+.location-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.location-page-header h1 {
+  margin: 0;
+  font-size: var(--font-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+  text-align: center;
+}
+
+.location-page .back-button {
+  background: none;
+  border: none;
+  font-size: 20px;
+  padding: var(--spacing-xs);
+  cursor: pointer;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Map Container */
+.map-container-1 {
+  flex: 1;
+  position: relative;
+  min-height: 300px;
+}
+
+.map-placeholder {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: #E8F4FD;
+  background-image: 
+    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.15) 0%, transparent 50%);
+}
+
+.map-background {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background-image: 
+  /* replaced with neutral subtle stripes using rgba */
+  linear-gradient(90deg, rgba(200,200,200,0.06) 1px, transparent 1px),
+  linear-gradient(rgba(200,200,200,0.06) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.location-pin {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--primary-red);
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
+
+.location-tooltip {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-gray);
+}
+
+.tooltip-content .location-name {
+  font-size: var(--font-base);
+  font-weight: 600;
+  color: var(--dark-gray);
+  margin-bottom: var(--spacing-xs);
+}
+
+.tooltip-content .phone-info {
+  font-size: var(--font-sm);
+  color: var(--medium-gray);
+  margin-bottom: var(--spacing-md);
+}
+
+.directions-btn {
+  background: var(--primary-blue);
+  color: var(--white);
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.directions-btn:hover {
+  background: #1976D2;
+}
+
+/* Address Section */
+.address-section {
+  background: var(--white);
+  padding: var(--spacing-xl) var(--spacing-lg);
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+  margin-top: -var(--spacing-lg);
+  position: relative;
+  z-index: 10;
+}
+
+.address-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0px;
+}
+
+.address-header h2 {
+  font-size: var(--font-xl);
+  font-weight: 600;
+  color: var(--dark-gray);
+}
+
+.location-action-btn {
+  background: none;
+  border: none;
+  color: var(--medium-gray);
+  cursor: pointer;
+  height: 26px;
+  width: 53px;
+  /* padding: var(--spacing-sm); */
+  border-radius: 10px;
+  transition: background-color 0.2s ease;
+  background: #F7E4DB;
+}
+
+.location-action-btn:hover {
+  background: #F7E4DB;
+}
+
+.address-text {
+  font-size: var(--font-base);
+  color: var(--dark-gray);
+  line-height: 1.5;
+  margin-bottom: var(--spacing-xl);
+}
+
+/* Map Actions */
+.map-actions {
+  display: flex;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.map-action-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  background: var(--light-gray);
+  border: 1px solid var(--border-gray);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.map-action-btn:hover {
+  background: var(--border-gray);
+  transform: translateY(-2px);
+}
+
+.map-action-btn .action-icon {
+  color: var(--medium-gray);
+}
+
+.map-action-btn span {
+  font-size: var(--font-sm);
+  font-weight: 500;
+  color: var(--dark-gray);
+  text-align: center;
+}
+
+/* Phone Section */
+.phone-section {
+  background: var(--white);
+  padding: 0 var(--spacing-lg) var(--spacing-xl);
+}
+
+.phone-header {
+  margin-bottom: 0px;
+}
+
+.phone-header h3 {
+  font-size: var(--font-lg);
+  font-weight: 600;
+  color: var(--dark-gray);
+}
+
+.phone-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--light-gray);
+  padding: 4px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-gray);
+}
+
+.phone-number {
+  font-size: var(--font-base);
+  font-weight: 500;
+  color: var(--dark-gray);
+}
+
+.call-btn {
+  background: #F7E4DB;
+  color: black;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 30%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.call-btn:hover {
+  background: #F7E4DB;
+  transform: scale(1.05);
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .location-page {
+    font-size: var(--font-sm);
+  }
+  
+  .location-page-header {
+    padding: var(--spacing-sm);
+  }
+  
+  .location-title {
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+  
+  .location-title h1 {
+    font-size: var(--font-xl);
+  }
+  
+  .map-container-1 {
+    min-height: 250px;  }
+  
+  .location-tooltip {
+    top: 15px;
+    left: 15px;
+    right: 15px;
+    padding: var(--spacing-sm);
+  }
+  
+  .tooltip-content .location-name {
+    font-size: var(--font-sm);
+  }
+  
+  .address-section, .phone-section {
+    margin: 4px;
+    padding: 10px;
+  }
+  
+  .address-header .address-label,
+  .phone-header .phone-label {
+    font-size: var(--font-base);
+  }
+  
+  .map-options {
+    gap: var(--spacing-xs);
+  }
+  
+  .map-option {
+    padding: var(--spacing-sm);
+  }
+  
+  .option-text {
+    font-size: var(--font-xs);
+  }
+  
+  .call-button {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 360px) {
+  .map-container-1 {
+    min-height: 200px;
+  }
+  
+  .location-title h1 {
+    font-size: var(--font-lg);
+  }
+  
+  .back-button, .home-button {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+  
+  .map-option {
+    padding: var(--spacing-xs);
+  }
+  
+  .option-icon {
+    font-size: 16px;
+  }
+}
+
+@media (min-width: 415px) and (max-width: 768px) {
+  .map-container-1 {
+    min-height: 400px;
+  }
+  
+  .address-section, .phone-section {
+    max-width: 500px;
+    margin: var(--spacing-lg) auto;
+  }
+}

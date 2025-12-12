@@ -1,0 +1,458 @@
+.property-form-container {
+    width: 100%;
+    height: 100vh;
+    /* Set specific height */
+    max-width: 375px;
+    /* Mobile container width */
+    margin: 0 auto;
+    /* Center the container */
+    background-color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Header Container - Compact */
+.header-container {
+    background-color: #ffffff;
+    padding: 12px 16px;
+    /* Reduced padding */
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    /* Reduced gap */
+    flex-shrink: 0;
+}
+
+.form-title {
+    font-size: 18px;
+    /* Reduced font size */
+    font-weight: bold;
+    color: #333;
+    margin: 0;
+    text-align: left;
+}
+
+/* Documents section - positioned on left */
+.documents-section {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    width: 100%;
+    padding-left: 0;
+    margin: 0;
+}
+
+.documents-text {
+    font-size: 12px;
+    /* Reduced font size */
+    color: #666;
+    margin: 0;
+    font-weight: 500;
+    text-align: left;
+    align-self: flex-start;
+    margin: 0;
+    padding-left: 0;
+} 
+
+.horizontal-lines {
+    display: flex;
+    gap: 6px;
+    /* Reduced gap */
+    justify-content: center;
+    margin-top: 4px;
+}
+
+.line {
+    height: 2px;
+    /* Reduced height */
+    width: 30px;
+    /* Reduced width */
+    border-radius: 2px;
+}
+
+.line.active {
+    background-color: #d2691e;
+}
+
+.line.inactive {
+    background-color: #e0e0e0;
+}
+
+/* Navigation Container - Compact */
+.navigation-container {
+    background-color: #ffffff;
+    padding: 8px 16px;
+    /* Reduced padding */
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.back-button,
+.save-draft-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px 8px;
+    /* Reduced padding */
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    min-width: 50px;
+    /* Reduced min-width */
+}
+
+.back-button:hover,
+.save-draft-button:hover {
+    background-color: #f5f5f5;
+}
+
+/* Button content - icon above text */
+.button-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    /* Reduced gap */
+}
+
+.button-icon {
+    font-size: 14px;
+    /* Reduced font size */
+    color: #666;
+    line-height: 1;
+}
+
+.button-text {
+    font-size: 10px;
+    /* Reduced font size */
+    color: #666;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Form Content - Scrollable and compact */
+.form-content {
+    padding: 12px 16px;
+    /* Reduced padding */
+    background-color: #ffffff;
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.form-content::-webkit-scrollbar {
+    display: none;
+}
+
+.property-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    /* Reduced gap */
+    padding-bottom: 20px;
+    /* Reduced bottom padding */
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    /* Reduced gap */
+}
+
+/* Checkbox Group - Compact */
+.checkbox-group {
+    margin: 12px 0;
+    /* Reduced margin */
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* Reduced gap */
+    cursor: pointer;
+    font-size: 12px;
+    /* Reduced font size */
+    color: #333;
+}
+
+.checkbox-input {
+    width: 16px;
+    /* Reduced size */
+    height: 16px;
+    /* Reduced size */
+    cursor: pointer;
+    margin: 0;
+}
+
+.checkbox-text {
+    user-select: none;
+}
+
+/* Checkbox Container - Compact custom checkbox */
+.checkbox-container {
+    margin: 12px 0;
+    /* Reduced margin */
+}
+
+.checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* Reduced gap */
+    cursor: pointer;
+    font-size: 12px;
+    /* Reduced font size */
+    color: #333;
+    position: relative;
+    padding-left: 24px;
+    /* Reduced padding */
+}
+
+.checkbox-wrapper .checkbox-input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 16px;
+    /* Reduced size */
+    width: 16px;
+    /* Reduced size */
+    background-color: #ffffff;
+    border: 2px solid #ddd;
+    border-radius: 3px;
+    transition: all 0.2s ease;
+}
+
+.checkbox-wrapper:hover .checkmark {
+    border-color: #d2691e;
+}
+
+.checkbox-wrapper .checkbox-input:checked~.checkmark {
+    background-color: #d2691e;
+    border-color: #d2691e;
+}
+
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.checkbox-wrapper .checkbox-input:checked~.checkmark:after {
+    display: block;
+}
+
+.checkbox-wrapper .checkmark:after {
+    left: 4px;
+    /* Adjusted for smaller checkbox */
+    top: 1px;
+    /* Adjusted for smaller checkbox */
+    width: 5px;
+    /* Reduced size */
+    height: 8px;
+    /* Reduced size */
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.checkbox-text {
+    margin-left: 6px;
+    /* Reduced margin */
+    line-height: 1.3;
+    user-select: none;
+}
+
+/* Form Actions - Compact and always visible */
+.form-actions {
+    display: flex;
+    justify-content: flex-start;
+    margin: 16px 0 8px 0;
+    /* Reduced margins */
+    padding: 0;
+    width: 100%;
+    flex-shrink: 0;
+    /* Prevent shrinking */
+}
+
+/* Verify Button - Compact size */
+.verify-button {
+    background-color: #c84c03;
+    color: white;
+    /* Changed to white for better contrast */
+    border: none;
+    border-radius: 6px;
+    /* Reduced border radius */
+    padding: 10px 24px;
+    /* Reduced padding */
+    font-size: 14px;
+    /* Reduced font size */
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 100px;
+    /* Reduced min-width */
+    height: 40px;
+    /* Set specific height */
+    box-shadow: 0 2px 4px rgba(210, 105, 30, 0.2);
+}
+
+.verify-button:hover {
+    background-color: #c84c03;
+    box-shadow: 0 3px 6px rgba(210, 105, 30, 0.3);
+}
+
+.verify-button:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(210, 105, 30, 0.3);
+}
+
+/* Form Submit Container - Compact */
+.form-submit {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin: 16px 0 8px 0;
+    /* Reduced margins */
+    padding: 0;
+}
+
+/* Alternative verify button styles */
+.verify-btn {
+    background-color: #d2691e !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 6px !important;
+    padding: 10px 24px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    min-width: 100px !important;
+    height: 40px !important;
+    transition: background-color 0.2s ease !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 999 !important;
+}
+
+.verify-btn:hover {
+    background-color: #b85a1a !important;
+}
+
+.form-actions .btn {
+    background-color: #d2691e;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    min-width: 100px;
+    height: 40px;
+}
+
+.form-actions .btn:hover {
+    background-color: #b85a1a;
+}
+
+/* Mobile optimizations */
+@media (max-width: 400px) {
+    .property-form-container {
+        max-width: 350px;
+    }
+
+    .header-container {
+        padding: 10px 12px;
+    }
+
+    .form-title {
+        font-size: 16px;
+    }
+
+    .navigation-container {
+        padding: 6px 12px;
+    }
+
+    .form-content {
+        padding: 10px 12px;
+    }
+
+    .property-form {
+        gap: 10px;
+        padding-bottom: 16px;
+    }
+
+    .form-row {
+        gap: 8px;
+    }
+
+    .verify-button,
+    .verify-btn,
+    .form-actions .btn {
+        padding: 8px 20px;
+        font-size: 12px;
+        min-width: 80px;
+        height: 36px;
+    }
+}
+
+/* new css */
+.input-wrapper {
+  position: relative;
+  width: 100%;
+}
+.calendar-icon {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #505A5F;
+}
+input[type="date"] {
+  padding-right: 36px;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form-field-half {
+  flex: 1 1 0;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+input[type="date"] {
+  width: 100%;
+  box-sizing: border-box;
+  padding-right: 36px; /* for icon */
+}

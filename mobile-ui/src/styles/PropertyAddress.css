@@ -1,0 +1,510 @@
+.property-form-container {
+  width: 100%;
+  max-width: 375px;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.property-form-header {
+  background-color: #F9E6E0;
+  padding: 16px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.back-button,
+.close-button {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  color: #333333;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.back-button:hover,
+.close-button:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+  text-align: left;
+  margin: 0;
+}
+
+.form-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: black;
+  margin: 0;
+  line-height: 1.2;
+  text-align: left;
+}
+
+.form-subtitle {
+  font-size: 16px;
+  color: black;
+  margin: 4px 0 0 0;
+  font-weight: 300;
+  font-style: italic;
+  text-align: left;
+}
+
+.form-content {
+  flex: 1;
+  padding: 24px 24px;
+  background-color: #FFFFFF;
+}
+
+.form-field {
+  margin-bottom: none !important;
+  position: relative;
+}
+
+.field-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 400;
+  color: #333333;
+  margin-bottom: 4px;
+  text-align: left;
+}
+
+.required-asterisk {
+  color: #C8504B;
+  margin-left: 2px;
+  font-weight: 400;
+}
+
+.colon {
+  margin-left: 4px;
+  color: #333333;
+  font-weight: 400;
+}
+
+.input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.user-input {
+  padding-right: 50px !important;
+}
+
+.voice-input-icon {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9E9E9E;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.voice-input-icon:hover {
+  color: #0F6CC0;
+}
+
+.input-wrapper:focus-within .voice-input-icon {
+  color: #0F6CC0;
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.checkbox-input {
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0 0;
+  cursor: pointer;
+  accent-color: #C8504B;
+  flex-shrink: 0;
+}
+
+.checkbox-label {
+  font-size: 16px;
+  color: black;
+  cursor: pointer;
+  line-height: 1.4;
+  margin: 0;
+  font-weight: 300;
+  text-align: left;
+}
+
+.checkbox-label:hover {
+  color: #0F6CC0;
+}
+
+@media (max-width: 480px) {
+  .checkbox-container {
+    gap: 10px;
+  }
+  .checkbox-input {
+    width: 16px;
+    height: 16px;
+    margin: 1px 0 0 0;
+  }
+  .checkbox-label {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .voice-input-icon {
+    right: 12px;
+  }
+}
+
+.single-button {
+  background-color: #F9E6E0;
+  border: none;
+  border-radius: 35%;
+  padding: 20%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.button-container{
+  padding: 0% 5%;
+  margin-top: 3%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  background-color: #fff;
+}
+
+.tabs-group{
+  display: flex;
+  flex-direction: row;
+  justify-content:space-around;
+  align-items: center;
+  background-color: #F9E6E0;
+  padding: 0% 10% 5% 3%;
+}
+
+.tab{
+  width: 8%;
+  height: 0px;
+  border: 2px solid #F9E6E0;
+  border-radius: 0%;
+}
+
+.active{}
+
+.form-submit {
+  padding: 16px 0px;
+  background-color: #FFFFFF;
+}
+
+.verify-button {
+  width: 60%;
+  padding: 8px 24px;
+  margin-left: 40%;
+  background-color: #c84c03;
+  border: none;
+  border-radius: 8px;
+  color: #FFFFFF;
+  font-size: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.verify-button:hover {
+  background-color: #c84c03;
+}
+
+.verify-button:active {
+  background-color: #c84c03;
+}
+
+/* ---- MODIFIED FOR STABLE ROW ---- */
+.form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: none !important;
+}
+
+/* Each half of row has field and error container */
+.form-field-half {
+  flex: 1;
+  position: relative;
+}
+
+.input-error-container {
+  position: relative;
+  width: 100%;
+  min-height: 40px; /* Height of input + space for error message */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+/* For dropdowns in form-row, below the button */
+.dropdown-error-container {
+  position: relative;
+  /* min-height: 58px; */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+/* Error messages always stable, in red, do not move layout */
+.error-message {
+  color: #C8504B !important;
+  font-size: 14px;
+  font-weight: 400;
+  text-align: left;
+  min-height: 18px;
+  display: block;
+}
+
+.input-error {
+  color: #C8504B !important;
+  border-color: #C8504B !important;
+}
+
+/* Dropdown style */
+.dropdown-arrow{
+  color: black;
+  font-size: 10px;
+}
+
+.dropdown-button {
+  width: 100%;
+  padding: 12px 16px;
+  background-color: #FFFFFF;
+  border: 1px solid #5F6368;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #333333;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  font-weight: 400;
+}
+
+.dropdown-button span:first-child {
+  font-weight: 400;
+}
+
+/* Responsive */
+@media (max-width: 800px) {
+  .form-content {
+    padding: 12px 24px;
+  }
+  .property-form-header {
+    padding: 12px;
+  }
+  .form-title {
+    font-size: 16px;
+  }
+  .form-subtitle {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-row {
+    flex-direction: row;
+    gap: 12px; 
+  }
+  .form-field-half {
+    flex: 1;
+  }
+}
+
+/* Custom width for Locality dropdown only */
+.dropdown-container-igrsLocality {
+  width: 350px;
+  max-width: 40%;
+}
+.dropdown-container-igrsLocality .dropdown-button {
+  width: 100%;
+}
+@media (max-width: 800px) {
+  .dropdown-container-igrsLocality {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* Custom width for block dropdown only */
+.dropdown-container-igrsBlock {
+  width: 350px;
+  max-width: 40%;
+}
+.dropdown-container-igrsBlock .dropdown-button {
+  width: 100%;
+}
+@media (max-width: 800px) {
+  .dropdown-container-igrsBlock {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* Custom width for block dropdown only */
+.dropdown-container-igrsClassification {
+  width: 350px;
+  max-width: 60%;
+}
+.dropdown-container-igrsClassification .dropdown-button {
+  width: 100%;
+}
+@media (max-width: 800px) {
+  .dropdown-container-igrsClassification {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* Custom width for block dropdown only */
+.dropdown-container-builtupArea {
+  width: 350px;
+  max-width: 100%;
+}
+.dropdown-container-builtupArea .dropdown-button {
+  width: 100%;
+}
+@media (max-width: 800px) {
+  .dropdown-container-builtupArea {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* Custom width for block dropdown only */
+.dropdown-container-sideSetBack {
+  width: 350px;
+  max-width: 50%;
+}
+.dropdown-container-sideSetBack .dropdown-button {
+  width: 100%;
+}
+@media (max-width: 800px) {
+  .dropdown-container-sideSetBack {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* Custom width for Floor Type dropdown only */
+.dropdown-container-floorType {
+  width: 350px;
+  max-width: 60%;
+}
+.dropdown-container-floorType .dropdown-button {
+  width: 100%;
+}
+@media (max-width: 800px) {
+  .dropdown-container-floorType {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* Custom width for Floor Type dropdown only */
+.dropdown-container-wallType {
+  width: 350px;
+  max-width: 60%;
+}
+.dropdown-container-wallType .dropdown-button {
+  width: 100%;
+}
+@media (max-width: 800px) {
+  .dropdown-container-wallType {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* Custom width for Floor Type dropdown only */
+.dropdown-container-woodType {
+  width: 350px;
+  max-width: 60%;
+}
+.dropdown-container-woodType .dropdown-button {
+  width: 100%;
+}
+@media (max-width: 800px) {
+  .dropdown-container-woodType {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+
+/* Custom width for side setback input */
+.input-wrapper-frontSetBack {
+  width: 350px;
+  max-width: 70%; /* Adjust as needed */
+}
+
+@media (max-width: 800px) {
+  .input-wrapper-frontSetBack {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+
+.input-wrapper-sideSetBack {
+  width: 350px;
+  max-width: 45% !important; /* Adjust as needed */
+}
+
+@media (max-width: 800px) {
+  .input-wrapper-sideSetBack {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+
+.form-buildingsetback-container {
+  margin-top: 40px !important;
+}
+
+.form-field-half .error-message {
+  min-height: 20px; /* Reserve space for error message */
+  color: #D32F2F;
+  font-size: 12px;
+  margin-top: 4px;
+  font-weight: 400;
+}
+
+.error-message {
+  color: #D32F2F;
+  font-size: 12px;
+  margin-top: 4px;
+  font-weight: 400;
+  min-height: 20px; /* Reserve space even when empty */
+  display: block;
+}
+
+.input-error {
+  border: 1.5px solid #d32f2f !important;
+}
+
+.dropdown-button.input-error {
+  border-color: #d32f2f !important;
+}

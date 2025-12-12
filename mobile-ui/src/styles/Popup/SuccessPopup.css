@@ -1,0 +1,85 @@
+.popup-fixed-bottom-center {
+  position: fixed;
+  left: 50%;
+  bottom: 110px;
+  transform: translateX(-50%);
+  width: min(370px, 96vw);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2000;
+  pointer-events: none;
+}
+
+@media (max-width: 420px) {
+  .popup-fixed-bottom-center {
+    width: 96vw;
+    min-width: 0;
+    left: 2vw;
+    transform: none;
+  }
+}
+
+.popup-card {
+  min-width: 332px;
+  max-width: 92vw;
+  border-radius: 8px;
+  padding: 22px 22px 18px 22px;
+  box-shadow: 0 6px 27px 1px rgba(45,94,43,0.22);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  border-width: 1.4px;
+  border-style: solid;
+  position: relative;
+  pointer-events: all;
+  opacity: 1;
+  background: #eaffec !important;
+  border-color: #228c50;
+  transition: opacity 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.popup-fade-in {
+  opacity: 1;
+  animation: fadeInPopup 0.45s ease-in;
+}
+@keyframes fadeInPopup {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.popup-fade-out {
+  opacity: 0;
+  animation: fadeOutPopup 0.45s ease-out;
+}
+@keyframes fadeOutPopup {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.popup-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+  gap: 8px;
+}
+
+.popup-success-icon { color: #228c50 !important; font-size: 22px !important; }
+
+.popup-title { font-weight: bold; font-size: 17px; }
+.popup-success.popup-title { color: #228c50; }
+
+.popup-message {
+  color: #222;
+  font-size: 15px;
+  font-weight: 500;
+  margin-bottom: 14px;
+  margin-top: 2px;
+}

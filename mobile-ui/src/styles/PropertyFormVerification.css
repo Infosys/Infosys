@@ -1,0 +1,576 @@
+.property-form-verification-root {
+  background: #f5f5f5;
+  min-height: 100vh;
+  padding: 0;
+  font-family: 'Roboto', Arial, sans-serif;
+  position: relative;
+}
+
+.form-subtitle {
+   font-size: 16px;
+  color: black;
+  margin: 4px 0 0 0;
+  font-weight: 300;
+  font-style: italic;
+  text-align: left;
+}
+
+/* Language Toggle Styles */
+.language-toggle {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 1000;
+}
+
+.language-btn {
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-weight: 500;
+}
+
+.language-btn:hover {
+  background-color: #1976D2;
+}
+
+span.back-text{
+  color: #c84c03;
+  font-weight: 700; /* make back-text bold */
+}
+
+/* c84c03 */
+.verification-top-header {
+  background: #F7E4DB;
+  padding: 18px 24px 12px 24px;
+  /* border-radius: 0 0 18px 18px; */
+  /* margin: 0 auto 12px;  */
+  position: relative;
+  width: 412px; /* fixed width as requested */
+  height: 153px; /* fixed height as requested */
+  box-sizing: border-box;
+}
+
+/* Hide Leaflet zoom controls for the Property Location view (citizen) to match design */
+.property-form-verification-root .leaflet-control-zoom,
+.property-form-verification-root .leaflet-control-zoom.leaflet-bar {
+  display: none !important;
+}
+.verification-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #333;
+}
+.verification-subtitle {
+  color: black;
+  font-style: italic;
+  font-size: 1rem;
+  margin-top: 1px;
+}
+
+.verification-top-header .verification-subtitle .summary-information {
+  font-style: italic;
+  color: inherit;
+  font-size: 1rem;
+}
+.verification-back-home.header-back {
+  position: absolute;
+  left: 18px;
+  bottom: 18px; /* align lower to avoid overlapping subtitle */
+  display: flex;
+  align-items: center;
+  z-index: 3;
+}
+.verification-back-home {
+  display: flex;
+  align-items: center;
+  color: #c84c03;
+  cursor: pointer;
+  font-weight: 500;
+  margin: 24px 0 0 0;
+  font-size: 1rem;
+  width: 20px;
+}
+.back-arrow {
+  margin-right: 8px;
+}
+
+.property-id-header {
+  font-size: 1.1rem;
+  /* keep header text normal weight; specific id value styled separately */
+  font-weight: 400;
+  margin: 12px 0 12px 24px; /* add bottom gap before the map */
+  color: black;
+}
+
+.property-id-value {
+  font-weight: 400; /* not bold */
+  display: block;
+  margin-top: 4px;
+  margin-bottom: 12px; /* small gap before the map */
+  color: #333;
+}
+
+.property-form-container {
+  padding: 0 18px 24px 18px;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.verification-content {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 8px;
+}
+
+
+/* Card styles */
+.card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 0 6px #e0e0e0;
+  border: 1px solid rgb(168, 165, 165);
+
+}
+
+/* Address Progress Section */
+.address-progress-card {
+  padding: 24px 18px 24px 18px;
+  margin-left: 3%;
+  margin-right: 3%;
+  margin-top: 16px;
+  margin-bottom: 3px;
+}
+
+/* Property ID inside card */
+.property-id-in-card {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.address-progress-label {
+  color: #888;
+  font-style: italic;
+  font-size: 1rem;
+}
+.address-progress-value {
+  font-size: 1.14rem;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 4px;
+}
+.phone-label {
+  margin-top: 6px;
+}
+.phone-value {
+  font-size: 1.12rem;
+  font-weight: 600;
+  color: #222;
+}
+.completion-label {
+  margin-top: 8px;
+}
+.progress-bar-row {
+  display: flex;
+  align-items: center;
+  margin: 8px 0 10px 0;
+}
+.progress-bar-outer {
+  flex: 1;
+  height: 6px;
+  background: #eee;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-right: 12px;
+}
+.progress-bar-inner {
+  height: 100%;
+  background: #c84c03;
+  border-radius: 5px;
+  transition: width 0.3s;
+}
+.progress-bar-percentage {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #222;
+  min-width: 32px;
+}
+.address-progress-row {
+  display: flex;
+  align-items: center;
+  margin-top: 14px;
+  justify-content: flex-end; /* move the status indicators to the right side */
+}
+.location-btn.green-btn {
+  background: #d7f7dc;
+  color: #137c36;
+  border: none;
+  border-radius: 7px;
+  padding: 8px 22px;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-right: 26px;
+  cursor: pointer;
+  box-shadow: 0 0 2px #d7f7dc;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.status-indicators {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+.status-item {
+  display: flex;
+  flex-direction: column; /* stack number above text */
+  align-items: center;
+  gap: 4px;
+  min-width: 64px; /* allow compact stacking */
+  text-align: center;
+}
+.status-number {
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.status-text-review,
+.status-text-missing {
+  font-size: 0.95rem;
+  font-weight: 400;
+  margin: 0;
+  line-height: 1.1;
+}
+.status-item.need-review .status-number {
+  color: #c84c03;
+}
+.status-item.need-review .status-text,
+.status-item.need-review .status-text-review {
+  color: #c84c03;
+}
+.status-item.missing .status-number {
+  color: #ff0000;
+}
+.status-item.missing .status-text,
+.status-item.missing .status-text-missing {
+  color: #ff0000;
+}
+
+/* Alert Card */
+.alert-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 0 4px #e0e0e0;
+  padding: 12px 16px;
+  border: 1px solid #ececec;
+}
+.alert-card.warning {
+  margin: 0% 3%;
+  color: #e84d36;
+}
+.alert-card.info {
+  margin: 0% 3%;
+  color: #d2691e;
+}
+.alert-icon {
+  font-size: 1.3rem;
+  margin-right: 2px;
+}
+.alert-text {
+  flex: 1;
+  color: #000; /* ensure alert text is black */
+}
+
+/* Fields Section */
+.fields-section {
+  margin-top: 0;
+  padding-top: 0;
+  margin-left: 3%;
+  margin-right: 3%;
+}
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 10px;
+}
+.orange-header {
+  background: none;
+  color: #d2691e;
+  font-weight: 700;
+  font-size: 1.12rem;
+  border-bottom: none;
+}
+.section-icon {
+  font-size: 1.4rem;
+}
+.section-title {
+  font-size: 1.07rem;
+  font-weight: 600;
+}
+
+.missing-section .section-header {
+  color: #e84d36;
+}
+
+.verification-section .section-header {
+  color: #d2691e;
+}
+
+.field-item {
+  display: flex;
+  align-items: center;
+  position: relative;
+  padding: 0px 0 0px 14px;
+  background: none;
+}
+.field-item:last-child {
+  border-bottom: none;
+}
+.vertical-line {
+  border-left: 3px solid #d2691e;
+  background: none;
+}
+.field-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.field-name.bold {
+  font-weight: 700;
+  color: #222;
+  font-size: 1.08rem;
+}
+.field-description {
+  font-size: 14px;
+  color: #666;
+}
+.field-sub-description {
+  font-size: 0.97rem;
+  color: #999;
+  margin-top: 1px;
+}
+.required-badge {
+  background: #fff;
+  border: 2px solid #e84d36;
+  color: #e84d36;
+  border-radius: 20px;
+  padding: 3px 16px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-left: 12px;
+  min-width: 80px;
+  text-align: center;
+}
+.verification-badge {
+  background: #fff;
+  border: 2px solid #d2691e;
+  color: #d2691e;
+  border-radius: 20px;
+  padding: 3px 16px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-left: 12px;
+  min-width: 120px;
+  text-align: center;
+}
+
+/* Owner Avatar S circle */
+.owner-avatar {
+  display: inline-block;
+  background: #3788fc;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.08rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 36px;
+  margin-right: 10px;
+  margin-left: 10px;
+  box-shadow: 0 1px 3px #eee;
+  user-select: none;
+}
+
+/* Comment/Note Card */
+.comment-note-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 18px 16px;
+  box-shadow: 0 0 6px #e0e0e0;
+  margin: 0% 3%;
+}
+.comment-note-header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #d2691e;
+  font-weight: 700;
+  font-size: 1.08rem;
+  margin-bottom: 10px;
+}
+.comment-note-icon {
+  font-size: 1.2rem;
+}
+.comment-note-title {
+  font-size: 1.07rem;
+  font-weight: 600;
+  color: #c84c03;
+}
+.comment-note-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+}
+.comment-note-btn {
+  min-width: 120px;
+  padding: 8px 0;
+  padding-left: 4%;
+  padding-right: 4%;
+  border-radius: 7px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #fff;
+}
+.comment-note-btn.outlined {
+  border: 2px solid #c84c03;
+  color: #c84c03;
+  background: #fff;
+  box-shadow: 0 0 2px #efefef;
+}
+
+/* Continue Button */
+.action-section {
+  margin-top: 18px;
+  text-align: end;
+  margin-right: 3%;
+}
+.continue-button.orange-btn {
+  /* margin-left: 30%; */
+  margin-bottom: 2%;
+  max-width: 40%;
+  height: 40px;
+  align-content: center !important;
+  background: #c84c03;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 13px 0;
+  font-size: 16px;
+  font-weight: 550;
+  width: 100%;
+  box-shadow: 0 0 8px #ecd9c9;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background 0.2s;
+  /* align-items: end; */
+}
+.continue-button.orange-btn:hover {
+  background: #b8570c;
+}
+
+/* Map Container Styles */
+.map-container-main {
+  /* Fixed dimensions requested by designer */
+  height: 239px;
+  width: 354px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin: 0 auto 16px; /* center horizontally */
+  position: relative;
+}
+
+/* Map Provider Buttons */
+.map-provider-buttons {
+  display: flex;
+  justify-content: space-between;
+  width: 354px; /* match map width so buttons align under map */
+  margin: 0 auto 20px; /* center under map */
+  gap: 6px; /* reduced gap */
+}
+.map-provider-btn {
+  width: 110px;
+  height: 55px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 6px;
+  background: #EEEEEE; /* requested color */
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #495057;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 60px;
+}
+
+.map-provider-btn:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.map-provider-btn:hover .map-icon {
+  color: #495057;
+}
+
+.map-provider-btn .map-icon {
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+  display: block;
+  color: #6c757d;
+}
+
+/* Ensure map takes full container size */
+.map-container-main .leaflet-container {
+  height: 100% !important;
+  width: 100% !important;
+}
+
+/* Address overlay shown over the map in readOnly mode */
+.map-address-overlay {
+  position: absolute;
+  top: 24px; /* slightly below top of map */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,0.95);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  color: #222;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  max-width: 300px;
+  text-align: center;
+  z-index: 2050;
+}
+
+@media (max-width: 480px){
+  .map-provider-buttons{
+    padding: 0 4% 0 4% !important;
+  }
+  .map-container-main{
+    padding: 0 4% 0 4% !important;
+  }
+  .map-container-main .leaflet-container{
+    border-radius: 12px;
+  }
+}

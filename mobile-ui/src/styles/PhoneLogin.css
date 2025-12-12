@@ -1,0 +1,156 @@
+.phone-login-container {
+  background: #f3f3f3;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.phone-login-card {
+  background: #fff;
+  border-radius: 40px;
+  max-width: 420px;
+  width: 95vw;
+  margin: 0 auto;
+  padding: 32px 30px 24px 30px;
+  box-sizing: border-box;
+  box-shadow: 0 0 0 1px #f2f2f2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.phone-login-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 22px;
+  font-family: "Roboto", Arial, sans-serif;
+}
+
+.phone-form-group {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 32px;
+}
+
+.phone-form-group label {
+  font-size: 1.19rem;
+  color: #222;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: "Roboto", Arial, sans-serif;
+  font-weight: 500;
+}
+
+.required {
+  color: #f0541e;
+  font-weight: 400;
+  font-size: 1.1em;
+  margin-left: 2px;
+}
+
+.info-icon {
+  color: #888;
+  margin-left: 6px;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+.phone-input {
+  font-size: 1.1rem;
+  padding: 13px 14px;
+  border: 2px solid #222;
+  border-radius: 12px;
+  outline: none;
+  background: #fff;
+  width: 100%;
+  margin-bottom: 4px;
+  transition: border 0.2s;
+  font-family: "Roboto", Arial, sans-serif;
+}
+
+.phone-input:focus {
+  border-color: #c84c03;
+}
+
+.phone-form-hint {
+  font-size: 1rem;
+  color: #888;
+  margin-top: 2px;
+  margin-bottom: 0;
+  font-family: "Roboto", Arial, sans-serif;
+}
+
+.phone-error {
+  color: #c8504b;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+.phone-verify-btn {
+  width: 70%;
+  max-width: 240px;
+  background: #c84c03;
+  color: #fff;
+  border: none;
+  border-radius: 15px;
+  font-size: 1.2rem;
+  font-weight: 500;
+  padding: 11px 0;
+  margin: 12px auto 18px auto;
+  cursor: pointer;
+  font-family: 'Roboto', Arial, sans-serif;
+  box-shadow: none;
+  letter-spacing: 0.02em;
+  transition: background 0.15s;
+  display: block;
+}
+.phone-verify-btn:hover {
+  background: #a63d02;
+}
+
+.back-login-btn {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  color: #c84c03;
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin: 0 auto;
+  padding: 0;
+  transition: color 0.14s;
+}
+.back-login-btn:hover {
+  color: #a63d02;
+}
+
+@media (max-width: 600px) {
+  .phone-login-card {
+    border-radius: 18px;
+    padding: 20px 5vw 14px 5vw;
+    max-width: 99vw;
+  }
+  .phone-login-title {
+    font-size: 1.18rem;
+    margin-bottom: 13px;
+  }
+  .phone-form-group label {
+    font-size: 1rem;
+  }
+  .phone-input {
+    font-size: 1rem;
+    padding: 9px 10px;
+    border-radius: 7px;
+  }
+  .phone-verify-btn {
+    font-size: 1rem;
+    padding: 10px 0;
+    max-width: 99vw;
+  }
+}

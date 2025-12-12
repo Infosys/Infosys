@@ -1,0 +1,363 @@
+.send-email-root {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Segoe UI', 'Roboto', sans-serif;
+}
+.button-containers {
+  border-radius: 24px;
+  padding: 16px 0px 16px 0px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 18px;
+  font-weight: 500;
+  color: #d96632;
+  transition: background 0.18s ease, border 0.18s;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.form-titles{
+  font-size: 24px;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+}
+
+.form-subtitle{
+  font-size: 16px;
+}
+
+.header-content{
+  padding: 10px;
+}
+
+
+.send-email-header {
+  background: #fbe6dc;
+  padding: 24px 24px 10px 24px;
+  border-bottom: none;
+}
+
+.send-email-title {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #222;
+  margin-bottom: 2px;
+}
+
+.send-email-subtitle {
+  font-size: 0.98rem;
+  color: #000;
+  font-weight: 300;
+  font-style: italic;
+}
+
+.send-email-icons-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px 10px 24px;
+}
+
+.icon-btn {
+  background: #F7E4DB;
+  width: 50px;
+  height: 35px;
+  border: solid #e2691c;
+  /* color: #e2691c; */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  outline: none;
+}
+
+.icon-btn:active {
+  color: #c45915;
+}
+
+.icon-label {
+  font-size: 0.8rem;
+  margin-top: 1px;
+}
+
+.icon-back {
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.icon-home {
+  font-size: 1.3rem;
+  margin-bottom: 2px;
+}
+
+/* -- ACTION ICONS ROW -- */
+.send-email-actions-row {
+  display: flex;
+  justify-content: right;
+  align-items: center;
+  gap: 35px;
+  padding: 4px 26px 18px 0;
+}
+
+/* Buttons for attach and send */
+.attach-btn,
+.send-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.icon-attach,
+.icon-send {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 70px;
+  height: 30px;
+  min-width: 70px;
+  min-height: 30px;
+  border-radius: 8px;
+  border: 1.5px solid #e2691c;
+  box-sizing: border-box;
+  transition: background 0.15s, border-color 0.18s;
+}
+
+.icon-attach {
+  background: #fff;
+  color: #e2691c;
+}
+
+.icon-attach:hover {
+  background: #fbe6dc;
+  border-color: #c45915;
+}
+
+.icon-send {
+  background: #e2691c;
+  color: #fff;
+  border: none;
+  border: 1.5px solid #e2691c;
+}
+
+.icon-send:hover {
+  background: #c45915;
+  border-color: #c45915;
+}
+
+/* Make SVGs inside attach/send fit and be centered */
+/* .icon-attach svg,
+.icon-send svg {
+  width: 20px !important;
+  height: 20px !important;
+  display: block;
+  margin: auto;
+} */
+
+ /* Make SVGs inside attach/send fit and be centered - Updated */
+.icon-send svg {
+  width: 18px !important;
+  height: 18px !important;
+  font-size: 18px !important;
+  display: block;
+  margin: 4px;
+}
+
+/* Also ensure the MUI icon itself is properly sized */
+.icon-attach .MuiSvgIcon-root,
+.icon-send .MuiSvgIcon-root {
+  width: 20px !important;
+  height: 20px !important;
+
+}
+
+
+/* Form */
+.send-email-form {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0 24px;
+  gap: 12px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 2px;
+}
+
+/* FLOAT LABEL STYLES */
+.form-group-float {
+  margin-bottom: 4%;
+}
+
+.float-label-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #e0e0e0;
+  min-height: 38px;
+  background: transparent;
+  padding-right: 24px;
+}
+
+.chip-input {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-height: 36px;
+  width: 100%;
+}
+
+.email-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px 3px 12px;
+  background: #f3f3f3;
+  color: #444;
+  border-radius: 16px;
+  font-size: 1rem;
+  font-weight: 500;
+  border: 1px solid #e0e0e0;
+  min-width: 0;
+  margin: 2px 0 2px 0;
+}
+
+.from-chip {
+  margin-right: 0;
+}
+
+.chip-remove {
+  background: transparent;
+  border: none;
+  color: #888;
+  font-size: 1rem;
+  margin-left: 6px;
+  cursor: pointer;
+  outline: none;
+  padding: 0 3px;
+  transition: color 0.15s;
+}
+.chip-remove:hover {
+  color: #e2691c;
+}
+
+.chip-edit {
+  background: transparent;
+  border: none;
+  color: #888;
+  font-size: 1rem;
+  margin-left: 4px;
+  cursor: pointer;
+  outline: none;
+  padding: 0 3px;
+  transition: color 0.15s;
+  vertical-align: middle;
+}
+.chip-edit:hover {
+  color: #e2691c;
+}
+
+.email-input,
+.no-underline {
+  border: none;
+  outline: none;
+  font-size: 1rem;
+  background: transparent;
+  color: #222;
+  padding: 7px 0 7px 0;
+  min-width: 40px;
+}
+
+.no-underline {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.float-label {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #bbb;
+  font-size: 1rem;
+  pointer-events: none;
+  transition: all 0.2s;
+  font-weight: 400;
+  z-index: 2;
+  background: #fff;
+  padding: 0 2px;
+}
+
+.float-label.filled,
+.float-label-wrap input:focus + .float-label,
+.float-label-wrap textarea:focus + .float-label {
+  top: -6px;
+  font-size: 0.88rem;
+  color: #e2691c;
+  background: #fff;
+  padding: 0 4px;
+  z-index: 2;
+}
+
+.float-label-wrap input,
+.float-label-wrap textarea {
+  width: 100%;
+  border: none;
+  outline: none;
+  font-size: 1rem;
+  background: transparent;
+  color: #222;
+  padding: 12px 0 8px 0;
+}
+
+.float-label-wrap textarea {
+  resize: none;
+  min-height: 36px;
+}
+
+.dropdown-arrow {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #bbb;
+  font-size: 1.1rem;
+  pointer-events: none;
+  padding-right: 2px;
+}
+
+.discard-btn {
+  margin: 35px 0 0 auto;
+  padding: 6px 26px;
+  background: #fff;
+  color: #e2691c;
+  border: 1.5px solid #e2691c;
+  border-radius: 8px;
+  font-size: 1.08rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+
+.discard-btn:hover {
+  background: #fbe6dc;
+  color: #c45915;
+}

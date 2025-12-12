@@ -1,0 +1,17 @@
+
+ 
+#root {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  /* Remove text-align: center and min-width: 25% */
+}
+ 
+/* Add this to ensure forms display properly */
+.App {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}

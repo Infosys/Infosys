@@ -1,0 +1,691 @@
+:root {
+  --page-padding-xs: 8px;
+  --page-padding-sm: 12px;
+  --page-padding-md: 20px;
+  --page-padding-lg: 32px;
+
+  --header-height: 64px;
+  --nav-height: 76px;
+  --nav-gap: 12px;
+
+  --min-content-width: 300px;
+  --max-content-width: 1024px;
+  --nav-max-width: 1024px;
+}
+
+/* --------- Language Toggle Styles --------- */
+.language-toggle {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  z-index: 1000;
+  display: flex;
+  gap: 5px;
+}
+
+.language-btn {
+  padding: 6px 12px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.language-btn:hover {
+  background-color: #0056b3;
+}
+
+.language-btn.active {
+  background-color: #28a745;
+}
+
+.language-btn.active:hover {
+  background-color: #1e7e34;
+}
+
+/* --------- Property Form Layout --------- */
+.property-form-container {
+  width: 100vw;
+  min-width: 100vw;
+  max-width: 100vw;
+  margin: 0;
+  box-sizing: border-box;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding-left: 0;
+  padding-right: 0;
+  padding-top: 0; /* Removed top padding */
+  padding-bottom: 0; /* Removed bottom padding */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #fff;
+}
+
+/* ---------- Header ---------- */
+.property-form-header {
+  background-color: #F9E6E0;
+  padding: clamp(10px, 2.6vw, 18px);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--page-padding-md);
+  justify-content: flex-start;
+  border-bottom: 1px solid #E0E0E0;
+}
+
+/* ---------- Buttons ---------- */
+.back-button,
+.close-button {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  color: #333333;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+.back-button:hover,
+.close-button:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* ---------- Title and Subtitle ---------- */
+.header-content {
+  text-align: left;
+  margin: 0;
+}
+div.form-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: black;
+  margin: 0;
+  line-height: 1.2;
+  text-align: left;
+}
+div.form-subtitle {
+  font-size: 16px;
+  color: black;
+  margin: 4px 0 0 0;
+  font-weight: 300;
+  font-style: italic;
+  text-align: left;
+}
+
+/* ---------- Form Content ---------- */
+.form-content {
+  flex: 1;
+  padding: 24px 0;
+  background-color: #FFFFFF;
+}
+
+/* ---------- Form Fields ---------- */
+.form-field {
+  margin-bottom: 24px;
+  position: relative;
+}
+.field-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333333;
+  margin-bottom: 8px;
+}
+.dropdown-container {
+  position: relative;
+}
+
+/* ---------- Dropdown ---------- */
+.dropdown-button {
+  width: 100%;
+  padding: 8px 16px;
+  background-color: #FFFFFF;
+  border: 1px solid #5F6368;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #333333;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  font-weight: 400;
+  height: 40px;
+  box-sizing: border-box;
+}
+.dropdown-button span:first-child {
+  font-weight: 400;
+  min-height: 20px;
+  display: flex;
+  align-items: center;
+}
+.dropdown-arrow {
+  color: #757575;
+  transition: transform 0.2s;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.dropdown-button:hover {
+  border-color: #0F6CC0;
+}
+.dropdown-button:focus {
+  outline: none;
+  border-color: #0F6CC0;
+  box-shadow: 0 0 0 2px rgba(15, 108, 192, 0.1);
+}
+.dropdown-arrow {
+  color: #757575;
+  transition: transform 0.2s;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: #FFFFFF;
+  border: 1px solid #E0E0E0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  margin-top: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.dropdown-option {
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #333333;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-bottom: 1px solid #F0F0F0;
+}
+.dropdown-option:last-child {
+  border-bottom: none;
+}
+.dropdown-option:hover {
+  background-color: #FBEEE8;
+}
+div.dropdown-option.selected {
+  background-color: #C8504B !important;
+  color: #FFFFFF;
+}
+
+/* ---------- Inputs ---------- */
+.text-input {
+  width: 100%;
+  padding: 8px 16px;
+  background-color: #FFFFFF;
+  border: 1px solid #5F6368;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #333333;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+  height: 40px;
+}
+.text-input:focus {
+  outline: none;
+  border-color: #0F6CC0;
+  box-shadow: 0 0 0 2px rgba(15, 108, 192, 0.1);
+}
+.text-input::placeholder {
+  color: #9E9E9E;
+}
+button.location-tag-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px; /* space between icon and text */
+  background-color: #FFC0A3; /* requested color */
+  border-radius: 8px;
+  color: #000000; /* black font color */
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.12s, transform 0.06s;
+  width: 49%;
+  padding: 10px 14px;
+}
+
+button.location-tag-button:hover {
+  transform: translateY(-1px);
+  background-color: #ffb089; /* slightly darker on hover */
+}
+
+button.polygon-tag-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px; /* space between icon and text */
+  background-color: #88CDAD; /* requested polygon button color */
+  border-radius: 8px;
+  color: #000000; /* black font color */
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.12s, transform 0.06s;
+  width: 49%;
+  padding: 10px 14px;
+  border: none;
+}
+
+.btn-parent {
+  padding: 0px 0px 20px 0px; 
+}
+
+button.polygon-tag-button:hover {
+  transform: translateY(-1px);
+  background-color: #7BC29D; /* slightly darker on hover */
+}
+
+/* ---------- Location Details Section ---------- */
+.location-details-section {
+  background-color: #F5F5F5;
+  border: none;
+  border-left: 4px solid #C8504B;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  margin-top: 16px;
+}
+
+.location-field {
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #333333;
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+}
+
+.location-field:last-child {
+  margin-bottom: 0;
+}
+
+.location-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333333;
+  margin-right: 12px;
+  min-width: 85px;
+  flex-shrink: 0;
+}
+
+.location-value {
+  font-size: 14px;
+  color: #333333;
+  margin: 0;
+  font-weight: 400;
+  flex: 1;
+}
+
+.location-timestamp {
+  font-size: 12px;
+  color: #C8504B;
+  margin-top: 8px;
+  margin-bottom: 12px;
+  font-style: italic;
+  line-height: 1.3;
+}
+
+.location-actions {
+  display: flex;
+  gap: 28px; /* slightly increased spacing between action buttons */
+  justify-content: flex-start;
+  align-items: center;
+  margin-top: 16px;
+  padding-left: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.location-actions::-webkit-scrollbar {
+  height: 6px;
+}
+.location-actions::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.08);
+  border-radius: 3px;
+}
+
+.location-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  border: none;
+  background: none;
+  margin-right: 8px; /* ensure extra separation between inline action buttons */
+  /* control the label size here - change this value to adjust Remove/Edit label size */
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  text-decoration: none;
+  color: #C8504B;
+  line-height: 1.2;
+  vertical-align: middle;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.location-action-btn:hover {
+  opacity: 0.8;
+}
+
+.location-action-btn svg {
+  /* scale the icon slightly to better match the label font-size */
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+/* quick helpers if you want different sizes for remove vs edit */
+.location-action-btn.remove-btn {
+  /* slightly smaller label for remove */
+  font-size: 12px;
+}
+.location-action-btn.view-btn {
+  font-size: 12px;
+}
+.location-action-btn.edit-btn {
+  font-size: 13px;
+  margin-left: 8px; /* explicit spacing between View and Edit */
+}
+
+/* ---------- Submit ---------- */
+.form-submit {
+  padding-right: 6%;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  margin-bottom: 4%;
+  background-color: #FFFFFF;
+  width: 100%;
+}
+.verify-button {
+  width: 60%;
+  max-width: 120px;
+  padding: 12px 16px;
+  background-color: #C84C0E;
+  border: none;
+  border-radius: 10px;
+  color: #FFFFFF;
+  font-size: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.verify-button:hover {
+  background-color: #c84c03;
+}
+.verify-button:active {
+  background-color: #c84c03;
+}
+
+/* ---------- Tabs ---------- */
+.tabs-group {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  background-color: #F9E6E0;
+  padding: 0% 10% 5% 3%;
+}
+.tab {
+  width: 8%;
+  height: 0px;
+  border: 2px solid #00000033;
+  border-radius: 0%;
+}
+.active {
+  background-color: #C8504B;
+}
+
+
+/* ---------- Single Button ---------- */
+.single-button {
+  background-color: #F9E6E0;
+  border: none;
+  border-radius: 35%;
+  padding: 20%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- Button Container ---------- */
+.button-container {
+  padding: 0% 5%;
+  margin-top: 3%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  background-color: #fff;
+}
+
+/* ---------- Property Cards ---------- */
+.property-card-summary {
+  border-left: 4px solid #C84C0E;
+  margin-top: 16px;
+  background-color: #F5F5F5;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  margin-right: 5px;
+  position: relative;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.property-card-polygon{
+   border-left: 4px solid #00703C;
+  margin-top: 10px;
+  background-color: #F5F5F5;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  margin-right: 5px;
+  position: relative;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+}
+.property-card.orange-border {
+  border-left: 4px solid #FF6B35;
+}
+
+.property-card.green-border {
+  border-left: 4px solid #4CAF50;
+}
+
+
+.card-content {
+  width: 100%;
+  margin: 0%;
+}
+
+.card-field {
+  margin-bottom: 5px;
+  display: flex;
+  /* flex-direction: column; */
+  gap: 4px;
+}
+.card-field-coordinate {
+  margin-top: 0px;
+  display: flex;
+  /* flex-direction: column; */
+  /* gap: -10px; */
+}
+
+.card-field-polygon {
+  margin-bottom: -7px;
+  display: flex;
+  /* flex-direction: column; */
+  gap: 4px;
+}
+.card-field:last-of-type {
+  margin-bottom: 8px;
+}
+
+.card-parent {
+  margin: 0%;
+}
+
+.field-label-bold {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333333;
+  margin-bottom: 2px;
+}
+
+.field-value {
+  margin-left: 28px;
+  font-size: 14px;
+  color: #333333;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.field-value-coordinates {
+  margin-left: 0px;
+  font-size: 14px;
+  color: #333333;
+  font-weight: 400;
+  line-height: 1.4;
+}
+.card-timestamp {
+  font-size: 12px;
+  font-style: italic;
+  margin: 8px 0 12px 0;
+  line-height: 1.3;
+}
+
+.card-timestamp.orange {
+  color: #FF6B35;
+}
+
+.card-timestamp.green {
+  color: #4CAF50;
+}
+
+.card-actions {
+  /* background-color: white; */
+  display: flex;
+  gap: 20px;
+  margin-top: 12px;
+  margin-left: 25px;
+}
+
+.card-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: white;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: opacity 0.2s;
+  text-decoration: none;
+  width: 140px;
+}
+
+/* .card-action-btn.orange { 
+  border-radius: 10px;
+  color: #C84C0E;
+}
+
+.card-action-btn.green {
+  border-radius: 10px;
+  color: #00703C;
+} */
+
+.card-action-btn:hover {
+  opacity: 0.7;
+}
+
+
+.card-action-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Coordinates list for polygons */
+.coordinates-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.summary-coordinates-list{
+  /* max-height: 120px;
+  overflow-y: auto; */
+  background: #f5f5f5;
+  padding: 6px;
+  border-radius: 4px;
+  margin-top: -5px;
+  }
+
+.coordinate-line {
+  font-size: 14px;
+  color: #333333;
+  font-weight: 400;
+}
+
+/* ---------- Responsive adjustments ---------- */
+@media (max-width: 420px) {
+  .property-form-container {
+    padding-top: 0; /* Removed top padding */
+    padding-bottom: 0; /* Removed bottom padding */
+    border-radius: 0;
+    background-color: #fff;
+  }
+  .property-form-header {
+    padding: 8px 4px;
+  }
+  .form-title {
+    font-size: 16px;
+  }
+  .form-subtitle {
+    font-size: 12px;
+  }
+  .form-content {
+    padding: 12px 0;
+  }
+}
+
+@media (min-width: 421px) and (max-width: 1023px) {
+  .property-form-container {
+    padding-top: 0; /* Removed top padding */
+    padding-bottom: 0; /* Removed bottom padding */
+    border-radius: 8px;
+  }
+  .form-content {
+    padding: 20px 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  .property-form-container {
+    padding-top: 0; /* Removed top padding */
+    padding-bottom: 0; /* Removed bottom padding */
+    border-radius: 16px;
+  }
+  .form-content {
+    padding: 28px 0;
+  }
+}
+
+/* Landscape phones: reduce bottom space */
+@media (max-height: 480px) and (orientation: landscape) {
+  .property-form-container {
+    padding-bottom: 0;
+  }
+}

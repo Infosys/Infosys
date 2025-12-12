@@ -1,0 +1,139 @@
+.marker-card {
+  --card-offset-x: 5px;
+  --card-offset-top: 65px;
+  position: absolute;
+  left: 50%;
+  top: var(--card-offset-top);
+  transform: translateX(var(--card-offset-x));
+  width: 220px; /* Increased card width */
+  z-index: 300;
+  pointer-events: auto;
+  animation: markerCardFadeSlide 180ms ease-out;
+}
+
+@keyframes markerCardFadeSlide {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--card-offset-x) + 8px));
+  }
+  to {
+    opacity: 1;
+    transform: translateX(var(--card-offset-x));
+  }
+}
+
+.marker-card-inner {
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  font-family: inherit;
+}
+
+.marker-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.25;
+  margin-bottom: 6px;
+  color: #111;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.marker-card-progress {
+  font-size: 14px;
+  font-weight: 500;
+  color: #c84c0e;
+  margin-bottom: 10px;
+}
+
+.marker-card-actions{
+  display: flex;
+  justify-content: flex-end;
+}
+
+.marker-card-btn-2 {
+  display: flex;
+  justify-content: flex-end;
+  background: #c84c0e;
+  color: #fff;
+  border: none;
+  font-weight: 600;
+  border-radius: 5px;
+  padding: 3px 10px;   /* Reduced height by lowering vertical padding */
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.18s ease;
+  min-height: 24px;    /* Minimal height for accessibility, but quite slim */
+  line-height: 1.3;    /* Reduces text vertical space */
+}
+
+.marker-card-btn:hover {
+  background: #a7420c;
+}
+
+.marker-card-btn:active {
+  background: #8f3609;
+}
+
+.marker-card-btn:focus {
+  outline: 2px solid #c84c0e;
+  outline-offset: 2px;
+}
+
+.property-marker {
+  position: relative;
+  z-index: 1;
+  cursor: pointer;
+  user-select: none;
+  width: 70px;
+  height: 70px;
+  pointer-events: none;
+}
+
+.property-marker.selected {
+  z-index: 100;
+}
+
+.pointer-wrapper {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  width: 70px;
+  height: 70px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.pointer-wrapper img {
+  transition: transform 0.22s ease;
+  transform-origin: center bottom;
+  width: 60px;
+  height: 60px;
+  display: block;
+}
+
+.property-marker.selected .pointer-wrapper img {
+  transform: scale(1.12);
+}
+
+/* Responsive tweaks for smaller screens */
+@media (max-width: 380px) {
+  .marker-card {
+    width: 170px;
+  }
+  .marker-card-title {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 320px) {
+  .marker-card { width: 135px; }
+  .marker-card-title { font-size: 10px; }
+}

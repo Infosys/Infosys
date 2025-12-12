@@ -1,0 +1,125 @@
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.input-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin: 0;
+  padding: 0;
+  line-height: 1.2;
+}
+
+.required {
+  color: #e74c3c;
+}
+
+.input-field {
+  padding: 8px 10px;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: white;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+  height: 36px;
+}
+
+/* .input-field-no {
+  padding: 8px 10px;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: white;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+  height: 36px;
+  width: 120px;
+} */
+
+.input-field:focus {
+  outline: none;
+  border-color: #d2691e;
+}
+
+.input-field:active {
+  border-color: #d2691e;
+}
+
+.input-field::placeholder {
+  color: #999;
+  font-size: 14px;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #d2691e;
+}
+.select-field {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 10px center;
+  background-repeat: no-repeat;
+  background-size: 14px;
+  padding-right: 30px;
+}
+
+/* Mobile-specific input styling */
+@media (max-width: 480px) {
+  .input-field {
+    padding: 14px;
+    font-size: 14px; /* Prevents zoom on iOS */
+    border-radius: 10px;
+  }
+  
+/*  .input-label {
+    font-size: 14px;
+  } */
+  
+  .select-field {
+    padding-right: 44px;
+    background-position: right 14px center;
+  }
+}
+
+/* Ensure proper touch targets */
+@media (hover: none) and (pointer: coarse) {
+  .input-field {
+    min-height: 48px;
+    padding: 16px;
+  }
+}
+
+/* Date input specific styling for mobile */
+.input-field[type="date"] {
+  position: relative;
+}
+
+.input-field[type="date"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  background: none;
+  color: #666;
+  font-size: 14px;
+}
+
+/* Focus states for better mobile accessibility */
+.input-field:focus-visible {
+  outline: 2px solid #d2691e;
+  outline-offset: 2px;
+}
+
+/* Better contrast for placeholders on mobile */
+@media (prefers-contrast: high) {
+  .input-field::placeholder {
+    color: #666;
+  }
+}

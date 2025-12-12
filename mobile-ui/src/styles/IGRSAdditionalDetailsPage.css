@@ -1,0 +1,242 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto:300,400,500,600,700&display=swap');
+
+body {
+  font-family: 'Roboto', Arial, sans-serif;
+}
+
+.container {
+  font-family: 'Roboto', Arial, sans-serif;
+  width: 100%;
+  max-width: 412px;
+  margin: 0 auto;
+  padding: 0 1rem 1rem 1rem; /* Remove top padding for header flush */
+  background-color: #ffffff;
+  min-height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Header Section */
+.header-section {
+  width: 100vw;
+  max-width: 412px;
+  min-width: 100%;
+  height: 142px;
+  background-color: #F7E4DB;
+  border-radius: 0;
+  box-sizing: border-box;
+  text-align: left;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 0;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  transform: translateX(-50%);
+  opacity: 1;
+}
+
+.main-title {
+  font-family: 'Roboto', Arial, sans-serif;
+  font-weight: 600;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 100%;
+  letter-spacing: 0;
+  color: #333;
+  margin: 0;
+  width: 300px;
+  height: 28px;
+  position: absolute;
+  top: 37px;
+  left: 32px;
+  opacity: 1;
+}
+
+.header-section .subheading {
+  font-family: 'Roboto', Arial, sans-serif;
+  font-weight: 300;
+  font-style: italic;
+  font-size: 16px;
+  line-height: 100%;
+  letter-spacing: 0px;
+  color: #666;
+  margin: 0;
+  width: 200px;
+  height: 19px;
+  position: absolute;
+  top: 75px;
+  left: 32px;
+  opacity: 1;
+}
+
+/* Progress Section */
+.progress-section {
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.progress-bar {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  margin: 0 1rem;
+  padding-left: 16px;
+  padding-right: 16px;
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.step {
+  width: 20px;
+  height: 3px;
+  background-color: #ccc;
+  border-radius: 4px;
+}
+
+.step.filled {
+  background-color: #C84C0E;
+}
+
+/* Navigation Buttons */
+.top-navigation {
+  display: flex;
+  justify-content: space-between;
+  width: 327px;
+  margin: 1rem auto;
+}
+
+.nav-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 35px;
+  background-color: #C84C0E;
+  border: none;
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  opacity: 1;
+  color: #fff; /* Icon color */
+}
+
+.nav-button svg {
+  color: #fff; /* Ensure icon is white for contrast */
+}
+
+/* Navigation Label Styles */
+.save-draft-label,
+.back-label {
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 200;
+  font-style: normal;
+  color: #C84C0E;
+  margin-top: 4px;
+  letter-spacing: 0px;
+  line-height: 114%;
+}
+
+.nav-save-draft, .nav-back {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Form Section */
+form {
+  width: 100%;
+  max-width: 327px;
+  margin: auto;
+  box-sizing: border-box;
+}
+
+.form-group {
+  margin-bottom: 1.8rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* Checkbox List Styling */
+.form-group.checkbox-group {
+  flex-direction: row;
+  gap: 1rem;                    /* horizontal gap between checkbox and label */
+  margin-bottom: 1.5rem;        /* vertical gap between rows */
+  align-items: center;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.checkbox-group label {
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 14px;
+  color: #333;
+  margin: 0;
+  font-weight: 400;
+}
+
+label {
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 0.3rem;
+  text-align: left;
+  width: 100%;
+}
+
+label.required::after {
+  content: " *";
+  color: #B91900;
+}
+
+select {
+  font-family: 'Roboto', Arial, sans-serif;
+  width: 100%;
+  padding: 0.6rem;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.button-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.verify-button {
+  font-family: 'Roboto', Arial, sans-serif;
+  width: 139px;
+  height: 40px;
+  background-color: #c84c03;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 24px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-sizing: border-box;
+}
+
+.verify-button:hover {
+  background-color: #c84c03;
+}

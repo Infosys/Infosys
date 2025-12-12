@@ -1,0 +1,120 @@
+.btn {
+  padding: 16px 32px;
+  border: none;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  box-sizing: border-box;
+  letter-spacing: 0.5px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #d2691e 0%, #b85a1a 100%);
+  color: white;
+  box-shadow: 0 4px 16px rgba(210, 105, 30, 0.3);
+}
+
+.btn-primary:hover {
+  background-color: #b85a1a;
+  box-shadow: 0 4px 12px rgba(210, 105, 30, 0.3);
+}
+
+.btn-primary:active {
+  background-color: #a04d17;
+  transform: translateY(1px);
+  box-shadow: 0 1px 4px rgba(210, 105, 30, 0.3);
+}
+
+.btn-secondary {
+  background-color: #f8f9fa;
+  color: #333;
+  border: 2px solid #ddd;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.btn-secondary:hover {
+  background-color: #e9ecef;
+  border-color: #bbb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-secondary:active {
+  background-color: #dee2e6;
+  transform: translateY(1px);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn:disabled:active {
+  transform: none;
+}
+
+/* Mobile-specific button styling */
+@media (max-width: 480px) {
+  .btn {
+    padding: 14px 28px;
+    font-size: 14px;
+    min-width: 120px;
+    border-radius: 10px;
+  }
+}
+
+/* Touch-friendly interactions for mobile */
+@media (hover: none) and (pointer: coarse) {
+  .btn {
+    min-height: 48px;
+    padding: 16px 32px;
+  }
+  
+  .btn:hover {
+    /* Remove hover effects on touch devices */
+    background-color: inherit;
+    box-shadow: inherit;
+    border-color: inherit;
+  }
+  
+  .btn-primary:hover {
+    background-color: #d2691e;
+    box-shadow: 0 2px 8px rgba(210, 105, 30, 0.2);
+  }
+  
+  .btn-secondary:hover {
+    background-color: #f8f9fa;
+    border-color: #ddd;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  }
+}
+
+/* Focus states for better accessibility */
+.btn:focus-visible {
+  outline: 2px solid #d2691e;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .btn-primary {
+    border: 2px solid #000;
+  }
+  
+  .btn-secondary {
+    border-color: #000;
+  }
+}
