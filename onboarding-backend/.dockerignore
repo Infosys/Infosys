@@ -1,0 +1,7 @@
+*.json
+*.md
+/migrations
+.env
+*.yaml
+*.yml
+.gitignore
