@@ -1,0 +1,1069 @@
+import React, { useRef, useEffect, useState, useCallback } from 'react';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import { Box, Button, IconButton } from "@mui/material";
+import closeSvg from "../../Assets/MapMarkerIcon/close.svg";
+import undoSvg from "../../Assets/MapMarkerIcon/undo.svg";
+import editSquareSvg from "../../Assets/MapMarkerIcon/edit_squaremap.svg";
+// import { useDispatch } from 'react-redux';
+// import { selectApplication } from '../../redux/apiSlice';
+import propertyMarkerSvg from '../../Assets/MapMarkerIcon/Proptery one.svg';
+import { useReplaceGisCoordinatesMutation } from '../../api/GisDataAPI';
+import {
+  mapComponentOuterStyle,
+  mapWrapperContainerStyle,
+  mapDivStyle,
+  mapOverlayStyle,
+  mapButtonPanelStyle,
+  mapButtonStyle,
+  mapIconButtonStyle,
+  mapUndoButtonStyle,
+} from "../../Styles/searchPropertyStyles/MapComponent";
+import type { Property } from '../../model/applicationByIdModel';
+import { useAuth } from '../../../../login-signup/provider/AuthProvider';
+// import { useSelector } from 'react-redux';
+// import type { RootState } from '../../../../../../store';
+import { usePostApplicationLogMutation } from '../../api/applicationApi';
+
+/**
+ * Type definition for polygon drawing controls exposed to parent component
+ */
+type PolygonControlRef = { 
+  start?: () => void;      // Start drawing mode
+  finish?: () => void;     // Finish and save polygon
+  clear?: (notify?: boolean) => void;  // Clear all drawings
+  undo?: () => void        // Undo last point
+} | null;
+
+/**
+ * MapWrapper Component
+ * 
+ * Core map rendering component using Leaflet.js
+ * Handles both static display and interactive drawing modes
+ * 
+ * Features:
+ * - Display single points, multiple points, or polygons
+ * - Interactive polygon drawing with visual feedback
+ * - Location editing mode with live center updates
+ * - Centroid calculation for polygons
+ */
+export function MapWrapper({
+  interactive,
+  coordinates,
+  externalControlRef,
+  onPolygonComplete,
+  locationMode,
+  onLocationMove,
+  initialCenter,
+}: {
+  interactive: boolean;  // Enable/disable map interactions (pan, zoom)
+  coordinates?: Array<{ Latitude?: number; Longitude?: number; latitude?: number; longitude?: number }> | null;
+  externalControlRef?: React.MutableRefObject<PolygonControlRef> | null;  // Ref for parent to control polygon drawing
+  onPolygonComplete?: (coords: Array<{ lat: number; lng: number }>) => void;  // Callback when polygon drawing completes
+  locationMode?: boolean;  // Special mode for single point editing
+  onLocationMove?: (lat: number, lng: number) => void;  // Live callback for map center changes
+  initialCenter?: { lat: number; lng: number } | null;  // Initial map center for location mode
+}) {
+  // DOM and MapLibre instance references
+  const mapRef = useRef<HTMLDivElement | null>(null);
+  const mapInstanceRef = useRef<maplibregl.Map | null>(null);
+  
+  // Drawing state references
+  const initialLocationSentRef = useRef(false);  // Prevents duplicate initial location callbacks
+  const drawingPointsRef = useRef<[number, number][]>([]);  // Points being drawn
+  const tempMarkersRef = useRef<L.Layer[]>([]);  // Temporary point markers during drawing
+  const drawnLayersRef = useRef<L.Layer[]>([]);  // Final drawn layers (polygons, markers)
+
+  /**
+   * Main map initialization and update effect
+   * Handles map creation, marker placement, and event listeners
+   */
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // Parse coordinates from props (keep lat,lng ordering as before)
+    const hasArray = coordinates && Array.isArray(coordinates) && coordinates.length > 0;
+    let points: [number, number][] = [];
+    if (hasArray) {
+      points = coordinates!.map((c) => [c.Latitude ?? c.latitude ?? 0, c.Longitude ?? c.longitude ?? 0] as [number, number]);
+    }
+
+    // Determine map center: prefer initialCenter in locationMode, otherwise use first coordinate
+    const defaultCenterLatLng: [number, number] = (locationMode && initialCenter)
+      ? [initialCenter.lat, initialCenter.lng]
+      : (hasArray ? points[0] : [12.9141, 77.6387]); // Default: Bangalore coordinates
+
+    // MapLibre expects [lng, lat]
+    const centerLngLat: [number, number] = [defaultCenterLatLng[1], defaultCenterLatLng[0]];
+
+    // Initialize MapLibre map
+    const styleUrl = 'https://api.maptiler.com/maps/base-v4/style.json?key=YguiTF06mLtcpSVKIQyc';
+    const map = new maplibregl.Map({
+      container: mapRef.current as HTMLElement,
+      style: styleUrl,
+      center: centerLngLat as [number, number],
+      zoom: 15,
+      attributionControl: false,
+    });
+
+    mapInstanceRef.current = map;
+    
+    // add zoom control (zoom in/out) at bottom-left; hide compass/rotate control
+   map.addControl(new maplibregl.NavigationControl({ showCompass: false, showZoom: true }), 'bottom-left');
+
+
+    // Utilities for managing MapLibre layers/sources/markers
+    const customMarkerElement = () => {
+      // Create a fixed-size wrapper so MapLibre's anchor calculations are stable across zoom and image load
+      const wrapper = document.createElement('div');
+      wrapper.style.width = '34px';
+      wrapper.style.height = '34px';
+      wrapper.style.position = 'relative';
+      wrapper.style.pointerEvents = 'none';
+
+      const img = document.createElement('img');
+      img.src = propertyMarkerSvg;
+      img.style.width = '34px';
+      img.style.height = '34px';
+      img.style.position = 'absolute';
+      img.style.left = '50%';
+      img.style.bottom = '0';
+      img.style.transform = 'translateX(-50%)';
+      img.style.display = 'block';
+      img.style.margin = '0';
+      img.style.padding = '0';
+
+      wrapper.appendChild(img);
+      return wrapper;
+    };
+
+    const addedSourceIds: string[] = [];
+    const addedLayerIds: string[] = [];
+    const createdMarkers: maplibregl.Marker[] = [];
+
+  const addMarker = (lat: number, lng: number) => {
+      try {
+        const el = customMarkerElement();
+        // Use anchor: 'bottom' so the bottom of the image is exactly at the coordinate.
+        const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' as any })
+          .setLngLat([lng, lat])
+          .addTo(map);
+        createdMarkers.push(marker);
+        return marker;
+      } catch (e) {
+        return null;
+      }
+    };
+
+    const clearDrawn = () => {
+      // remove markers
+      createdMarkers.forEach(m => { try { m.remove(); } catch (e) {} });
+      createdMarkers.length = 0;
+
+      // remove layers and sources
+      addedLayerIds.forEach(id => { try { if (map.getLayer(id)) map.removeLayer(id); } catch (e) {} });
+      addedSourceIds.forEach(id => { try { if (map.getSource(id)) map.removeSource(id); } catch (e) {} });
+      addedLayerIds.length = 0;
+      addedSourceIds.length = 0;
+    };
+
+    // When map is loaded, add initial features
+    map.on('load', () => {
+      // Display markers/polygons only when NOT in location editing mode
+      if (!locationMode) {
+        if (points.length >= 3) {
+          // Create GeoJSON polygon (MapLibre expects [lng,lat])
+          const coords = points.map(p => [p[1], p[0]] as [number, number]);
+          // ensure closed ring
+          const ring = coords.slice();
+          if (ring.length && (ring[0][0] !== ring[ring.length - 1][0] || ring[0][1] !== ring[ring.length - 1][1])) {
+            ring.push(ring[0]);
+          }
+          const sourceId = 'polygon-source';
+          const fillLayerId = 'polygon-fill';
+          const lineLayerId = 'polygon-line';
+          map.addSource(sourceId, { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [ring] } } as any });
+          map.addLayer({ id: fillLayerId, type: 'fill', source: sourceId, paint: { 'fill-color': '#C84C0E', 'fill-opacity': 0.2 } });
+          map.addLayer({ id: lineLayerId, type: 'line', source: sourceId, paint: { 'line-color': '#C84C0E', 'line-width': 2 } });
+          addedSourceIds.push(sourceId);
+          addedLayerIds.push(fillLayerId, lineLayerId);
+
+          // Fit bounds
+          const lats = points.map(p => p[0]);
+          const lngs = points.map(p => p[1]);
+          const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+          const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
+          try { map.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 20 }); } catch (e) {}
+
+          // compute visual centroid using pixel space
+          const computeVisualCentroid = (latlngs: [number, number][]) => {
+            try {
+              const layerPts = latlngs.map(p => map.project([p[1], p[0]]));
+              let signedArea = 0, cx = 0, cy = 0;
+              for (let i = 0; i < layerPts.length; i++) {
+                const p0 = layerPts[i];
+                const p1 = layerPts[(i + 1) % layerPts.length];
+                const a = p0.x * p1.y - p1.x * p0.y;
+                signedArea += a;
+                cx += (p0.x + p1.x) * a;
+                cy += (p0.y + p1.y) * a;
+              }
+              signedArea *= 0.5;
+              if (Math.abs(signedArea) < 1e-6) {
+                const avgX = layerPts.reduce((s, p) => s + p.x, 0) / layerPts.length;
+                const avgY = layerPts.reduce((s, p) => s + p.y, 0) / layerPts.length;
+                return map.unproject([avgX, avgY]);
+              }
+              cx = cx / (6 * signedArea);
+              cy = cy / (6 * signedArea);
+              return map.unproject([cx, cy]);
+            } catch (err) {
+              return { lat: latlngs[0][0], lng: latlngs[0][1] } as any;
+            }
+          };
+
+          try {
+            const centroid = computeVisualCentroid(points);
+            const marker = addMarker(centroid.lat, centroid.lng);
+            // no popup; keep marker
+            if (marker) drawnLayersRef.current.push(marker as any);
+          } catch (e) {
+            console.error('Failed to create centroid marker:', e);
+          }
+
+        } else if (points.length === 1) {
+          const marker = addMarker(points[0][0], points[0][1]);
+          if (marker) drawnLayersRef.current.push(marker as any);
+          try { map.setCenter([points[0][1], points[0][0]]); map.setZoom(15); } catch (e) {}
+
+        } else if (points.length === 2) {
+          points.forEach(p => { const m = addMarker(p[0], p[1]); if (m) drawnLayersRef.current.push(m as any); });
+          const lats = points.map(p => p[0]);
+          const lngs = points.map(p => p[1]);
+          const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+          const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
+          try { map.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 20 }); } catch (e) {}
+
+        } else {
+          // default marker at center
+          const marker = addMarker(defaultCenterLatLng[0], defaultCenterLatLng[1]);
+          if (marker) drawnLayersRef.current.push(marker as any);
+        }
+      }
+    });
+
+    // Control map interactivity based on props
+    if (!interactive && !locationMode) {
+      try { map.dragPan.disable(); } catch (e) {}
+      try { map.scrollZoom.disable(); } catch (e) {}
+      try { map.doubleClickZoom.disable(); } catch (e) {}
+      try { map.boxZoom && (map.boxZoom as any).disable && (map.boxZoom as any).disable(); } catch (e) {}
+      try { (map as any).keyboard && (map as any).keyboard.disable && (map as any).keyboard.disable(); } catch (e) {}
+    }
+
+    // Always allow interactions in location mode for repositioning
+    if (locationMode) {
+      try { map.dragPan.enable(); } catch (e) {}
+      try { map.scrollZoom.enable(); } catch (e) {}
+    }
+
+    // Location mode: Track map center changes in real-time
+    let locationHandler: (() => void) | null = null;
+    if (locationMode) {
+      locationHandler = () => {
+        try {
+          const c = map.getCenter();
+          onLocationMove && onLocationMove(c.lat, c.lng);
+        } catch (e) {
+          console.warn('[MapWrapper] Failed to read map center', e);
+        }
+      };
+
+      map.on('move', locationHandler);
+      map.on('moveend', locationHandler);
+      map.on('drag', locationHandler);
+
+      if (!initialLocationSentRef.current) {
+        initialLocationSentRef.current = true;
+        locationHandler();
+      }
+    }
+
+    // Resize map shortly after mount
+    setTimeout(() => { try { map.resize(); } catch (e) {} }, 200);
+
+    // Cleanup function
+    return () => {
+      if (locationHandler) {
+        map.off('move', locationHandler);
+        map.off('moveend', locationHandler);
+        map.off('drag', locationHandler);
+      }
+      initialLocationSentRef.current = false;
+      try { clearDrawn(); } catch (e) {}
+      try { map.remove(); } catch (e) {}
+      mapInstanceRef.current = null;
+    };
+  }, [interactive, coordinates, locationMode, initialCenter, onLocationMove]);
+
+  /**
+   * Expose polygon drawing controls to parent component via ref
+   */
+  useEffect(() => {
+    if (!externalControlRef) return;
+
+    externalControlRef.current = {
+      start: () => startDrawingOnMap(),
+      finish: () => finishDrawingOnMap(),
+      clear: (notify?: boolean) => clearDrawingsOnMap(notify),
+      undo: () => undoDrawingOnMap()
+    };
+
+    return () => { 
+      if (externalControlRef) externalControlRef.current = null; 
+    };
+  }, [externalControlRef]);
+
+  /**
+   * Start polygon drawing mode
+   * - Clears previous drawings
+   * - Changes cursor to crosshair
+   * - Attaches click handler for point placement
+   */
+  const startDrawingOnMap = () => {
+    const map = mapInstanceRef.current as maplibregl.Map | null;
+    if (!map) return;
+
+    drawingPointsRef.current = [];
+
+    // remove any preview source/layer
+    try {
+      if (map.getLayer('preview-line')) map.removeLayer('preview-line');
+      if (map.getLayer('preview-fill')) map.removeLayer('preview-fill');
+      if (map.getSource('preview')) map.removeSource('preview');
+    } catch (e) {}
+
+    tempMarkersRef.current.forEach(m => { try { (m as any).remove(); } catch (e) {} });
+    tempMarkersRef.current = [];
+
+    (map.getContainer() as HTMLElement).style.cursor = 'crosshair';
+    map.getCanvas().style.cursor = 'crosshair';
+    map.on('click', onMapClick);
+  };
+
+  /**
+   * Handle map clicks during drawing mode
+   * - Adds point to drawing array
+   * - Shows temporary marker at click location
+   * - Updates temporary polyline/polygon visualization
+   */
+  const onMapClick = (e: any) => {
+    const latlng: [number, number] = [e.lngLat.lat, e.lngLat.lng];
+    drawingPointsRef.current.push(latlng);
+
+    const map = mapInstanceRef.current as maplibregl.Map | null;
+    if (!map) return;
+
+    // add small DOM marker at click location
+    try {
+      const el = document.createElement('div');
+      el.style.width = '10px';
+      el.style.height = '10px';
+      el.style.background = '#C84C0E';
+      el.style.borderRadius = '50%';
+      el.style.transform = 'translate(-50%, -50%) scale(1)';
+      // prevent the temp marker from catching pointer events
+      el.style.pointerEvents = 'none';
+      const m = new maplibregl.Marker({ element: el })
+        .setLngLat([e.lngLat.lng, e.lngLat.lat])
+        .addTo(map);
+      // store as any in tempMarkersRef
+      tempMarkersRef.current.push(m as any);
+    } catch (err) {}
+
+    // update preview source
+    try {
+      const coords = drawingPointsRef.current.map(p => [p[1], p[0]]);
+      const preview = {
+        type: 'Feature',
+        geometry: drawingPointsRef.current.length >= 3 ? { type: 'Polygon', coordinates: [[...coords, coords[0]]] } : { type: 'LineString', coordinates: coords }
+      } as any;
+
+      if (!map.getSource('preview')) {
+        map.addSource('preview', { type: 'geojson', data: preview });
+        map.addLayer({ id: 'preview-fill', type: 'fill', source: 'preview', paint: { 'fill-color': '#C84C0E', 'fill-opacity': 0.15 } });
+        map.addLayer({ id: 'preview-line', type: 'line', source: 'preview', paint: { 'line-color': '#C84C0E', 'line-width': 2 } });
+      } else {
+        (map.getSource('preview') as any).setData(preview);
+      }
+    } catch (err) { }
+  };
+
+  /**
+   * Finish polygon drawing
+   * - Removes click handler
+   * - Resets cursor
+   * - Creates final polygon if 3+ points
+   * - Calls completion callback
+   * - Cleans up temporary markers
+   */
+  const finishDrawingOnMap = () => {
+    const map = mapInstanceRef.current as maplibregl.Map | null;
+    if (!map) return;
+
+    map.off('click', onMapClick);
+    (map.getContainer() as HTMLElement).style.cursor = '';
+    map.getCanvas().style.cursor = '';
+
+    const pts = drawingPointsRef.current.slice();
+    if (pts.length >= 3) {
+      // Add final polygon source/layer
+      const coords = pts.map(p => [p[1], p[0]]);
+      const ring = coords.slice(); if (ring.length && (ring[0][0] !== ring[ring.length-1][0] || ring[0][1] !== ring[ring.length-1][1])) ring.push(ring[0]);
+      try {
+        if (map.getSource('drawn')) map.removeSource('drawn');
+        if (map.getLayer('drawn-fill')) map.removeLayer('drawn-fill');
+        if (map.getLayer('drawn-line')) map.removeLayer('drawn-line');
+      } catch (e) {}
+      try {
+  map.addSource('drawn', { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [ring] } } as any });
+        map.addLayer({ id: 'drawn-fill', type: 'fill', source: 'drawn', paint: { 'fill-color': '#C84C0E', 'fill-opacity': 0.15 } });
+        map.addLayer({ id: 'drawn-line', type: 'line', source: 'drawn', paint: { 'line-color': '#C84C0E', 'line-width': 2 } });
+      } catch (e) {}
+
+      drawnLayersRef.current.push('drawn' as any);
+
+      // Notify parent
+      try { if (onPolygonComplete) onPolygonComplete(pts.map(p => ({ lat: p[0], lng: p[1] }))); } catch (e) { console.error(e); }
+    }
+
+    // remove preview and temp markers
+    try { if (map.getLayer('preview-line')) map.removeLayer('preview-line'); } catch (e) {}
+    try { if (map.getLayer('preview-fill')) map.removeLayer('preview-fill'); } catch (e) {}
+    try { if (map.getSource('preview')) map.removeSource('preview'); } catch (e) {}
+
+    tempMarkersRef.current.forEach(m => { try { (m as any).remove(); } catch (e) {} });
+    tempMarkersRef.current = [];
+    drawingPointsRef.current = [];
+  };
+
+  /**
+   * Undo last drawn point
+   * - Removes last point from array
+   * - Removes corresponding marker
+   * - Redraws temporary visualization
+   */
+  const undoDrawingOnMap = () => {
+    const map = mapInstanceRef.current as maplibregl.Map | null;
+    if (!map) return;
+
+    // remove last temp marker
+    try {
+      const last = tempMarkersRef.current.pop();
+      if (last) try { (last as any).remove(); } catch (e) {}
+    } catch (e) {}
+
+    drawingPointsRef.current.pop();
+
+    // update preview source
+    try {
+      const coords = drawingPointsRef.current.map(p => [p[1], p[0]]);
+      const preview = {
+        type: 'Feature',
+        geometry: drawingPointsRef.current.length >= 3 ? { type: 'Polygon', coordinates: [[...coords, coords[0]]] } : { type: 'LineString', coordinates: coords }
+      } as any;
+      if (map.getSource('preview')) (map.getSource('preview') as any).setData(preview);
+    } catch (e) {}
+  };
+
+  /**
+   * Clear all drawings (both temporary and final)
+   * @param notify - If true, calls onPolygonComplete with empty array
+   */
+  const clearDrawingsOnMap = (notify: boolean = false) => {
+    const map = mapInstanceRef.current as maplibregl.Map | null;
+    if (!map) return;
+
+    // remove drawn source/layers
+    try { if (map.getLayer('drawn-fill')) map.removeLayer('drawn-fill'); } catch (e) {}
+    try { if (map.getLayer('drawn-line')) map.removeLayer('drawn-line'); } catch (e) {}
+    try { if (map.getSource('drawn')) map.removeSource('drawn'); } catch (e) {}
+
+    // remove preview
+    try { if (map.getLayer('preview-line')) map.removeLayer('preview-line'); } catch (e) {}
+    try { if (map.getLayer('preview-fill')) map.removeLayer('preview-fill'); } catch (e) {}
+    try { if (map.getSource('preview')) map.removeSource('preview'); } catch (e) {}
+
+    // remove markers
+    tempMarkersRef.current.forEach(m => { try { (m as any).remove(); } catch (e) {} });
+    tempMarkersRef.current = [];
+
+    drawingPointsRef.current = [];
+
+    // Notify parent if requested
+    if (notify && onPolygonComplete) onPolygonComplete([]);
+  };
+
+  return <Box ref={mapRef} sx={mapDivStyle} />;
+}
+
+/**
+ * MapComponent Props Interface
+ */
+interface MapComponentProps {
+  application: Property | null;
+  applicationStatus: string  // Property data containing GIS information
+  applicationID: string
+}
+
+/**
+ * MapComponent - Parent Container
+ * 
+ * Main component that manages map state and user interactions
+ * 
+ * Features:
+ * - Toggle between view/edit modes
+ * - Polygon drawing with undo/clear controls
+ * - Single point location editing with live preview
+ * - Automatic coordinate persistence via RTK Query mutation
+ * - Display of current coordinates and centroid
+ * 
+ * State Management:
+ * - Uses local React state for UI interactions
+ * - Persists changes to backend via RTK Query mutation
+ * - RTK Query cache automatically updates on successful mutation
+ */
+export default function MapComponent({ application, applicationStatus, applicationID }: MapComponentProps) {
+  // Extract coordinates from application data
+  const coordinates = application?.GISData?.Coordinates;
+  const status = applicationStatus;
+  // console.log("application Status from map  :",status );
+  
+
+  // UI state
+  const [interactive, setInteractive] = useState(false);  // Map interactivity toggle
+  const [polygonActive, setPolygonActive] = useState(false);  // Polygon drawing mode active
+  const [locationMode, setLocationMode] = useState(false);  // Single point editing mode
+
+  // Location state
+  const [locationCenter, setLocationCenter] = useState<{ lat: number; lng: number } | null>(null);  // Live map center during editing
+  const [initialEditCenter, setInitialEditCenter] = useState<{ lat: number; lng: number } | null>(null);  // Initial center when entering edit mode
+  const [currentPolygon, setCurrentPolygon] = useState<Array<{ lat: number; lng: number }> | null>(null);  // Currently drawn polygon
+  const [lastSavedLocation, setLastSavedLocation] = useState<{ lat: number; lng: number } | null>(null);  // Last saved single point
+   const [postApplicationLog] = usePostApplicationLogMutation();
+    const { user } = useAuth();
+    const userName= user?.username
+  // Refs
+  const polygonControlRef = useRef<PolygonControlRef>(null);  // Control polygon drawing from parent
+
+  // RTK Query mutation for persisting coordinates to backend
+  const [replaceGisCoordinates] = useReplaceGisCoordinatesMutation();
+
+  /**
+   * Sync coordinates from props to local state
+   * Extracts single point coordinates when available
+   */
+  useEffect(() => {
+    // Reset drawing state when coordinates change
+    setCurrentPolygon(null);
+    setLocationCenter(null);
+
+    // Extract single point coordinate from various possible structures
+    const fromCoordinates = (() => {
+      if (Array.isArray(coordinates) && coordinates.length === 1) {
+        return {
+          lat: coordinates[0].Latitude ?? coordinates[0].Latitude ?? 0,
+          lng: coordinates[0].Longitude ?? coordinates[0].Longitude ?? 0,
+        };
+      }
+
+      // Check GISData for single point
+      const gs = application?.GISData;
+      const lat = gs?.Latitude ?? gs?.Latitude;
+      const lng = gs?.Longitude ?? gs?.Longitude;
+      if (typeof lat === 'number' && typeof lng === 'number') {
+        return { lat, lng };
+      }
+
+      return null;
+    })();
+
+    // Update lastSavedLocation if coordinate changed
+    if (
+      fromCoordinates &&
+      (!lastSavedLocation ||
+        fromCoordinates.lat !== lastSavedLocation.lat ||
+        fromCoordinates.lng !== lastSavedLocation.lng)
+    ) {
+      setLastSavedLocation(fromCoordinates);
+    }
+  }, [coordinates, application, lastSavedLocation]);
+
+  /**
+   * Convert backend coordinate format to polygon points
+   * Handles both uppercase and lowercase property names
+   */
+  const backendCoordsToPolygon = (coords: any) =>
+    Array.isArray(coords)
+      ? coords.map((c) => ({
+          lat: c.Latitude ?? c.latitude ?? 0,
+          lng: c.Longitude ?? c.longitude ?? 0,
+        }))
+      : [];
+
+  /**
+   * Live update handler for location mode
+   * Called continuously as user pans the map
+   */
+  const handleLocationMove = useCallback((lat: number, lng: number) => {
+    setLocationCenter({ lat, lng });
+  }, []);
+
+  /**
+   * Handle polygon drawing completion
+   * - Updates local state immediately
+   * - Persists to backend via RTK Query mutation
+   * - Reverts on error
+   */
+  const handlePolygonComplete = async (polygonArr: Array<{ lat: number; lng: number }>) => {
+    setCurrentPolygon(polygonArr);
+    setLastSavedLocation(null);
+
+    const updatedCoords = polygonArr.map((p) => ({ latitude: p.lat, longitude: p.lng }));
+
+    const gisDataId = application?.GISData?.ID ?? application?.GISData?.ID ?? null;
+    const applicationId = application?.ID ?? null;
+    
+    // Log polygon change
+    const prevCoords = Array.isArray(application?.GISData?.Coordinates) ? application.GISData.Coordinates : [];
+    let comments = '';
+    if (prevCoords.length > 0) {
+      comments = `Polygon changed`;
+    } else {
+      comments = `Polygon added`;
+    }
+
+    if (gisDataId && applicationId) {
+      try {
+        await replaceGisCoordinates({ 
+          gisDataId, 
+          applicationId,
+          points: updatedCoords 
+        }).unwrap();
+        // console.log('Polygon coordinates saved successfully');
+      } catch (err) {
+        console.error('Failed to save polygon coordinates', err);
+        setCurrentPolygon(null);
+      }
+    } else {
+      console.warn('Missing GISDataID or ApplicationID; cannot persist coordinates');
+    }
+
+    // Build log payload
+    const logPayload = {
+      applicationId: applicationID || '',
+      propertyId: application?.GISData?.PropertyID || '',
+      gisDataId: gisDataId || '',
+      action: "EDIT_POLYGON",
+      performedBy: (typeof userName !== 'undefined' && userName) ? userName : "SERVICE_MANAGER",
+      actor: "SERVICE MANAGER",
+      comments,
+      timestamp: new Date().toISOString(),
+      metadata: {}
+    };
+    // console.log("Polygon Log Payload : ", logPayload);
+
+    // Post the log
+    try {
+      if (typeof postApplicationLog === 'function') {
+        await postApplicationLog(logPayload).unwrap();
+      }
+    } catch (err) {
+      console.error("Failed to post polygon application log:", err);
+    }
+  };
+
+  /**
+   * Save single point location
+   * - Uses live center from locationCenter state
+   * - Updates local state immediately for instant feedback
+   * - Persists to backend
+   * - Exits location mode on success
+   */
+ 
+    // const currentUserRole = useSelector((state: RootState) => state.user.currentUser?.role);
+    
+    
+    const saveLocation = async () => {
+    if (!locationCenter) return;
+
+    const payload = [{ latitude: locationCenter.lat, longitude: locationCenter.lng }];
+
+    // Log changed coordinates before editing
+    const prevLocation = lastSavedLocation;
+    if (prevLocation && (prevLocation.lat !== locationCenter.lat || prevLocation.lng !== locationCenter.lng)) {
+      console.log(`Location changed from lat: ${prevLocation.lat}, lng: ${prevLocation.lng} to lat: ${locationCenter.lat}, lng: ${locationCenter.lng}`);
+    }
+
+    setLastSavedLocation(locationCenter);
+    setCurrentPolygon(null);
+    setLocationMode(false);
+    setInitialEditCenter(null);
+
+    const gisDataId = application?.GISData?.ID ?? null;
+    const applicationId = application?.ID ?? null;
+
+    if (gisDataId && applicationId) {
+      try {
+        await replaceGisCoordinates({ 
+          gisDataId, 
+         applicationId,
+          points: payload 
+        }).unwrap();
+        console.log('Location saved successfully');
+      } catch (err) {
+        console.error('Failed to save location', err);
+        setLastSavedLocation(null);
+      }
+    } else {
+      console.warn('Missing GISDataID or ApplicationID; cannot persist location');
+    }
+
+    // Prepare log entry in required format
+    let comments = '';
+    if (prevLocation && (prevLocation.lat !== locationCenter.lat || prevLocation.lng !== locationCenter.lng)) {
+      comments = `Location changed`;
+    } else {
+      comments = `Location added`;
+    }
+    // Build log payload
+    const logPayload = {
+      applicationId: applicationID || '',
+      propertyId: application?.GISData?.PropertyID || '',
+      gisDataId: gisDataId || '',
+      action: "EDIT_LOCATION",
+      performedBy: (typeof userName !== 'undefined' && userName) ? userName : "SERVICE_MANAGER",
+      actor: "SERVICE MANAGER",
+      comments,
+      timestamp: new Date().toISOString(),
+      metadata: {}
+    };
+    console.log("Location Log Payload : ", logPayload);
+
+    // Post the log
+    try {
+      if (typeof postApplicationLog === 'function') {
+        await postApplicationLog(logPayload).unwrap();
+      }
+    } catch (err) {
+      console.error("Failed to post location application log:", err);
+    }
+  };
+
+  /**
+   * Cancel location editing mode
+   * Discards any unsaved changes
+   */
+  const cancelLocation = () => {
+    setLocationMode(false);
+    setLocationCenter(null);
+    setInitialEditCenter(null);
+  };
+
+  /**
+   * Memoized coordinates for map display
+   * Priority: currentPolygon > backend coordinates > lastSavedLocation
+   * Returns null in location mode (no markers displayed)
+   */
+  const displayCoords = React.useMemo(() => {
+    if (locationMode) return null;  // Hide markers in location edit mode
+    
+    if (currentPolygon && currentPolygon.length) {
+      return currentPolygon.map((p) => ({ Latitude: p.lat, Longitude: p.lng }));
+    }
+    
+    if (Array.isArray(coordinates) && coordinates.length > 0) {
+      return coordinates;
+    }
+    
+    if (lastSavedLocation) {
+      return [{ Latitude: lastSavedLocation.lat, Longitude: lastSavedLocation.lng }];
+    }
+    
+    return null;
+  }, [locationMode, currentPolygon, lastSavedLocation, coordinates]);
+
+  /**
+   * Calculate centroid for display in info panel
+   * - For single point: returns the point
+   * - For polygon: calculates geometric centroid using shoelace formula
+   */
+  const displayCentroid = (() => {
+    const sourceCoords = locationMode && locationCenter
+      ? [{ Latitude: locationCenter.lat, Longitude: locationCenter.lng }]
+      : displayCoords || [];
+    
+    const points = backendCoordsToPolygon(sourceCoords);
+    if (!points.length) return null;
+    if (points.length === 1) return points[0];
+
+    // Calculate polygon centroid using shoelace formula
+    let signedArea = 0, cx = 0, cy = 0;
+    for (let i = 0; i < points.length; i++) {
+      const { lat: x0, lng: y0 } = points[i];
+      const { lat: x1, lng: y1 } = points[(i + 1) % points.length];
+      const a = x0 * y1 - x1 * y0;
+      signedArea += a;
+      cx += (x0 + x1) * a;
+      cy += (y0 + y1) * a;
+    }
+    signedArea *= 0.5;
+
+    // Fallback for degenerate polygons
+    if (signedArea === 0) return points[0];
+
+    cx = cx / (6 * signedArea);
+    cy = cy / (6 * signedArea);
+    return { lat: cx, lng: cy };
+  })();
+
+  return (
+    <Box sx={mapComponentOuterStyle}>
+      {/* Map Container */}
+      <Box sx={mapWrapperContainerStyle}>
+        <MapWrapper
+          interactive={interactive}
+          coordinates={displayCoords}
+          externalControlRef={polygonControlRef}
+          onPolygonComplete={handlePolygonComplete}
+          locationMode={locationMode}
+          initialCenter={initialEditCenter}
+          onLocationMove={handleLocationMove}
+        />
+
+        {/* Overlay to enable interactivity on click (for non-interactive maps) */}
+        {!interactive && (
+          <Box
+            sx={mapOverlayStyle}
+            onClick={() => setInteractive(true)}
+            title="Click to activate map"
+          />
+        )}
+
+        {/* Polygon Drawing Controls (visible when polygon mode active) */}
+        {polygonActive && (
+          <Box sx={{ 
+            position: 'absolute', 
+            top: 10, 
+            left: 12, 
+            display: 'flex', 
+            gap: 1, 
+            zIndex: 1200 
+          }}>
+            {/* Clear button */}
+            <IconButton
+              aria-label="clear"
+              onClick={() => polygonControlRef.current?.clear?.(false)}
+              sx={mapIconButtonStyle}
+            >
+              <img src={closeSvg} alt="close" style={{ width: 24, height: 24 }} />
+            </IconButton>
+
+            {/* Start drawing button */}
+            <Button
+              variant="contained"
+              size="small"
+              sx={mapButtonStyle}
+              onClick={() => polygonControlRef.current?.start?.()}
+            >
+              Start
+            </Button>
+
+            {/* Finish drawing button */}
+            <Button
+              variant="contained"
+              size="small"
+              sx={mapButtonStyle}
+              onClick={() => { 
+                polygonControlRef.current?.finish?.(); 
+                setPolygonActive(false); 
+              }}
+            >
+              Finish
+            </Button>
+
+            {/* Undo last point button */}
+            <IconButton
+              aria-label="undo"
+              onClick={() => polygonControlRef.current?.undo?.()}
+              sx={mapUndoButtonStyle}
+            >
+              <img src={undoSvg} alt="undo" style={{ width: 28, height: 28, paddingTop: 2 }} />
+            </IconButton>
+          </Box>
+        )}
+
+        {/* Coordinate Info Panel (top right) - shown when NOT in location mode */}
+        {displayCentroid && !locationMode && (
+          <Box sx={{ 
+            position: 'absolute', 
+            top: 12, 
+            right: 12, 
+            background: '#fff', 
+            p: 1, 
+            borderRadius: 1, 
+            zIndex: 1199 
+          }}>
+            <div style={{ fontSize: 12, color: '#333' }}>
+              latitude: {displayCentroid.lat.toFixed(6)}
+            </div>
+            <div style={{ fontSize: 12, color: '#333' }}>
+              longitude: {displayCentroid.lng.toFixed(6)}
+            </div>
+            {displayCoords && displayCoords.length > 2 && (
+              <div style={{ fontSize: 12, color: '#333', marginTop: 6 }}>
+                points: {displayCoords.length}
+              </div>
+            )}
+          </Box>
+        )}
+      </Box>
+
+      {/* Main Action Buttons */}
+      <Box sx={mapButtonPanelStyle}>
+        {/* Edit Location Button - for single point editing */}
+        <Button
+          variant="contained"
+          sx={mapButtonStyle}
+          onClick={() => {
+            setPolygonActive(false);
+            polygonControlRef.current?.clear?.(false);
+
+            // Calculate initial center for location edit mode
+            // Priority: single saved point > polygon centroid > default
+            const coordsForCenter = (currentPolygon && currentPolygon.length)
+              ? currentPolygon
+              : (Array.isArray(displayCoords) ? backendCoordsToPolygon(displayCoords) : []);
+
+            let initial: { lat: number; lng: number } | null = null;
+
+            if (coordsForCenter && coordsForCenter.length === 1) {
+              // Single point: use directly
+              initial = { lat: coordsForCenter[0].lat, lng: coordsForCenter[0].lng };
+            } else if (coordsForCenter && coordsForCenter.length > 1) {
+              // Multiple points: calculate average as initial center
+              const avg = coordsForCenter.reduce(
+                (acc, p) => ({ lat: acc.lat + p.lat, lng: acc.lng + p.lng }), 
+                { lat: 0, lng: 0 }
+              );
+              initial = { 
+                lat: avg.lat / coordsForCenter.length, 
+                lng: avg.lng / coordsForCenter.length 
+              };
+            }
+
+            setInitialEditCenter(initial);
+            setLocationMode(true);
+            setInteractive(true);
+          }}
+          startIcon={
+            <Box 
+              component="img" 
+              src={editSquareSvg} 
+              alt="edit" 
+              sx={{ width: 18, height: 18, ml: 0.5 }} 
+            />
+          }
+          disabled={status === "AUDIT_VERIFIED"}
+        >
+          Edit Location
+        </Button>
+
+        {/* Edit Polygon Button - toggle polygon drawing mode */}
+        <Button
+          variant="contained"
+          sx={mapButtonStyle}
+          onClick={() => {
+            setPolygonActive((prev) => {
+              const next = !prev;
+              if (next) {
+                // Entering polygon mode: exit location mode
+                setLocationMode(false);
+                setInteractive(true);
+              }
+              return next;
+            });
+          }}
+          startIcon={
+            <Box 
+              component="img" 
+              src={editSquareSvg} 
+              alt="edit" 
+              sx={{ width: 18, height: 18 }} 
+            />
+          }
+          disabled={status === "AUDIT_VERIFIED"}
+        >
+          Edit Polygon
+        </Button>
+      </Box>
+
+      {/* Location Mode Overlay (center marker + coordinate display) */}
+      {locationMode && (
+        <>
+          {/* Centered marker that stays in middle of screen */}
+          <Box sx={{ 
+            position: 'absolute', 
+            left: '50%', 
+            top: '50%', 
+            transform: 'translate(-50%, -100%)',  // Position point of marker at center
+            pointerEvents: 'none',  // Don't block map interactions
+            zIndex: 1300 
+          }}>
+            <img 
+              src={propertyMarkerSvg} 
+              alt="center" 
+              style={{ width: 34, height: 34 }} 
+            />
+          </Box>
+
+          {/* Live coordinate display with save/cancel buttons */}
+          <Box sx={{ 
+            position: 'absolute', 
+            top: 12, 
+            left: 12, 
+            background: '#fff', 
+            p: 1, 
+            borderRadius: 1, 
+            zIndex: 1301 
+          }}>
+            <div style={{ fontSize: 12 }}>
+              Lat: {locationCenter ? locationCenter.lat.toFixed(6) : '—'}
+            </div>
+            <div style={{ fontSize: 12 }}>
+              Lng: {locationCenter ? locationCenter.lng.toFixed(6) : '—'}
+            </div>
+            <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+              <Button 
+                size="small" 
+                variant="contained" 
+                sx={mapButtonStyle} 
+                onClick={saveLocation}
+              >
+                Save
+              </Button>
+              <Button 
+                size="small" 
+                variant="text" 
+                sx={mapButtonStyle} 
+                onClick={cancelLocation}
+              >
+                Cancel
+              </Button>
+            </Box>
+          </Box>
+        </>
+      )}
+    </Box>
+  );
+}

@@ -1,0 +1,23 @@
+/* Marker.css - Styles for custom map markers in the All Applications page
+   These styles control the appearance and layout of custom Leaflet/Map marker icons */
+
+/* Remove background and border for custom Leaflet marker icons */
+.leaflet-marker-icon.custom-marker-icon {
+  background: transparent;
+  border: none;
+}
+
+/* Flexbox layout for custom marker icon container */
+.custom-marker-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+/* Add drop shadow to SVG icons and prevent pointer events */
+.custom-marker-icon svg {
+  filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.3));
+  pointer-events: none;
+}

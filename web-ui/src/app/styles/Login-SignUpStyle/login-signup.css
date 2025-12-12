@@ -1,0 +1,18 @@
+/* Hide browser's default password reveal button */
+
+/* 1. Hide the "reveal password" eye icon in Internet Explorer and Edge (legacy) */
+input.no-password-reveal::-ms-reveal,
+/* 2. Hide the "clear input" X button in Internet Explorer and Edge (legacy) */
+input.no-password-reveal::-ms-clear {
+  display: none; /* Completely removes these buttons from view */
+}
+
+/* 3.  Hide the autofill credentials button in Chrome/Safari/Edge (Chromium) */
+input.no-password-reveal::-webkit-credentials-auto-fill-button,
+/* 4. Hide the autofill contacts button in Chrome/Safari/Edge (Chromium) */
+input.no-password-reveal::-webkit-contacts-auto-fill-button {
+  visibility: hidden; /* Makes the button invisible but still takes up space */
+  pointer-events: none; /* Disables all mouse interactions (clicks, hovers, etc.) */
+  position: absolute; /* Takes it out of normal document flow */
+  right: 0; /* Positions it at the right edge (though it's already hidden) */
+}
