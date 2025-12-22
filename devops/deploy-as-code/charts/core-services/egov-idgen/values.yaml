@@ -1,0 +1,40 @@
+# Common Labels
+labels:
+  app: "egov-idgen"
+  group: "core"
+
+# Ingress Configs
+ingress:
+  enabled: false
+  zuul: false
+  context: "egov-idgen"
+
+# Init Containers Configs
+initContainers:
+  dbMigration:
+    enabled: false
+    schemaTable: "egov_idgen_schema"
+    image:
+      repository: "egov-idgen-db"
+
+# Container Configs
+image:
+  repository: "egov-idgen"
+replicas: "1"
+healthChecks:
+  enabled: false
+  livenessProbePath: "/egov-idgen/health"
+  readinessProbePath: "/egov-idgen/health"
+appType: "java-spring"
+tracing-enabled: false
+heap: "-Xmx192m -Xms192m"
+java-args: "-Dspring.profiles.active=monitoring"
+idformat-from-mdms: "false"
+autocreate-new-seq: "false"
+
+# Additional Container Envs
+env: |
+  - name: HTTP_PORT
+    value: "8080"
+  - name: SERVER_CONTEXT_PATH
+    value: "/idgen"

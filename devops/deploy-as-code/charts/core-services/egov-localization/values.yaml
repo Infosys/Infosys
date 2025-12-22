@@ -1,0 +1,30 @@
+# Common Labels
+labels:
+  app: "egov-localization"
+  group: "core"
+
+# Ingress Configs
+ingress:
+  enabled: false
+  zuul: true
+  context: "localization"
+
+# Init Containers Configs
+initContainers:
+  dbMigration:
+    enabled: false
+    schemaTable: "egov_localization_schema"
+    image:
+      repository: "egov-localization-db"
+
+# Container Configs
+image:
+  repository: "egov-localization"
+replicas: "1"
+appType: "java-spring"
+tracing-enabled: true
+heap: "-Xmx256m -Xms256m"
+healthChecks:
+  enabled: true
+  livenessProbePath: "/localization/health"
+  readinessProbePath: "/localization/health"

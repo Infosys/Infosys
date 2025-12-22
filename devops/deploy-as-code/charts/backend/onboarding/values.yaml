@@ -1,0 +1,61 @@
+# Common Labels
+labels:
+  app: "digit-onboarding"
+  group: "core"
+
+# Service Type
+service:
+  type: "NodePort"
+  # nodePort: 30080  # Uncomment and set if you need a specific NodePort
+
+# Ingress Configs
+ingress:
+  enabled: false
+  zuul: false
+  context: "digit-onboarding"
+
+# Init Containers Configs
+initContainers:
+  dbMigration:
+    enabled: false
+
+# Container Configs
+image:
+  repository: "infyartifactory.jfrog.io/docker/digit3/onboarding-ms"
+  tag: "0.2.5"
+replicas: "1"
+httpPort: 8080
+healthChecks:
+  enabled: false
+appType: ""
+tracing-enabled: false
+
+# Additional Container Envs
+env: |
+  - name: SERVER_PORT
+    value: "8080"
+  - name: GIN_MODE
+    value: "release"
+  {{- if .Values.env }}
+  {{- .Values.env | nindent 2 }}
+  {{- end }}
+  - name: TOKEN_URL
+    value: "$(KEYCLOAK_BASE_URL)/realms/master/protocol/openid-connect/token"
+  - name: USER_URL
+    value: "$(KEYCLOAK_BASE_URL)/admin/realms/$(KEYCLOAK_REALM)/users"
+  - name: ASSIGN_ROLE_URL
+    value: "$(KEYCLOAK_BASE_URL)/admin/realms/$(KEYCLOAK_REALM)/users/%s/role-mappings/realm"
+  - name: ROLE_URL
+    value: "$(KEYCLOAK_BASE_URL)/admin/realms/$(KEYCLOAK_REALM)/roles/%s"
+  - name: ROLES_URL
+    value: "$(KEYCLOAK_BASE_URL)/admin/realms/$(KEYCLOAK_REALM)/users/%s/role-mappings/realm"
+  - name: DELETE_URL
+    value: "$(KEYCLOAK_BASE_URL)/admin/realms/$(KEYCLOAK_REALM)/users/%s"
+  - name: MDMS_API_URL
+    value: {{ .Values.mdms.apiUrl | quote }}
+  - name: CORS_ALLOWED_ORIGINS
+    value: {{ .Values.cors.allowedOrigins | quote }}
+  - name: CORS_ALLOWED_METHODS
+    value: {{ .Values.cors.allowedMethods | quote }}
+  - name: CORS_ALLOWED_HEADERS
+    value: {{ .Values.cors.allowedHeaders | quote }} 
