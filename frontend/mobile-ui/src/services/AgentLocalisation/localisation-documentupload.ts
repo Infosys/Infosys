@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
+import env from '../../config/env';
 
 interface LocalizationMessage {
   uuid: string;
@@ -205,7 +206,7 @@ export const useDocumentUploadLocalization = () => {
   const fetchLocalizedTexts = async (newLocale: string) => {
     try {
       const codesParam = messageCodes.join(',');
-      const url = `${import.meta.env.VITE_LOCALIZATION_HOST}/localization/v1/messages?module=common&locale=${newLocale}&codes=${codesParam}`;
+      const url = `${env.LOCALIZATION_HOST}/localization/v1/messages?module=common&locale=${newLocale}&codes=${codesParam}`;
 
       const response = await fetch(url, {
         headers: {

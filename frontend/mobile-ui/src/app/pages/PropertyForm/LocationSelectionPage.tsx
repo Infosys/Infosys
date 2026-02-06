@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import { IconButton } from '@mui/material';
@@ -6,98 +6,172 @@ import LocationMapWithDrawing from './LocationMapWithDrawing';
 import undoIcon from '../../assets/Agent/undo.svg';
 import { usePropertyForm } from '../../../context/PropertyFormContext';
 import { usePropertyInformationLocalization } from '../../../services/AgentLocalisation/localisation-propertyInformation';
-// Remove Leaflet import
-// import L from 'leaflet';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import '../../../styles/LocationSelection.css';
 
-// Helper function to get reverse geocoded address with fallback
+// Constants
+const AREA_EPSILON = 1e-9;
+const SEARCH_DEBOUNCE_MS = 300;
+const SEARCH_MIN_LENGTH = 2;
+const AUTOCOMPLETE_LIMIT = 5;
+const SINGLE_RESULT_LIMIT = 1;
+const MAP_ZOOM_LEVEL = 16;
+const MAP_CENTER_DELAY = 500;
+const MAX_PROPERTY_OPTIONS = 5;
+const INDIA_LAT_MIN = 8;
+const INDIA_LAT_MAX = 37;
+const INDIA_LNG_MIN = 68;
+const INDIA_LNG_MAX = 97;
+const MIN_POLYGON_POINTS = 3;
+const DEFAULT_BANGALORE_CENTER: [number, number] = [77.5946, 12.9716];
+
+// India major cities for fallback geocoding
+const INDIA_CITIES = {
+  bangalore: { lat: 12.9716, lng: 77.5946, name: 'Bangalore, Karnataka' },
+  delhi: { lat: 28.6139, lng: 77.209, name: 'Delhi' },
+  mumbai: { lat: 19.076, lng: 72.8777, name: 'Mumbai, Maharashtra' },
+  chennai: { lat: 13.0827, lng: 80.2707, name: 'Chennai, Tamil Nadu' },
+  hyderabad: { lat: 17.385, lng: 78.4867, name: 'Hyderabad, Telangana' },
+  pune: { lat: 18.5204, lng: 73.8567, name: 'Pune, Maharashtra' },
+} as const;
+
+// Type definitions
+interface LocationData {
+  coordinates: [number, number];
+  address: string;
+}
+
+interface ShapeData {
+  type: 'point' | 'polyline' | 'rectangle' | 'polygon' | 'deleted';
+  coordinates?: number[] | number[][];
+  area?: number;
+  layer?: string;
+  address?: string;
+  addedAt?: string;
+}
+
+interface PropertyOption {
+  address: string;
+  coordinates: { lat: number; lng: number } | null;
+  id: string;
+}
+
+interface SearchResult {
+  id: number;
+  displayName: string;
+  coordinates: [number, number];
+  type: string;
+}
+
+interface PhotonFeature {
+  geometry: {
+    coordinates: [number, number];
+  };
+  properties: {
+    housenumber?: string;
+    street?: string;
+    district?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    name?: string;
+    type?: string;
+  };
+}
+
+// Helper: Build address parts from properties
+const buildAddressParts = (props: PhotonFeature['properties']): string[] => {
+  const parts: string[] = [];
+  if (props.housenumber) parts.push(props.housenumber);
+  if (props.street) parts.push(props.street);
+  if (props.district) parts.push(props.district);
+  if (props.city) parts.push(props.city);
+  if (props.state) parts.push(props.state);
+  return parts;
+};
+
+// Helper: Find nearest India city
+const findNearestIndiaCity = (lat: number, lng: number): string => {
+  let closestArea = 'Unknown Area, India';
+  let minDistance = Infinity;
+
+  Object.values(INDIA_CITIES).forEach((city) => {
+    const distance = Math.sqrt(
+      Math.pow(lat - city.lat, 2) + Math.pow(lng - city.lng, 2)
+    );
+    if (distance < minDistance) {
+      minDistance = distance;
+      closestArea = city.name;
+    }
+  });
+
+  return `Near ${closestArea}`;
+};
+
+// Helper: Format coordinates as location string
+const formatLocationString = (lat: number, lng: number): string =>
+  `Location: ${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`;
+
+// Helper: Extract address from geocoding response
+const extractAddressFromResponse = (data: { features?: PhotonFeature[] }): string | null => {
+  if (!data.features?.length) return null;
+
+  const props = data.features[0].properties;
+  if (!props) return null;
+
+  const parts = buildAddressParts(props);
+  if (parts.length > 0) return parts.join(', ');
+  if (props.name) return props.name;
+
+  return null;
+};
+
+// Helper: Check if coordinates are in India
+const isInIndia = (lat: number, lng: number): boolean =>
+  lat >= INDIA_LAT_MIN && lat <= INDIA_LAT_MAX && lng >= INDIA_LNG_MIN && lng <= INDIA_LNG_MAX;
+
+// Helper: Get reverse geocoded address with fallback
 const getReverseGeocodedAddress = async (lat: number, lng: number): Promise<string> => {
   try {
-    // Use Photon API which is CORS-friendly
     const response = await fetch(
       `https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}`,
       {
         method: 'GET',
-        headers: {
-          Accept: 'application/json',
-        },
+        headers: { Accept: 'application/json' },
       }
     );
 
     if (response.ok) {
       const data = await response.json();
-      if (data.features && data.features.length > 0) {
-        const feature = data.features[0];
-        if (feature.properties) {
-          const props = feature.properties;
-          const parts = [];
-
-          // Build address from available components
-          if (props.housenumber) parts.push(props.housenumber);
-          if (props.street) parts.push(props.street);
-          if (props.district) parts.push(props.district);
-          if (props.city) parts.push(props.city);
-          if (props.state) parts.push(props.state);
-
-          if (parts.length > 0) {
-            return parts.join(', ');
-          }
-
-          // Fallback to name if available
-          if (props.name) {
-            return props.name;
-          }
-        }
-      }
+      const address = extractAddressFromResponse(data);
+      if (address) return address;
     }
-  } catch (error) {
-    console.warn('Photon geocoding failed, trying alternative:', error);
+  } catch {
+    // Silent fail, use fallback
   }
 
-  // Try alternative approach with a simple area lookup
-  try {
-    if (lat >= 8 && lat <= 37 && lng >= 68 && lng <= 97) {
-      const areas = {
-        bangalore: { lat: 12.9716, lng: 77.5946, name: 'Bangalore, Karnataka' },
-        delhi: { lat: 28.6139, lng: 77.209, name: 'Delhi' },
-        mumbai: { lat: 19.076, lng: 72.8777, name: 'Mumbai, Maharashtra' },
-        chennai: { lat: 13.0827, lng: 80.2707, name: 'Chennai, Tamil Nadu' },
-        hyderabad: { lat: 17.385, lng: 78.4867, name: 'Hyderabad, Telangana' },
-        pune: { lat: 18.5204, lng: 73.8567, name: 'Pune, Maharashtra' },
-      };
-      let closestArea = 'Unknown Area, India';
-      let minDistance = Infinity;
-      Object.values(areas).forEach((area) => {
-        const distance = Math.sqrt(
-          Math.pow(lat - area.lat, 2) + Math.pow(lng - area.lng, 2)
-        );
-        if (distance < minDistance) {
-          minDistance = distance;
-          closestArea = area.name;
-        }
-      });
-      return `Near ${closestArea}`;
-    }
-  } catch (error) {
-    console.warn('Area lookup failed:', error);
+  // Fallback to India cities if in India
+  if (isInIndia(lat, lng)) {
+    return findNearestIndiaCity(lat, lng);
   }
-  return `Location: ${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`;
+
+  return formatLocationString(lat, lng);
 };
 
-// Helper function to calculate centroid of a polygon (matching LocationMapWithDrawing implementation)
+// Helper: Calculate centroid of a polygon
 const calculatePolygonCentroid = (
   coordinates: number[][]
 ): { lat: number; lng: number } => {
-  if (!coordinates || coordinates.length === 0) {
-    return { lat: 12.9716, lng: 77.5946 };
+  if (!coordinates?.length) {
+    return { lat: DEFAULT_BANGALORE_CENTER[1], lng: DEFAULT_BANGALORE_CENTER[0] };
   }
-  // Fixed: MapLibre coordinates are [lng, lat], so we need to swap
+
   const pts = coordinates.map(([lng, lat]) => ({ x: lng, y: lat }));
   let twiceArea = 0;
   let xSum = 0;
   let ySum = 0;
+
   for (let i = 0; i < pts.length; i++) {
     const j = (i + 1) % pts.length;
     const cross = pts[i].x * pts[j].y - pts[j].x * pts[i].y;
@@ -105,38 +179,50 @@ const calculatePolygonCentroid = (
     xSum += (pts[i].x + pts[j].x) * cross;
     ySum += (pts[i].y + pts[j].y) * cross;
   }
+
   const area = twiceArea / 2;
-  if (Math.abs(area) < 1e-9) {
-    const avg = pts.reduce((acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }), {
-      x: 0,
-      y: 0,
-    });
-    const result = { lat: avg.y / pts.length, lng: avg.x / pts.length };
-    return result;
+
+  if (Math.abs(area) < AREA_EPSILON) {
+    const avg = pts.reduce(
+      (acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }),
+      { x: 0, y: 0 }
+    );
+    return { lat: avg.y / pts.length, lng: avg.x / pts.length };
   }
-  const cx = xSum / (6 * area);
-  const cy = ySum / (6 * area);
-  const result = { lat: cy, lng: cx };
+
+  return { lat: ySum / (6 * area), lng: xSum / (6 * area) };
+};
+
+// Helper: Validate and swap coordinates if needed
+const validateCoordinates = (lat: number, lng: number): [number, number] => {
+  if (Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+    return [lng, lat];
+  }
+  return [lat, lng];
+};
+
+// Helper: Deduplicate property options
+const deduplicatePropertyOptions = (options: PropertyOption[]): PropertyOption[] => {
+  const seen = new Map<string, PropertyOption>();
+  let doNotConsider: PropertyOption | null = null;
+
+  for (const option of options) {
+    if (option.address === 'do_not_consider_key') {
+      doNotConsider = option;
+      continue;
+    }
+    const key = (option.address || '').trim();
+    if (!seen.has(key)) {
+      seen.set(key, option);
+    }
+  }
+
+  const result = Array.from(seen.values());
+  if (doNotConsider) result.push(doNotConsider);
   return result;
 };
 
-// Type for location data (coordinates and address)
-interface LocationData {
-  coordinates: [number, number]; // [lng, lat] for MapLibre
-  address: string;
-}
-
-// Type for drawn shape data (point, polygon, etc.)
-interface ShapeData {
-  type: 'point' | 'polyline' | 'rectangle' | 'polygon' | 'deleted';
-  coordinates?: number[] | number[][];
-  area?: number;
-  layer?: any;
-  address?: string;
-  addedAt?: string;
-}
-
-// Main component for selecting and confirming property location on a map
+// Main component
 const LocationSelectionPage: React.FC = () => {
   const navigate = useNavigate();
   const { updateForm, formData } = usePropertyForm();
@@ -159,19 +245,19 @@ const LocationSelectionPage: React.FC = () => {
     doNotConsiderText,
   } = usePropertyInformationLocalization();
 
-  // State for selected location (coordinates and address)
-  const [selectedLocation, setSelectedLocation] = useState<LocationData>(() => {
+  // Initialize selected location from form data
+  const getInitialLocation = (): LocationData => {
     if (formData.locationData) {
       if (mode === 'polygon' && formData.locationData.drawnShapes) {
         const existingPolygon = formData.locationData.drawnShapes.find(
           (shape) => shape.type === 'polygon'
         );
-        if (existingPolygon && existingPolygon.coordinates) {
+        if (existingPolygon?.coordinates) {
           const centroid = calculatePolygonCentroid(
             existingPolygon.coordinates as number[][]
           );
           return {
-            coordinates: [centroid.lng!, centroid.lat!],
+            coordinates: [centroid.lng, centroid.lat],
             address:
               formData.locationData.address ||
               `Centroid: ${centroid.lat.toFixed(6)}, ${centroid.lng.toFixed(6)}`,
@@ -180,39 +266,31 @@ const LocationSelectionPage: React.FC = () => {
       }
       return {
         coordinates: [
-          formData.locationData.coordinates?.lng!,
-          formData.locationData.coordinates?.lat!,
+          formData.locationData.coordinates?.lng ?? DEFAULT_BANGALORE_CENTER[0],
+          formData.locationData.coordinates?.lat ?? DEFAULT_BANGALORE_CENTER[1],
         ],
-        address: formData.locationData.address,
+        address: formData.locationData.address || '',
       };
     }
     return {
-      coordinates: [77.5946, 12.9716], // [lng, lat]
+      coordinates: DEFAULT_BANGALORE_CENTER,
       address: 'Vittal Mallya Road, Richmond Town, Bengaluru, Karnataka',
     };
-  });
+  };
 
-  // State for loading, search, polygon, and map refs
+  // State declarations
+  const [selectedLocation, setSelectedLocation] = useState<LocationData>(getInitialLocation);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [polygonActive, setPolygonActive] = useState(false);
-  const polygonControlRef = useRef<{
-    finish?: () => void;
-    start?: () => void;
-    clear?: () => void;
-  } | null>(null);
-  const mapRef = useRef<maplibregl.Map | null>(null);
-  const searchTimeoutRef = useRef<number | null>(null);
-
   const [selectedPropertyIndex, setSelectedPropertyIndex] = useState<number>(0);
-  const [propertyOptions, setPropertyOptions] = useState<any[]>([]);
+  const [propertyOptions, setPropertyOptions] = useState<PropertyOption[]>([]);
   const [loadingPropertyOptions, setLoadingPropertyOptions] = useState<boolean>(false);
   const [locationLocked, setLocationLocked] = useState<boolean>(false);
-
-  // State for drawn shapes on the map
+  const [drawingPointCount, setDrawingPointCount] = useState<number>(0);
   const [drawnShapes, setDrawnShapes] = useState<ShapeData[]>(() => {
     if (formData.locationData?.drawnShapes) {
       return formData.locationData.drawnShapes.map((shape, index) => ({
@@ -226,22 +304,65 @@ const LocationSelectionPage: React.FC = () => {
     return [];
   });
 
-  // Handle location update from map (pin or move)
-  const handleLocationUpdate = (lat: number, lng: number, address: string) => {
-    // If the map locked the location (after polygon finish), ignore further map move/zoom events
+  // Refs
+  const polygonControlRef = useRef<{
+    finish?: () => void;
+    start?: () => void;
+    clear?: () => void;
+  } | null>(null);
+  const mapRef = useRef<maplibregl.Map | null>(null);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Generate property options from polygon shape
+  const generatePropertyOptions = useCallback(async (polygon: ShapeData): Promise<PropertyOption[]> => {
+    if (!polygon.coordinates || polygon.type !== 'polygon') return [];
+
+    const coords = polygon.coordinates as number[][];
+    const properties: PropertyOption[] = [];
+
+    if (coords.length > MIN_POLYGON_POINTS) {
+      const limit = Math.min(coords.length, MAX_PROPERTY_OPTIONS);
+
+      for (let index = 0; index < limit; index++) {
+        const coord = coords[index];
+        const [validLat, validLng] = validateCoordinates(coord[1], coord[0]);
+
+        try {
+          const address = await getReverseGeocodedAddress(validLat, validLng);
+          if (address && !address.startsWith('Location:') && !address.startsWith('Near')) {
+            properties.push({
+              address,
+              coordinates: { lat: validLat, lng: validLng },
+              id: `property_${index}`,
+            });
+          }
+        } catch {
+          // Skip failed geocoding
+        }
+      }
+    }
+
+    properties.push({
+      address: 'do_not_consider_key',
+      coordinates: null,
+      id: 'not_considered',
+    });
+
+    return properties;
+  }, []);
+
+  // Handle location update from map
+  const handleLocationUpdate = useCallback((lat: number, lng: number, address: string) => {
     if (locationLocked) {
       setIsLoading(false);
       return;
     }
-    setSelectedLocation({
-      coordinates: [lng, lat], // [lng, lat]
-      address: address,
-    });
+    setSelectedLocation({ coordinates: [lng, lat], address });
     setIsLoading(false);
-  };
+  }, [locationLocked]);
 
   // Handle shape drawn or deleted on the map
-  const handleShapeDrawn = async (shapeData: ShapeData) => {
+  const handleShapeDrawn = useCallback(async (shapeData: ShapeData) => {
     if (shapeData.type === 'deleted') {
       setDrawnShapes((prev) => prev.filter((shape) => shape.layer !== shapeData.layer));
       const remainingPolygons = drawnShapes.filter(
@@ -250,171 +371,87 @@ const LocationSelectionPage: React.FC = () => {
       if (remainingPolygons.length === 0) {
         setPropertyOptions([]);
       }
-    } else {
-      setDrawnShapes((prev) => {
-        const existingIndex = prev.findIndex((shape) => shape.layer === shapeData.layer);
-        if (existingIndex >= 0) {
-          const updated = [...prev];
-          updated[existingIndex] = shapeData;
-          return updated;
-        } else {
-          return [...prev, shapeData];
-        }
-      });
-
-      if (shapeData.type === 'polygon') {
-        setLoadingPropertyOptions(true);
-        try {
-          if (mode === 'polygon') {
-            setDrawnShapes((prev) => {
-              const nonPolygonShapes = prev.filter((shape) => shape.type !== 'polygon');
-              return [...nonPolygonShapes, shapeData];
-            });
-
-            // Note: selectedLocation is already updated by handleLocationUpdate with centroid address
-            // No need to update it again here to avoid overriding the correct address
-          }
-
-          let options = await generatePropertyOptions(shapeData);
-          // Deduplicate options by address (keep first occurrence). Keep the 'do_not_consider_key' item at the end.
-          const dedupePropertyOptions = (opts: any[]) => {
-            const seen = new Map<string, any>();
-            let doNotConsider: any = null;
-            for (const o of opts) {
-              if (o.address === 'do_not_consider_key') {
-                doNotConsider = o;
-                continue;
-              }
-              const key = (o.address || '').trim();
-              if (!seen.has(key)) {
-                seen.set(key, o);
-              }
-            }
-            const result = Array.from(seen.values());
-            if (doNotConsider) result.push(doNotConsider);
-            return result;
-          };
-
-          options = dedupePropertyOptions(options);
-          setPropertyOptions(options);
-          // If only one real property (not counting do_not_consider), auto-select it and hide list
-          const realOptions = options.filter((o) => o.address !== 'do_not_consider_key');
-          if (realOptions.length === 1) {
-            const idx = options.findIndex((o) => o.id === realOptions[0].id);
-            if (idx >= 0) setSelectedPropertyIndex(idx);
-          } else {
-            // default selection to last (do_not_consider) if multiple
-            setSelectedPropertyIndex(options.length - 1);
-          }
-        } catch (error) {
-          setPropertyOptions([]);
-        } finally {
-          setLoadingPropertyOptions(false);
-        }
-      }
+      return;
     }
-  };
 
-  // Generate property options from polygon shape
-  const generatePropertyOptions = async (polygon: ShapeData) => {
-    if (!polygon.coordinates || polygon.type !== 'polygon') return [];
-    const coords = polygon.coordinates as number[][];
-    const properties = [];
-    if (coords.length > 3) {
-      for (let index = 0; index < coords.length && index < 5; index++) {
-        const coord = coords[index];
-        // MapLibre uses [lng, lat]
-        let lng = coord[0];
-        let lat = coord[1];
-
-        // Validate coordinates
-        if (Math.abs(lat) > 90 || Math.abs(lng) > 180) {
-          // Swap if needed
-          [lat, lng] = [lng, lat];
-        }
-        try {
-          const address = await getReverseGeocodedAddress(lat, lng);
-          if (
-            address &&
-            !address.startsWith('Location:') &&
-            !address.startsWith('Near')
-          ) {
-            properties.push({
-              address: address,
-              coordinates: { lat, lng },
-              id: `property_${index}`,
-            });
-          }
-        } catch (error) {
-          continue;
-        }
+    setDrawnShapes((prev) => {
+      const existingIndex = prev.findIndex((shape) => shape.layer === shapeData.layer);
+      if (existingIndex >= 0) {
+        const updated = [...prev];
+        updated[existingIndex] = shapeData;
+        return updated;
       }
-    }
-    properties.push({
-      address: 'do_not_consider_key',
-      coordinates: null,
-      id: 'not_considered',
+      return [...prev, shapeData];
     });
-    return properties;
-  };
 
-  // Handle search input for address/location
-  const handleSearchInput = (value: string) => {
-    setSearchQuery(value);
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-    if (value.trim().length > 2) {
-      searchTimeoutRef.current = setTimeout(() => {
-        performSearch(value, true);
-      }, 300);
-    } else {
-      setSearchResults([]);
-      setShowSearchResults(false);
-    }
-  };
+    if (shapeData.type === 'polygon') {
+      setLoadingPropertyOptions(true);
+      try {
+        if (mode === 'polygon') {
+          setDrawnShapes((prev) => {
+            const nonPolygonShapes = prev.filter((shape) => shape.type !== 'polygon');
+            return [...nonPolygonShapes, shapeData];
+          });
+        }
 
-  // Perform address/location search (autocomplete or direct)
-  const performSearch = async (query: string, isAutocomplete: boolean = false) => {
+        const options = await generatePropertyOptions(shapeData);
+        const deduped = deduplicatePropertyOptions(options);
+        setPropertyOptions(deduped);
+
+        const realOptions = deduped.filter((o) => o.address !== 'do_not_consider_key');
+        if (realOptions.length === 1) {
+          const idx = deduped.findIndex((o) => o.id === realOptions[0].id);
+          if (idx >= 0) setSelectedPropertyIndex(idx);
+        } else {
+          setSelectedPropertyIndex(deduped.length - 1);
+        }
+      } catch {
+        setPropertyOptions([]);
+      } finally {
+        setLoadingPropertyOptions(false);
+      }
+    }
+  }, [mode, drawnShapes, generatePropertyOptions]);
+
+  // Perform address/location search
+  const performSearch = useCallback(async (query: string, isAutocomplete: boolean = false) => {
     if (!query.trim()) return;
+
     try {
       if (isAutocomplete) {
         setSearchLoading(true);
       } else {
         setIsLoading(true);
       }
-      const limit = isAutocomplete ? 5 : 1;
+
+      const limit = isAutocomplete ? AUTOCOMPLETE_LIMIT : SINGLE_RESULT_LIMIT;
       const response = await fetch(
         `https://photon.komoot.io/api?q=${encodeURIComponent(query)}&limit=${limit}`,
         {
           method: 'GET',
-          headers: {
-            Accept: 'application/json',
-          },
+          headers: { Accept: 'application/json' },
         }
       );
+
       if (response.ok) {
         const data = await response.json();
-        if (data.features && data.features.length > 0) {
+        if (data.features?.length > 0) {
           if (isAutocomplete) {
-            const formattedResults = data.features.map((feature: any, index: number) => {
+            const formattedResults = data.features.map((feature: PhotonFeature, index: number) => {
               const coords = feature.geometry.coordinates;
               const props = feature.properties;
-              const parts = [];
-              if (props.name) parts.push(props.name);
-              if (props.street) parts.push(props.street);
-              if (props.city) parts.push(props.city);
-              if (props.state) parts.push(props.state);
+              const parts = buildAddressParts(props);
+              if (props.name && !parts.includes(props.name)) parts.unshift(props.name);
               if (props.country) parts.push(props.country);
 
-              const displayName =
-                parts.length > 0
-                  ? parts.join(', ')
-                  : `Location: ${coords[1].toFixed(4)}°, ${coords[0].toFixed(4)}°`;
+              const displayName = parts.length > 0
+                ? parts.join(', ')
+                : formatLocationString(coords[1], coords[0]);
+
               return {
                 id: index,
                 displayName,
-                coordinates: [coords[1], coords[0]], // [lat, lng] for display
+                coordinates: [coords[1], coords[0]] as [number, number],
                 type: props.type || 'location',
               };
             });
@@ -423,19 +460,15 @@ const LocationSelectionPage: React.FC = () => {
           } else {
             const feature = data.features[0];
             const coords = feature.geometry.coordinates;
-            const lat = coords[1];
-            const lng = coords[0];
-            await selectLocation(lat, lng);
+            await selectLocation(coords[1], coords[0]);
           }
-        } else {
-          if (isAutocomplete) {
-            setSearchResults([]);
-            setShowSearchResults(false);
-          }
+        } else if (isAutocomplete) {
+          setSearchResults([]);
+          setShowSearchResults(false);
         }
       }
-    } catch (error) {
-      console.error('Search failed:', error);
+    } catch {
+      // Silent fail
     } finally {
       if (isAutocomplete) {
         setSearchLoading(false);
@@ -443,54 +476,171 @@ const LocationSelectionPage: React.FC = () => {
         setIsLoading(false);
       }
     }
-  };
+  }, []);
 
   // Select a location from search or map
-  const selectLocation = async (lat: number, lng: number) => {
+  const selectLocation = useCallback(async (lat: number, lng: number) => {
     try {
       setIsLoading(true);
       const address = await getReverseGeocodedAddress(lat, lng);
-      setSelectedLocation({
-        coordinates: [lng, lat], // [lng, lat]
-        address: address,
-      });
+      setSelectedLocation({ coordinates: [lng, lat], address });
+
       if (mapRef.current) {
-        // MapLibre uses flyTo with center as [lng, lat]
-        mapRef.current.flyTo({
-          center: [lng, lat],
-          zoom: 16,
-        });
+        mapRef.current.jumpTo({ center: [lng, lat], zoom: MAP_ZOOM_LEVEL });
       }
       setShowSearchResults(false);
-    } catch (error) {
-      console.error('Failed to select location:', error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  // Handle click on a search result
-  const handleSearchResultClick = (result: any) => {
-    setSearchQuery(result.displayName);
-    selectLocation(result.coordinates[0], result.coordinates[1]);
-  };
+  // Handle search input
+  const handleSearchInput = useCallback((value: string) => {
+    setSearchQuery(value);
 
-  // Handle search button click
-  const handleSearch = () => {
-    if (searchQuery.trim()) {
-      performSearch(searchQuery, false);
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (value.trim().length > SEARCH_MIN_LENGTH) {
+      searchTimeoutRef.current = setTimeout(() => {
+        void performSearch(value, true);
+      }, SEARCH_DEBOUNCE_MS);
+    } else {
+      setSearchResults([]);
       setShowSearchResults(false);
     }
-  };
+  }, [performSearch]);
+
+  // Handle search result click
+  const handleSearchResultClick = useCallback((result: SearchResult) => {
+    setSearchQuery(result.displayName);
+    void selectLocation(result.coordinates[0], result.coordinates[1]);
+  }, [selectLocation]);
+
+  // Handle search button click
+  const handleSearch = useCallback(() => {
+    if (searchQuery.trim()) {
+      void performSearch(searchQuery, false);
+      setShowSearchResults(false);
+    }
+  }, [searchQuery, performSearch]);
 
   // Handle back navigation
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     navigate(-1);
-  };
+  }, [navigate]);
 
-  // Handle confirm location button click (save to form)
-  const handleConfirmLocation = async () => {
-    const firstPolygon = drawnShapes.find((s) => s.type === 'polygon') as any | undefined;
+  // Clear all shapes
+  const handleClearAll = useCallback(() => {
+    try {
+      polygonControlRef.current?.clear?.();
+    } catch {
+      // Ignore errors
+    }
+    setDrawnShapes([]);
+    setPropertyOptions([]);
+    setDrawingPointCount(0);
+    updateForm({
+      locationData: {
+        gisDataId: formData.locationData?.gisDataId,
+        drawnShapes: [],
+        coordinates: {},
+        address: '',
+      },
+    });
+  }, [formData.locationData?.gisDataId, updateForm]);
+
+  // Helper: Get address and coordinates for polygon property
+  const getPolygonPropertyData = useCallback(
+    async (
+      firstPolygon: ShapeData,
+      selectedPropertyIndex: number,
+      propertyOptions: PropertyOption[]
+    ): Promise<{ address: string; coords: { lat: number; lng: number } }> => {
+      if (selectedPropertyIndex < propertyOptions.length) {
+        const selectedProperty = propertyOptions[selectedPropertyIndex];
+        if (selectedProperty.coordinates) {
+          return {
+            address: selectedProperty.address,
+            coords: selectedProperty.coordinates,
+          };
+        }
+      }
+
+      // Fallback to first coordinate
+      const coords = (firstPolygon.coordinates as number[][]) || [];
+      if (coords.length > 0) {
+        const firstCoord = coords[0];
+        const [validLat, validLng] = validateCoordinates(firstCoord[1], firstCoord[0]);
+
+        try {
+          setIsLoading(true);
+          const address = await getReverseGeocodedAddress(validLat, validLng);
+          return { address, coords: { lat: validLat, lng: validLng } };
+        } catch {
+          return {
+            address: `${validLat.toFixed(6)}, ${validLng.toFixed(6)}`,
+            coords: { lat: validLat, lng: validLng },
+          };
+        } finally {
+          setIsLoading(false);
+        }
+      }
+
+      // Ultimate fallback
+      return {
+        address: selectedLocation.address,
+        coords: {
+          lat: selectedLocation.coordinates[1],
+          lng: selectedLocation.coordinates[0],
+        },
+      };
+    },
+    [selectedLocation]
+  );
+
+  // Helper: Get address and coordinates for point property
+  const getPointPropertyData = useCallback(
+    async (pinned: ShapeData): Promise<{ address: string; coords: { lat: number; lng: number } }> => {
+      if (!pinned.coordinates || (pinned.coordinates as number[]).length < 2) {
+        return {
+          address: selectedLocation.address,
+          coords: {
+            lat: selectedLocation.coordinates[1],
+            lng: selectedLocation.coordinates[0],
+          },
+        };
+      }
+
+      const [validLat, validLng] = validateCoordinates(
+        (pinned.coordinates as number[])[1],
+        (pinned.coordinates as number[])[0]
+      );
+
+      if (pinned.address) {
+        return { address: pinned.address, coords: { lat: validLat, lng: validLng } };
+      }
+
+      try {
+        setIsLoading(true);
+        const address = await getReverseGeocodedAddress(validLat, validLng);
+        return { address, coords: { lat: validLat, lng: validLng } };
+      } catch {
+        return {
+          address: `${validLat.toFixed(6)}, ${validLng.toFixed(6)}`,
+          coords: { lat: validLat, lng: validLng },
+        };
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [selectedLocation]
+  );
+
+  // Handle confirm location
+  const handleConfirmLocation = useCallback(async () => {
+    const firstPolygon = drawnShapes.find((s) => s.type === 'polygon');
     let addressToSave = selectedLocation.address;
     let coordsToSave = {
       lat: selectedLocation.coordinates[1],
@@ -498,60 +648,15 @@ const LocationSelectionPage: React.FC = () => {
     };
 
     if (firstPolygon && propertyOptions.length > 0) {
-      if (selectedPropertyIndex < propertyOptions.length) {
-        const selectedProperty = propertyOptions[selectedPropertyIndex];
-        if (selectedProperty.coordinates) {
-          addressToSave = selectedProperty.address;
-          coordsToSave = selectedProperty.coordinates;
-        } else {
-          const coords = (firstPolygon.coordinates as number[][]) || [];
-          if (coords.length > 0) {
-            const firstCoord = coords[0];
-            // MapLibre coordinates are [lng, lat]
-            let lng = firstCoord[0];
-            let lat = firstCoord[1];
-
-            // Validate
-            if (Math.abs(lat) > 90 || Math.abs(lng) > 180) {
-              [lat, lng] = [lng, lat];
-            }
-            try {
-              setIsLoading(true);
-              addressToSave = await getReverseGeocodedAddress(lat, lng);
-            } catch (err) {
-              addressToSave = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-            } finally {
-              setIsLoading(false);
-            }
-            coordsToSave = { lat, lng };
-          }
-        }
-      }
-    }
-
-    if (!firstPolygon) {
-      const pinned = drawnShapes.find((s) => s.type === 'point') as any | undefined;
-      if (pinned && pinned.coordinates && (pinned.coordinates as number[]).length >= 2) {
-        // MapLibre coordinates are [lng, lat]
-        let plng = (pinned.coordinates as number[])[0];
-        let plat = (pinned.coordinates as number[])[1];
-
-        if (Math.abs(plat) > 90 || Math.abs(plng) > 180) {
-          [plat, plng] = [plng, plat];
-        }
-        if (pinned.address) {
-          addressToSave = pinned.address;
-        } else {
-          try {
-            setIsLoading(true);
-            addressToSave = await getReverseGeocodedAddress(plat, plng);
-          } catch (err) {
-            addressToSave = `${plat.toFixed(6)}, ${plng.toFixed(6)}`;
-          } finally {
-            setIsLoading(false);
-          }
-        }
-        coordsToSave = { lat: plat, lng: plng };
+      const result = await getPolygonPropertyData(firstPolygon, selectedPropertyIndex, propertyOptions);
+      addressToSave = result.address;
+      coordsToSave = result.coords;
+    } else {
+      const pinned = drawnShapes.find((s) => s.type === 'point');
+      if (pinned) {
+        const result = await getPointPropertyData(pinned);
+        addressToSave = result.address;
+        coordsToSave = result.coords;
       }
     }
 
@@ -567,62 +672,62 @@ const LocationSelectionPage: React.FC = () => {
           coordinates: shape.coordinates || [],
           area: shape.area,
           address: shape.address,
-          addedAt: (shape as any).addedAt,
+          addedAt: shape.addedAt,
         })),
     };
     updateForm({ locationData });
     navigate(-1);
-  };
+  }, [
+    drawnShapes,
+    selectedLocation,
+    propertyOptions,
+    selectedPropertyIndex,
+    formData.locationData?.gisDataId,
+    updateForm,
+    navigate,
+    getPolygonPropertyData,
+    getPointPropertyData,
+  ]);
 
-  // On mount: reverse geocode initial location
+  // Initial reverse geocode
   useEffect(() => {
     const reverseGeocode = async () => {
       try {
         setIsLoading(true);
         const address = await getReverseGeocodedAddress(
-          selectedLocation.coordinates[1], // lat
-          selectedLocation.coordinates[0] // lng
+          selectedLocation.coordinates[1],
+          selectedLocation.coordinates[0]
         );
+        setSelectedLocation((prev) => ({ ...prev, address }));
+      } catch {
         setSelectedLocation((prev) => ({
           ...prev,
-          address: address,
-        }));
-      } catch (error) {
-        setSelectedLocation((prev) => ({
-          ...prev,
-          address: `${selectedLocation.coordinates[1].toFixed(
-            6
-          )}, ${selectedLocation.coordinates[0].toFixed(6)}`,
+          address: `${selectedLocation.coordinates[1].toFixed(6)}, ${selectedLocation.coordinates[0].toFixed(6)}`,
         }));
       } finally {
         setIsLoading(false);
       }
     };
-    reverseGeocode();
+    void reverseGeocode();
   }, []);
 
-  // On mount: center map on polygon centroid if present
+  // Center map on polygon centroid
   useEffect(() => {
     if (mode === 'polygon' && mapRef.current) {
       const existingPolygon = drawnShapes.find((s) => s.type === 'polygon');
-      if (existingPolygon && existingPolygon.coordinates) {
-        const centroid = calculatePolygonCentroid(
-          existingPolygon.coordinates as number[][]
-        );
+      if (existingPolygon?.coordinates) {
+        const centroid = calculatePolygonCentroid(existingPolygon.coordinates as number[][]);
         setTimeout(() => {
-          if (mapRef.current) {
-            // MapLibre uses flyTo with center as [lng, lat]
-            mapRef.current.flyTo({
-              center: [centroid.lng, centroid.lat],
-              zoom: 16,
-            });
-          }
-        }, 500);
+          mapRef.current?.flyTo({
+            center: [centroid.lng, centroid.lat],
+            zoom: MAP_ZOOM_LEVEL,
+          });
+        }, MAP_CENTER_DELAY);
       }
     }
   }, [mode, drawnShapes]);
 
-  // On mount: load property options for existing polygon
+  // Load property options for existing polygon
   useEffect(() => {
     const loadExistingPolygonOptions = async () => {
       const existingPolygon = drawnShapes.find((s) => s.type === 'polygon');
@@ -630,28 +735,10 @@ const LocationSelectionPage: React.FC = () => {
         setLoadingPropertyOptions(true);
         try {
           const options = await generatePropertyOptions(existingPolygon);
-          // Deduplicate options and keep do_not_consider at the end
-          const dedupePropertyOptions = (opts: any[]) => {
-            const seen = new Map<string, any>();
-            let doNotConsider: any = null;
-            for (const o of opts) {
-              if (o.address === 'do_not_consider_key') {
-                doNotConsider = o;
-                continue;
-              }
-              const key = (o.address || '').trim();
-              if (!seen.has(key)) {
-                seen.set(key, o);
-              }
-            }
-            const result = Array.from(seen.values());
-            if (doNotConsider) result.push(doNotConsider);
-            return result;
-          };
-          const deduped = dedupePropertyOptions(options);
+          const deduped = deduplicatePropertyOptions(options);
           setPropertyOptions(deduped);
           setSelectedPropertyIndex(deduped.length - 1);
-        } catch (error) {
+        } catch {
           setPropertyOptions([]);
         } finally {
           setLoadingPropertyOptions(false);
@@ -661,10 +748,10 @@ const LocationSelectionPage: React.FC = () => {
         setSelectedPropertyIndex(0);
       }
     };
-    loadExistingPolygonOptions();
+    void loadExistingPolygonOptions();
   }, []);
 
-  // Cleanup search timeout on unmount
+  // Cleanup search timeout
   useEffect(() => {
     return () => {
       if (searchTimeoutRef.current) {
@@ -673,7 +760,7 @@ const LocationSelectionPage: React.FC = () => {
     };
   }, []);
 
-  // Hide search results dropdown when clicking outside
+  // Hide search results on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
@@ -687,7 +774,9 @@ const LocationSelectionPage: React.FC = () => {
     };
   }, []);
 
-  // Main render: map, search, polygon controls, property options, and confirm button
+  const realPropertyOptions = propertyOptions.filter((p) => p.address !== 'do_not_consider_key');
+  const showPropertyList = realPropertyOptions.length !== 1;
+
   return (
     <div className="location-selection-container">
       <div className="location-header1">
@@ -751,8 +840,9 @@ const LocationSelectionPage: React.FC = () => {
           {showSearchResults && searchResults.length > 0 && (
             <div className="search-results-dropdown">
               {searchResults.map((result) => (
-                <div
+                <button
                   key={result.id}
+                  type="button"
                   className="search-result-item"
                   onClick={() => handleSearchResultClick(result)}
                 >
@@ -773,7 +863,7 @@ const LocationSelectionPage: React.FC = () => {
                     <div className="search-result-name">{result.displayName}</div>
                     <div className="search-result-type">{result.type}</div>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           )}
@@ -783,39 +873,18 @@ const LocationSelectionPage: React.FC = () => {
                 <IconButton
                   size="small"
                   aria-label="clear-polygon"
-                  onClick={() => {
-                    try {
-                      if (polygonControlRef.current && polygonControlRef.current.clear)
-                        polygonControlRef.current.clear();
-                    } catch (e) {
-                      /* ignore */
-                    }
-                    setDrawnShapes([]);
-                    setPropertyOptions([]);
-                    updateForm({
-                      locationData: {
-                        gisDataId: formData.locationData?.gisDataId!,
-                        drawnShapes: [],
-                        coordinates: {},
-                        address: '',
-                      },
-                    });
-                  }}
+                  onClick={handleClearAll}
                   title="Clear drawings"
                   className="polygon-control-refresh"
                 >
-                  <img
-                    src={undoIcon}
-                    alt="Undo"
-                    style={{ width: '20px', height: '20px' }}
-                  />
+                  <img src={undoIcon} alt="Undo" style={{ width: '20px', height: '20px' }} />
                 </IconButton>
               </div>
               <button
-                className={`polygon-control-btn start`}
+                className="polygon-control-btn start"
                 onClick={() => {
                   setPolygonActive(true);
-                  if (polygonControlRef.current?.start) polygonControlRef.current.start();
+                  polygonControlRef.current?.start?.();
                 }}
                 title={startDrawingBtn}
               >
@@ -832,13 +901,18 @@ const LocationSelectionPage: React.FC = () => {
                 {startDrawingBtn}
               </button>
               <button
-                className={`polygon-control-btn finish`}
+                className="polygon-control-btn finish"
+                disabled={drawingPointCount < MIN_POLYGON_POINTS}
                 onClick={() => {
-                  if (polygonControlRef.current?.finish)
-                    polygonControlRef.current.finish();
+                  polygonControlRef.current?.finish?.();
                   setPolygonActive(false);
+                  setDrawingPointCount(0);
                 }}
-                title={finishDrawingBtn}
+                title={
+                  drawingPointCount < MIN_POLYGON_POINTS
+                    ? 'Need at least 3 points to finish polygon'
+                    : finishDrawingBtn
+                }
               >
                 <svg
                   width="16"
@@ -857,25 +931,16 @@ const LocationSelectionPage: React.FC = () => {
         </div>
         <div className="location-map-container">
           <LocationMapWithDrawing
-            center={[selectedLocation.coordinates[1], selectedLocation.coordinates[0]]} // [lat, lng]
+            center={[selectedLocation.coordinates[1], selectedLocation.coordinates[0]]}
             onLocationUpdate={handleLocationUpdate}
             onShapeDrawn={handleShapeDrawn}
             initialShapes={formData.locationData?.drawnShapes || []}
-            onClearAll={() => {
-              setDrawnShapes([]);
-              updateForm({
-                locationData: {
-                  gisDataId: formData.locationData?.gisDataId,
-                  drawnShapes: [],
-                  coordinates: {},
-                  address: '',
-                },
-              });
-            }}
+            onClearAll={handleClearAll}
             externalFinishRef={polygonControlRef}
             startDrawing={polygonActive}
             externalMapRef={mapRef}
-            onLocationLockChange={(locked: boolean) => setLocationLocked(locked)}
+            onLocationLockChange={setLocationLocked}
+            onDrawingPathChange={setDrawingPointCount}
           />
         </div>
       </div>
@@ -890,34 +955,26 @@ const LocationSelectionPage: React.FC = () => {
             )}
           </div>
         </div>
-        {drawnShapes.filter((shape) => shape.type === 'polygon').length > 0 && (
+        {drawnShapes.some((shape) => shape.type === 'polygon') && (
           <div className="selected-location-section">
             <h3>{multiplePropertiesTitle}</h3>
-            {loadingPropertyOptions ? (
+            {loadingPropertyOptions && (
               <div className="properties-list">
                 <p className="loading-address">{loadingPropertiesText}</p>
               </div>
-            ) : propertyOptions.length > 0 ? (
+            )}
+            {!loadingPropertyOptions && propertyOptions.length === 0 && (
               <div className="properties-list">
-                {/* If there's exactly one real property (excluding 'do_not_consider_key') we skip rendering the list and auto-use it */}
-                {propertyOptions.filter((p: any) => p.address !== 'do_not_consider_key')
-                  .length === 1 ? (
-                  <div className="property-item single">
-                    <div className="property-text">
-                      {
-                        propertyOptions.find(
-                          (p: any) => p.address !== 'do_not_consider_key'
-                        )!.address
-                      }
-                    </div>
-                  </div>
-                ) : (
-                  propertyOptions.map((property: any, index: number) => (
+                <p>{noPropertiesText}</p>
+              </div>
+            )}
+            {!loadingPropertyOptions && propertyOptions.length > 0 && (
+              <div className="properties-list">
+                {showPropertyList ? (
+                  propertyOptions.map((property, index) => (
                     <div
                       key={property.id}
-                      className={`property-item ${
-                        selectedPropertyIndex === index ? 'selected' : ''
-                      }`}
+                      className={`property-item ${selectedPropertyIndex === index ? 'selected' : ''}`}
                     >
                       <input
                         type="radio"
@@ -934,11 +991,11 @@ const LocationSelectionPage: React.FC = () => {
                       </label>
                     </div>
                   ))
+                ) : (
+                  <div className="property-item single">
+                    <div className="property-text">{realPropertyOptions[0].address}</div>
+                  </div>
                 )}
-              </div>
-            ) : (
-              <div className="properties-list">
-                <p>{noPropertiesText}</p>
               </div>
             )}
           </div>
@@ -946,7 +1003,12 @@ const LocationSelectionPage: React.FC = () => {
         <button
           className="confirm-location-btn"
           onClick={handleConfirmLocation}
-          disabled={isLoading}
+          disabled={isLoading || polygonActive}
+          title={
+            polygonActive
+              ? 'Please finish drawing the polygon before confirming the location.'
+              : undefined
+          }
         >
           {confirmLocationBtn}
         </button>

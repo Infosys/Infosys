@@ -11,17 +11,12 @@ interface OwnerCardProps {
   name: string;
   isPrimary?: boolean;
   onDelete?: () => void;
-  onViewOwners?: () => void;
   isDetailed: boolean;
   aadhar?: string;
   mobile?: string;
   email?: string;
   guardian?: string;
   guardianRelationship?: string;
-  nameText: string;
-  mobileNumberLabel: string;
-  aadhaarLabel: string;
-  emailLabel: string;
   guardianLabel: string;
   primaryOwnerText: string;
   onEdit?: () => void;

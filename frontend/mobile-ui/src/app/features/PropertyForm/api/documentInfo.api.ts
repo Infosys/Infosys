@@ -31,9 +31,9 @@ export const documentInfoApi = apiSlice.injectEndpoints({
       providesTags: [TAG_TYPES.DOCUMENT_INFO],
     }),
     // Mutation to update document info by document ID
-    updateDocumentInfo: builder.mutation<DocumentInfoResponse, { documentId: string; body: DocumentInfoRequest }>({
-      query: ({ documentId, body }) => ({
-        url: `/v1/additional-property-details/${documentId}`,
+    updateDocumentInfo: builder.mutation<DocumentInfoResponse, { documentId: string; body: DocumentInfoRequest; applicationId: string; isVerifying: boolean }>({
+      query: ({ documentId, body, applicationId, isVerifying }) => ({
+        url: `/v1/additional-property-details/${documentId}/${applicationId}?isVerifying=${isVerifying}`,
         method: 'PUT',
         body,
       }),

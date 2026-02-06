@@ -39,8 +39,8 @@ const OwnerCard: React.FC<OwnerCardProps> = ({
   viewOwnersText = 'View Owners',
 }) => (
   // Render owner summary card UI
-  <div style={{marginLeft:"7%", marginRight:"6%", border:"1px solid #b4b0b0ff", borderRadius:"25px", marginBottom:"0.5%"}} className="owner-summary-card">
-    <div style={{paddingBottom:"0"}} className="owner-summary-content">
+  <div className="owner-summary-card">
+    <div style={{ paddingBottom: '0' }} className="owner-summary-content">
       <div className="owner-summary-avatar">
         {/* Owner avatar icon */}
         <img
@@ -52,16 +52,29 @@ const OwnerCard: React.FC<OwnerCardProps> = ({
           style={{ display: 'block' }}
         />
       </div>
-      <div style={{marginLeft:"6%"}} className="owner-summary-info">
+      <div className="owner-summary-info">
         {/* Owner type (primary/secondary) */}
-        <div className="owner-summary-type">{isPrimary ? primaryOwnerText : ownerText}</div>
+        <div className="owner-summary-type">
+          {isPrimary ? primaryOwnerText : ownerText}
+        </div>
         {/* Owner name */}
-        <div className="owner-summary-name">{nameText}: {name}</div>
+        <div className="owner-summary-name">
+          {nameText}: {name}
+        </div>
+        {onViewOwners && (
+          <button
+            className="owner-summary-view-owners"
+            onClick={onViewOwners}
+            type="button"
+          >
+            {viewOwnersText}
+          </button>
+        )}
       </div>
       {/* Delete owner button if callback provided */}
       {onDelete && (
         <button
-          style={{padding:"0", backgroundColor: "#f5f5f5", marginRight:"2%"}}
+          style={{ padding: '0', backgroundColor: '#f5f5f5', marginRight: '2%' }}
           className="owner-summary-delete"
           onClick={onDelete}
           aria-label="Delete owner"
@@ -72,11 +85,6 @@ const OwnerCard: React.FC<OwnerCardProps> = ({
       )}
     </div>
     {/* View owners button if callback provided */}
-    {onViewOwners && (
-      <button style={{marginLeft:"26%", padding:"0"}} className="owner-summary-view-owners" onClick={onViewOwners} type="button">
-        {viewOwnersText}
-      </button>
-    )}
   </div>
 );
 

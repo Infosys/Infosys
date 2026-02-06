@@ -1,0 +1,118 @@
+.ptc-card {
+  width: 333px !important;
+  height: 85px !important;
+  border-radius: 15px !important;
+  padding: 12px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #F7E4DB !important;
+  border: 1px solid rgba(0,0,0,0.06) !important;
+  font-family: 'Roboto', Arial, sans-serif;
+}
+
+.ptc-left-spacer {
+  width: 8px;
+  flex: 0 0 8px;
+}
+
+.ptc-left-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.ptc-title-1 {
+  font-size: 16px;
+  font-weight: 700 !important;
+  color: #000000;
+  margin: 0;
+  text-align: left;
+  font-family: 'Roboto', Arial, sans-serif;
+}
+
+.ptc-view-btn-1 {
+  width: 114px;
+  height: 30px;
+  padding: 6px 12px;
+  text-transform: none;
+  border-radius: 8px;
+  background-color: #DBFAD3 !important;
+  color: #000000 !important;
+  box-shadow: none !important;
+  font-size: 10px !important;
+  border: 1px solid rgba(0,0,0,0.04) !important;
+  margin-right: 10px;
+}
+
+.ptc-open-icon {
+  font-size: 12px !important;
+}
+
+.ptc-right-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.ptc-price-top-bill{
+  font-size: 14px;
+  font-weight: 700 ;
+  color: #C84C0E !important;
+  margin: 0;
+  margin-right: 10px;
+}
+
+.ptc-middle-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ptc-icon-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+div.ptc-icon-btn {
+  color: #C84C0E;
+  padding: 4px !important;
+}
+
+.ptc-amount-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.visb {
+  color: #C84C0E;
+  margin-left: 5px;
+}
+
+.file {
+  color: #C84C0E;
+  margin-left: -10px;
+}
+.ptc-pay-btn {
+  width: 94px;
+  height: 36px;
+  padding: 6px 12px;
+  text-transform: none;
+  border-radius: 8px;
+  background-color: #C84C0E !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  font-size: 14px;
+  font-weight: 600;
+  min-width: 0;
+}
+
+.ptc-pay-btn:hover {
+  background-color: #a63f18 !important;
+}

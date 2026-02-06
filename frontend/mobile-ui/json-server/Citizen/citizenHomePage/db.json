@@ -1,0 +1,51 @@
+{
+  "home": {
+    "user": {
+      "activeLicenses": 3,
+      "numberOfProperties": 2
+    },
+    "properties": [
+      {
+        "id": 1,
+        "address": "Plot 432, 24th Cross, HSR Layout Sector 2, Bengaluru - 560102",
+        "enumerationProgress": 80,
+        "location": {
+          "lat": 12.9106,
+          "lng": 77.6385
+        }
+      },
+      {
+        "id": 2,
+        "address": "Plot 567, 27th Main Road, HSR Layout, Bengaluru - 560102",
+        "enumerationProgress": 100,
+        "location": {
+          "lat": 12.9135,
+          "lng": 77.6387
+        }
+      }
+    ],
+    "urgentAttention": [
+      {
+        "id": 1,
+        "type": "immediate",
+        "message": "BBMP Trade License renewal due on Oct 20 - HSR Layout establishment",
+        "date": "2024-10-04",
+        "status": "pending"
+      },
+      {
+        "id": 2,
+        "type": "casual",
+        "message": "BWSSB water bill payment successful - ₹1,250",
+        "date": "2024-10-04",
+        "status": "success"
+      },
+      {
+        "id": 3,
+        "type": "casual",
+        "message": "Karnataka Professional Tax registration completed",
+        "date": "2024-10-04",
+        "status": "success"
+      }
+    ]
+  }
+}

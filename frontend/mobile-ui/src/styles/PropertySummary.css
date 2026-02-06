@@ -48,36 +48,27 @@
   gap: 18px;
 }
  
-.summary-section{
-  background: var(--peach);
-  border-radius: 12px;
-  padding: 18px;
-  box-shadow: 0 1px 0 rgba(0,0,0,0.04);
-  border: 1px solid rgba(0,0,0,0.04);
-}
- 
 .section-header{
   display: flex;
   align-items: center;
   justify-content: space-between;
-  /* margin-bottom: 12px; */
+  width: 100%;
 }
 
 .section-title{
   font-size: 18px;
   color: #C84C0E;
   font-weight: 700;
+  flex: 0 1 auto;
 }
- 
+
 .edit-btn{
   background: transparent;
   border: none;
   cursor: pointer;
   color: black;
   font-size: 16px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
+  padding: 4px;
 }
  
 .edit-btn:hover {
@@ -159,11 +150,8 @@
  
 .property-tax-zone{
   display: inline-block;
-  background: #f7d9cb;
-  color: var(--orange);
-  padding: 6px 10px;
+  padding: 6px 4px;
   border-radius: 8px;
-  font-weight: 700;
   font-size: 13px;
 }
  

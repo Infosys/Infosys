@@ -1,0 +1,78 @@
+/* Unique "mct-" prefix to avoid collisions and increase specificity */
+
+.mct-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+  background: #FFEDE3;
+  border-radius: 80px;
+  padding: 14px;
+  box-sizing: border-box;
+}
+
+/* each tab is a button with centered content */
+.mct-wrapper .mct-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  padding: 6px;
+  cursor: pointer;
+  min-width: 88px;
+  box-sizing: border-box;
+}
+
+/* the icon container that receives highlight */
+.mct-wrapper .mct-tab .mct-icon-box {
+  width: 64px;
+  height: 32px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 160ms ease;
+  background: transparent;
+}
+
+/* icon default color */
+.mct-wrapper .mct-tab .mct-icon {
+  color: #4A3325;
+  font-size: 24px;
+}
+
+/* label */
+.mct-wrapper .mct-tab .mct-label {
+  font-size: 1rem;
+  color: #4A3325;
+  font-weight: 400;
+  text-align: center;
+}
+
+/* selected state: highlight icon box and bold label */
+.mct-wrapper .mct-tab.mct-selected .mct-icon-box {
+  background: #FDD5BF;
+}
+
+.mct-wrapper .mct-tab.mct-selected .mct-label {
+  font-weight: 700;
+}
+
+/* ensure the icon color remains consistent when selected */
+.mct-wrapper .mct-tab.mct-selected .mct-icon {
+  color: #4A3325;
+}
+
+/* focus styles (remove outer box, keep only inner selection) */
+.mct-wrapper .mct-tab:focus {
+  outline: none;
+}
+
+/* defensive specificity to reduce accidental overrides */
+.mct-wrapper .mct-tab,
+.mct-wrapper .mct-tab .mct-icon,
+.mct-wrapper .mct-tab .mct-label {
+  -webkit-font-smoothing: antialiased;
+}

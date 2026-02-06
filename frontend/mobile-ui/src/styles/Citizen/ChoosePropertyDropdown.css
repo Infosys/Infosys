@@ -1,0 +1,85 @@
+/* scoped with .choose-dropdown / .choose-paper to avoid overriding other selectors */
+
+.choose-dropdown { font-family: Roboto, Arial, sans-serif; }
+
+/* visible container (single box) */
+.choose-paper {
+  width: 355px;
+  height: 48px;
+  border-radius: 8px;
+  border: 1.5px solid #C84C03;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  box-sizing: border-box;
+}
+
+/* ensure the internal select/input does not draw its own box */
+.choose-paper .MuiOutlinedInput-notchedOutline { display: none; border: none; }
+
+/* make MUI input/select transparent & full height inside our container */
+.choose-paper .MuiInputBase-root,
+.choose-paper .MuiOutlinedInput-root,
+.choose-paper .MuiSelect-root {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  height: 100%;
+}
+
+/* align select content */
+.choose-paper .MuiSelect-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 6px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* hide default arrow icon */
+.choose-paper .MuiSelect-icon { display: none; }
+
+/* Menu paper should start flush with the dropdown bottom and have no top divider */
+.choose-menu-paper {
+  margin-top: 0 !important;
+  border-top: none !important;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+}
+
+/* Remove any top border/line emitted by inner list or MUI */
+.choose-menu-paper .MuiList-root,
+.choose-menu-list {
+  padding-top: 0;
+  margin-top: 0;
+  border-top: none;
+}
+
+/* remove the underline for standard variant within this container */
+.choose-paper .MuiInput-underline:before,
+.choose-paper .MuiInput-underline:after {
+  display: none;
+}
+
+/* defensive specificity: menu items and selected value */
+.choose-menu-item { padding: 12px 12px; transition: background-color 0.2s ease;}
+
+.choose-menu-item:hover {
+  background-color: #F7E4DB !important;
+  border-color: #C84C0E !important;
+}
+.menu-item-content { display:flex; flex-direction:column; }
+.menu-title { color: #505A5F; font-weight: 500; font-size: 14px; }
+.menu-subtitle { color: #000; font-size: 12px; margin-top: 6px; font-weight: 600; }
+.selected-value .selected-title { color: #505A5F; font-weight: 700; }
+.selected-subtitle { color: #000; }
+
+/* ensure no accidental top border from global styles */
+.choose-menu-paper{width: 355px; margin-left: -9px; border-radius: 0px;}
+.choose-menu-paper .MuiPaper-root,
+.choose-menu-paper .MuiList-root {
+  -webkit-font-smoothing: antialiased;
+  border-top: none !important;
+  /* margin-top: 400px */
+}

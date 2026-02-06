@@ -35,10 +35,10 @@ export function validateDropdown(value: string, _fieldLabel: string, required = 
 
 // Utility: Remove all non-alphabet characters from input (for onType)
 export function onlyAlphabetsInput(value: string): string {
-  return value.replace(/[^a-zA-Z\s]/g, '');
+  return value.replaceAll(/[^a-zA-Z\s]/g, '');
 }
 
 // Utility: Remove all non-numeric characters from input (for onType)
 export function onlyNumbersInput(value: string): string {
-  return value.replace(/[^0-9]/g, '');
+  return value.replaceAll(/[^0-9]/g, '');
 }

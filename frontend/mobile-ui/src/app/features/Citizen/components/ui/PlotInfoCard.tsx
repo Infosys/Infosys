@@ -91,7 +91,6 @@ const PlotInfo: FC<PlotInfoProps> = ({ property }) => {
         {/* Survey Number / Locality */}
         <Box>
           <Typography fontSize={13} color="#888">
-            {/* {messages['citizen.my-properties'][lang]['survey-number']} */}
             Apartment Name
           </Typography>
           <Typography fontWeight={700} color="#222">

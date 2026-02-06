@@ -9,7 +9,7 @@ import {
 import type { FC } from "react";
 import { useAppSelector } from "../../../../../redux/Hooks";
 import { getMessagesFromSession, useLocalization } from "../../../../../services/Citizen/Localization/LocalizationContext";
-// import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+
 import LoadingPage from "../../../../components/Loader";
 import type { CitizenPropertyData } from "../../models/CitizenPropertiesPageModel/CitizenPropertyPageModel";
 

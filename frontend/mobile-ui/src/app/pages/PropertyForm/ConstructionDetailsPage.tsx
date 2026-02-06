@@ -8,44 +8,59 @@
 //   - Handles form validation, error popups, and draft saving
 //   - Responsive UI with MUI components and custom dropdowns
 // Used in: Property form workflow for construction details step
-import React, { useEffect, useState } from 'react';
-import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
-import Button from '@mui/material/Button';
-import { useNavigate } from 'react-router-dom';
-import { useFormMode } from '../../../context/FormModeContext';
-import JsonService from '../../../services/jsonServerApiCalls';
-import { usePropertyForm } from '../../../context/PropertyFormContext';
-import { useLocalization } from '../../../services/AgentLocalisation/formLocalisation';
-import StepHeader from '../../features/Agent/components/StepHeader';
-import { useAssessmentDetailsLocalization } from '../../../services/AgentLocalisation/localisation-AssessmentDetails';
-import CustomDropdown from '../../features/PropertyForm/components/ConstructionDetail/ConstructionDropdown';
-import type { DropdownOption } from '../../features/PropertyForm/components/ConstructionDetail/ConstructionDropdown';
-import { verifyButtonSx } from './styles/sharedStyles';
-import type { AlertType } from '../../models/AlertType.model';
+import React, { useEffect, useState } from "react";
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+import Button from "@mui/material/Button";
+import { useNavigate } from "react-router-dom";
+import { useFormMode } from "../../../context/FormModeContext";
+import JsonService from "../../../services/jsonServerApiCalls";
+import { usePropertyForm } from "../../../context/PropertyFormContext";
+import { useLocalization } from "../../../services/AgentLocalisation/formLocalisation";
+import StepHeader from "../../features/Agent/components/StepHeader";
+import { useAssessmentDetailsLocalization } from "../../../services/AgentLocalisation/localisation-AssessmentDetails";
+import CustomDropdown from "../../features/PropertyForm/components/ConstructionDetail/ConstructionDropdown";
+import type { DropdownOption } from "../../features/PropertyForm/components/ConstructionDetail/ConstructionDropdown";
+import { verifyButtonSx } from "./styles/sharedStyles";
+import type { AlertType } from "../../models/AlertType.model";
 import {
   useCreateConstructionDetailsMutation,
   useUpdateConstructionDetailsMutation,
   useLazyGetConstructionDetailsByPropertyIdQuery,
   type ConstructionDetailsRequest,
-} from '../../../redux/apis/contructionAPI';
-import { NotificationPopup } from '../../components/Popup/NotificationPopup';
+} from "../../../redux/apis/contructionAPI";
+import { NotificationPopup } from "../../components/Popup/NotificationPopup";
 
 // Inline styles for layout and UI
 const containerStyle = {
-  width: '100%',
-  margin: '0',
-  minHeight: '100vh',
-  display: 'flex',
-  flexDirection: 'column' as const,
-  fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-  bgcolor: '#fff',
+  width: "100%",
+  margin: "0",
+  minHeight: "100vh",
+  display: "flex",
+  flexDirection: "column" as const,
+  fontFamily:
+    "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+  bgcolor: "#fff",
 };
 
-const headerStyle = { backgroundColor: '#F9E6E0' };
+const getEmptyFieldError = (field: string): string => {
+  switch (field) {
+    case 'floorType':
+      return 'Select Floor Type to proceed';
+    case 'roofType':
+      return 'Select Roof Type to proceed';
+    case 'wallType':
+      return 'Select Wall Type to proceed';
+    case 'woodType':
+      return 'Select Wood Type to proceed';
+    default:
+      return '';
+  }
+};
+
 const formContentStyle = { flex: 1, padding: '24px', backgroundColor: '#FFFFFF' };
 const formFieldWrapper = { marginBottom: -1.5 };
-const formSubmitStyle = { padding: '16px 0', backgroundColor: '#FFFFFF' };
+const formSubmitStyle = { padding: "16px 0", backgroundColor: "#FFFFFF" };
 
 type LocalData = {
   floorType: string;
@@ -60,6 +75,12 @@ const ConstructionDetailsPage: React.FC = () => {
   const { mode } = useFormMode();
   const navigate = useNavigate();
   const { formData, updateForm } = usePropertyForm();
+  const [hasModified, setHasModified] = useState(false);
+
+  const markModified = () => {
+    if (mode === "verify") setHasModified(true);
+  };
+
   const {
     newPropertyForm,
     constructionDetails,
@@ -83,11 +104,11 @@ const ConstructionDetailsPage: React.FC = () => {
   // Localization hooks for labels, dropdowns, and UI text
   // Local state for form fields, dropdowns, and popup
   const [localData, setLocalData] = useState<LocalData>({
-    floorType: formData.constructionDetails?.floorType || '',
-    roofType: formData.constructionDetails?.roofType || '',
-    wallType: formData.constructionDetails?.wallType || '',
-    woodType: formData.constructionDetails?.woodType || '',
-    constructionId: formData.constructionDetails?.id?.toString() || '',
+    floorType: formData.constructionDetails?.floorType || "",
+    roofType: formData.constructionDetails?.roofType || "",
+    wallType: formData.constructionDetails?.wallType || "",
+    woodType: formData.constructionDetails?.woodType || "",
+    constructionId: formData.constructionDetails?.id?.toString() || "",
   });
 
   const [floorTypes, setFloorTypes] = useState<DropdownOption[]>([]);
@@ -112,15 +133,13 @@ const ConstructionDetailsPage: React.FC = () => {
     title: string;
     message: string;
     duration: number;
-  }>(
-    {
-      type: 'warning',
-      open: false,
-      title: '',
-      message: '',
-      duration: 3000,
-    }
-  );
+  }>({
+    type: "warning",
+    open: false,
+    title: "",
+    message: "",
+    duration: 3000,
+  });
   const propertyId = formData.id;
   // Effect: Fetch existing construction details if propertyId is present
   useEffect(() => {
@@ -132,11 +151,11 @@ const ConstructionDetailsPage: React.FC = () => {
             const existingData = result.data[0];
             // Map PascalCase to camelCase
             const mappedData = {
-              floorType: existingData.FloorType || '',
-              roofType: existingData.RoofType || '',
-              wallType: existingData.WallType || '',
-              woodType: existingData.WoodType || '',
-              constructionId: existingData.ID || '',
+              floorType: existingData.FloorType || "",
+              roofType: existingData.RoofType || "",
+              wallType: existingData.WallType || "",
+              woodType: existingData.WoodType || "",
+              constructionId: existingData.ID || "",
             };
 
             setLocalData(mappedData);
@@ -148,7 +167,7 @@ const ConstructionDetailsPage: React.FC = () => {
             });
           }
         } catch (error) {
-          console.error('Failed to fetch construction details:', error);
+          console.error("Failed to fetch construction details:", error);
         }
       }
     };
@@ -170,17 +189,23 @@ const ConstructionDetailsPage: React.FC = () => {
     setRoofTypes(translateDropdownOptions(rawRoofTypes));
     setWallTypes(translateDropdownOptions(rawWallTypes));
     setWoodTypes(translateDropdownOptions(rawWoodTypes));
-  }, [rawFloorTypes, rawRoofTypes, rawWallTypes, rawWoodTypes, translateDropdownOptions]);
+  }, [
+    rawFloorTypes,
+    rawRoofTypes,
+    rawWallTypes,
+    rawWoodTypes,
+    translateDropdownOptions,
+  ]);
 
   // Effect: Sync local state with context data
   useEffect(() => {
     if (formData.constructionDetails) {
       setLocalData({
-        floorType: formData.constructionDetails.floorType || '',
-        roofType: formData.constructionDetails.roofType || '',
-        wallType: formData.constructionDetails.wallType || '',
-        woodType: formData.constructionDetails.woodType || '',
-        constructionId: formData.constructionDetails.id?.toString() || '',
+        floorType: formData.constructionDetails.floorType || "",
+        roofType: formData.constructionDetails.roofType || "",
+        wallType: formData.constructionDetails.wallType || "",
+        woodType: formData.constructionDetails.woodType || "",
+        constructionId: formData.constructionDetails.id?.toString() || "",
       });
     }
   }, [formData.constructionDetails]);
@@ -189,9 +214,9 @@ const ConstructionDetailsPage: React.FC = () => {
     setPopup((prev) => ({ ...prev, open: false }));
     setTimeout(() => {
       setPopup({
-        type: 'warning',
+        type: "warning",
         open: true,
-        title: 'Warning!',
+        title: "Warning!",
         message,
         duration,
       });
@@ -209,10 +234,10 @@ const ConstructionDetailsPage: React.FC = () => {
 
   // --- NEW: touched and field error state for dropdowns ---
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({
-    floorType: '',
-    roofType: '',
-    wallType: '',
-    woodType: '',
+    floorType: "",
+    roofType: "",
+    wallType: "",
+    woodType: "",
   });
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({
     floorType: false,
@@ -224,10 +249,11 @@ const ConstructionDetailsPage: React.FC = () => {
     setTouchedFields((prev) => ({ ...prev, [name]: true }));
 
   const clearError = (name: string) =>
-    setFieldErrors((prev) => ({ ...prev, [name]: '' }));
+    setFieldErrors((prev) => ({ ...prev, [name]: "" }));
 
   // Called when a dropdown option is selected
   const handleDropdownSelect = (field: string, value: string) => {
+    markModified();
     setLocalData((prev) => ({ ...prev, [field]: value }));
     clearError(field);
     markTouched(field);
@@ -238,15 +264,9 @@ const ConstructionDetailsPage: React.FC = () => {
     markTouched(field);
     const currentValue = (localData as any)[field] as string;
     if (!currentValue || currentValue === '') {
-      const labelMap: Record<string, string> = {
-        floorType: floorTypeText,
-        roofType: roofTypeText,
-        wallType: wallTypeText,
-        woodType: woodTypeText,
-      };
       setFieldErrors((prev) => ({
         ...prev,
-        [field]: `${labelMap[field]} is required`,
+        [field]: getEmptyFieldError(field),
       }));
     } else {
       clearError(field);
@@ -259,10 +279,10 @@ const ConstructionDetailsPage: React.FC = () => {
 
     // Validation (also set field errors for UI)
     const missing = [
-      { key: 'floorType', label: floorTypeText },
-      { key: 'roofType', label: roofTypeText },
-      { key: 'wallType', label: wallTypeText },
-      { key: 'woodType', label: woodTypeText },
+      { key: "floorType", label: floorTypeText },
+      { key: "roofType", label: roofTypeText },
+      { key: "wallType", label: wallTypeText },
+      { key: "woodType", label: woodTypeText },
     ].filter((f) => !(localData as any)[f.key]);
 
     if (missing.length > 0) {
@@ -271,19 +291,22 @@ const ConstructionDetailsPage: React.FC = () => {
       const newTouched = { ...touchedFields };
       missing.forEach((m) => {
         newTouched[m.key] = true;
-        newFieldErrors[m.key] = `${m.label} is required`;
+        newFieldErrors[m.key] = getEmptyFieldError(m.key);
       });
       setTouchedFields(newTouched);
       setFieldErrors(newFieldErrors);
 
-      showErrorPopup('Please fill in all construction details');
+      showErrorPopup("Please fill in all construction details");
       return;
     }
 
     if (!propertyId) {
-      showErrorPopup('Property ID is missing. Please complete previous steps.');
+      showErrorPopup("Property ID is missing. Please complete previous steps.");
       return;
     }
+
+    const applicationId = localStorage.getItem("applicationId") || localStorage.getItem("applicationLogId") || "";
+    const isVerifying = mode === "verify" && hasModified;
 
     try {
       const constructionPayload: ConstructionDetailsRequest = {
@@ -300,6 +323,8 @@ const ConstructionDetailsPage: React.FC = () => {
         result = await updateConstructionDetails({
           id: localData.constructionId,
           data: constructionPayload,
+          applicationId,
+          isVerifying,
         }).unwrap();
       } else {
         // CREATE new construction details
@@ -314,14 +339,12 @@ const ConstructionDetailsPage: React.FC = () => {
         },
       });
 
-      // Navigate to next page after a short delay
-      setTimeout(() => {
-        navigate('/property-form/floor-details-cards');
-      }, 1500);
+      navigate("/property-form/floor-details-cards");
     } catch (error: any) {
-      console.error('Failed to save construction details:', error);
+      console.error("Failed to save construction details:", error);
       const errorMessage =
-        error?.data?.message || 'Failed to save construction details. Please try again.';
+        error?.data?.message ||
+        "Failed to save construction details. Please try again.";
       showErrorPopup(errorMessage);
     }
   };
@@ -347,6 +370,12 @@ const ConstructionDetailsPage: React.FC = () => {
 
   const isSubmitting = isCreating || isUpdating;
 
+  const getSubmitButtonText = () => {
+    if (isSubmitting) return "Submitting...";
+    if (mode === "verify") return "Verify";
+    return nextButtonText;
+  };
+
   // UI rendering: WarningPopup, header, form with dropdowns and submit button
   return (
     <>
@@ -358,23 +387,21 @@ const ConstructionDetailsPage: React.FC = () => {
         onClose={() => setPopup((p) => ({ ...p, open: false }))}
       />
       <Box sx={containerStyle}>
-        <Box sx={headerStyle}>
-          <StepHeader
-            title={`${mode === 'new' ? `${newPropertyForm}` : 'Property Form'}`}
-            subtitle={`${constructionDetails}`}
-            steps={10}
-            activeStep={6}
-            onPrevious={handleGoBack}
-            onSaveDraft={handleSaveDraft}
-            previousText={previousText}
-            saveDraftText={saveDraftText}
-          />
-        </Box>
+        <StepHeader
+          title={mode === "new" ? newPropertyForm : "Property Form"}
+          subtitle={constructionDetails}
+          steps={10}
+          activeStep={6}
+          onPrevious={handleGoBack}
+          onSaveDraft={handleSaveDraft}
+          previousText={previousText}
+          saveDraftText={saveDraftText}
+        />
 
         <Box sx={formContentStyle}>
           <form onSubmit={handleSubmit}>
             <Stack>
-              <Box sx={{ ...formFieldWrapper, width: '75%' }}>
+              <Box sx={{ ...formFieldWrapper, width: "75%" }}>
                 <CustomDropdown
                   label={floorTypeText}
                   name="floorType"
@@ -388,7 +415,7 @@ const ConstructionDetailsPage: React.FC = () => {
                   required
                   error={fieldErrors.floorType}
                   touched={touchedFields.floorType}
-                  onBlur={() => handleBlurDropdown('floorType')}
+                  onBlur={() => handleBlurDropdown("floorType")}
                 />
               </Box>
 
@@ -406,11 +433,11 @@ const ConstructionDetailsPage: React.FC = () => {
                   required
                   error={fieldErrors.roofType}
                   touched={touchedFields.roofType}
-                  onBlur={() => handleBlurDropdown('roofType')}
+                  onBlur={() => handleBlurDropdown("roofType")}
                 />
               </Box>
 
-              <Box sx={{ ...formFieldWrapper, width: '75%' }}>
+              <Box sx={{ ...formFieldWrapper, width: "75%" }}>
                 <CustomDropdown
                   label={wallTypeText}
                   name="wallType"
@@ -424,11 +451,11 @@ const ConstructionDetailsPage: React.FC = () => {
                   required
                   error={fieldErrors.wallType}
                   touched={touchedFields.wallType}
-                  onBlur={() => handleBlurDropdown('wallType')}
+                  onBlur={() => handleBlurDropdown("wallType")}
                 />
               </Box>
 
-              <Box sx={{ ...formFieldWrapper, width: '75%' }}>
+              <Box sx={{ ...formFieldWrapper, width: "75%" }}>
                 <CustomDropdown
                   label={woodTypeText}
                   name="woodType"
@@ -442,7 +469,7 @@ const ConstructionDetailsPage: React.FC = () => {
                   required
                   error={fieldErrors.woodType}
                   touched={touchedFields.woodType}
-                  onBlur={() => handleBlurDropdown('woodType')}
+                  onBlur={() => handleBlurDropdown("woodType")}
                 />
               </Box>
 
@@ -452,13 +479,13 @@ const ConstructionDetailsPage: React.FC = () => {
                   disabled={isSubmitting || isFetching}
                   sx={{
                     ...verifyButtonSx,
-                    display: 'block',
-                    marginLeft: 'auto',
-                    marginTop: '100px',
+                    display: "block",
+                    marginLeft: "auto",
+                    marginTop: "100px",
                   }}
                   variant="contained"
                 >
-                  {isSubmitting ? 'Submitting...' : mode === 'verify' ? 'Verify' : nextButtonText}
+                  {getSubmitButtonText()}
                 </Button>
               </Box>
             </Stack>

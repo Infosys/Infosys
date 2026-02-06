@@ -68,8 +68,8 @@ const addButtonSx = {
   fontSize: 16,
   fontWeight: 500,
   textTransform: 'none',
+  boxShadow: 'none',
   width: '46%',
-  '&:hover': { backgroundColor: '#edd8ca' },
 };
 
 const cardListSx = {
@@ -91,9 +91,8 @@ const FloorDetailsCards: React.FC = () => {
   const { mode } = useFormMode();
   const navigate = useNavigate();
   const { formData, updateForm } = usePropertyForm();
-
-  // const floorId = (formData.floors as any)?.floorId as string | undefined;
-  // const isEditMode = Boolean(floorId);
+  
+  const applicationId = localStorage.getItem('applicationLogId') || localStorage.getItem('applicationId') || '';
 
   const {
     saveDraftText,
@@ -133,6 +132,11 @@ const FloorDetailsCards: React.FC = () => {
       length: (apiData.LengthFt || apiData.lengthFt || 0).toString(),
       breadth: (apiData.BreadthFt || apiData.breadthFt || 0).toString(),
       plinthArea: (apiData.PlinthAreaSqFt || apiData.plinthAreaSqFt || 0).toString(),
+      mezzanineArea: (
+        apiData.MezzanineAreaSqFt ||
+        apiData.mezzanineAreaSqFt ||
+        0
+      ).toString(),
       buildingPermissionNo:
         apiData.BuildingPermissionNo || apiData.buildingPermissionNo || '',
       floorsDetailsEntered:
@@ -153,14 +157,13 @@ const FloorDetailsCards: React.FC = () => {
     } else if (floorDetailsData && typeof floorDetailsData === 'object') {
       // Check if the data is directly an array or has floors property
       const dataKeys = Object.keys(floorDetailsData);
-      console.log('Data keys:', dataKeys);
+      console.log(dataKeys);
     }
 
     if (floors.length > 0) {
       const convertedFloors = floors.map(convertApiToLocal);
       updateForm({ floors: convertedFloors });
     } else {
-      // showErrorPopup("No floors found, setting empty array");
       updateForm({ floors: [] });
     }
   }, [floorDetailsData]);
@@ -185,7 +188,11 @@ const FloorDetailsCards: React.FC = () => {
       const floorId = floorToDelete?.ID || floorToDelete?.id;
 
       if (floorId) {
-        await deleteFloor(floorId).unwrap();
+        await deleteFloor({
+          id: floorId,
+          applicationId,
+          isVerifying: mode === 'verify',
+        }).unwrap();
         refetch(); // Refresh the data
       } else {
         // Fallback to local deletion if no API ID
@@ -307,7 +314,10 @@ const FloorDetailsCards: React.FC = () => {
         </Box>
 
         <Box component="main" sx={contentSx}>
-          <form onSubmit={handleSubmit} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <form
+            onSubmit={handleSubmit}
+            style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+          >
             <Stack spacing={2} sx={{ flex: 1 }}>
               {formData.floors && formData.floors.length > 0 ? (
                 <Box sx={cardListSx}>
@@ -340,7 +350,7 @@ const FloorDetailsCards: React.FC = () => {
                 </Typography>
               )}
             </Stack>
-            
+
             <Box
               sx={{
                 pt: 2,

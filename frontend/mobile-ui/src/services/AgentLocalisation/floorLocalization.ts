@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import env from '../../config/env';
 
 interface LocalizationMessage {
   uuid?: string;
@@ -150,7 +151,7 @@ export const useFloorLocalization = () => {
   const fetchLocalizedTexts = async (newLocale: string) => {
     try {
       const codesParam = messageCodes.join(',');
-      const url = `${import.meta.env.VITE_LOCALIZATION_HOST}/localization/v1/messages?module=common&locale=${newLocale}&codes=${codesParam}`;
+      const url = `${env.LOCALIZATION_HOST}/localization/v1/messages?module=common&locale=${newLocale}&codes=${codesParam}`;
   const res = await fetch(url, { headers: { 'X-Tenant-ID': 'pg' } });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: LocalizationResponse = await res.json();

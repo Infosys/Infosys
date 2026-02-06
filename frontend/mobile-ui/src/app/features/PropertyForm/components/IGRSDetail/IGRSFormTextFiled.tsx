@@ -1,4 +1,3 @@
-
 // Custom text field for IGRS details in property forms. Supports validation, placeholder, error display, and style overrides.
 
 import React from 'react';
@@ -26,7 +25,6 @@ const labelSx = {
   fontSize: 14,
   fontWeight: 400,
   color: '#333333',
-  marginBottom: '6px',
   textAlign: 'left' as const,
 };
 
@@ -69,11 +67,9 @@ const FormTextField: React.FC<FormTextFieldProps> = ({
         inputProps={{ inputMode: type === 'number' ? 'decimal' : 'text', ...inputProps }}
         error={!!(touched && error)}
         helperText={touched && error ? error : '\u00A0'}
-        FormHelperTextProps={{ sx: { minHeight: 20 } }}
+        FormHelperTextProps={{ sx: { minHeight: 20, marginLeft: 0 } }}
         sx={{
-          fontFamily: 'Roboto, sans-serif !important',
           '& .MuiOutlinedInput-input': {
-            fontFamily: 'Roboto, sans-serif',
             boxSizing: 'border-box !important',
             minHeight: '48px',
             borderRadius: '10px',
@@ -81,10 +77,12 @@ const FormTextField: React.FC<FormTextFieldProps> = ({
           '& .MuiOutlinedInput-root': {
             borderRadius: '10px',
             fontSize: '16px !important',
+            minHeight: '48px',
             boxSizing: 'border-box !important',
           },
           '& .MuiOutlinedInput-notchedOutline': {
             borderColor: '#C4C4C4 !important',
+            minHeight: '48px',
             borderRadius: '10px !important',
           },
           ...sx,

@@ -75,8 +75,10 @@ const RequestDialog: React.FC<RequestDialogProps> = ({
       onClose={handleClose}
       maxWidth="sm"
       fullWidth
-      PaperProps={{
-        sx: requestDialogPaperStyle,
+      slotProps={{
+        paper:{
+          sx: requestDialogPaperStyle
+        }
       }}
     >
       {/* Dialog title with close button */}

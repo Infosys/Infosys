@@ -2,70 +2,71 @@
 // This component renders the property information step in the property registration form.
 // Handles ownership, property type, apartment name, location tagging, polygons, and validation.
 // Integrates with context, localization, and Redux API hooks.
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import '../../../styles/NewPropertyForm.css';
-import { FaLocationCrosshairs } from 'react-icons/fa6';
-import { MdEdit, MdClose } from 'react-icons/md';
-import { usePropertyForm } from '../../../context/PropertyFormContext';
-import { useFormMode } from '../../../context/FormModeContext';
-import JsonService from '../../../services/jsonServerApiCalls';
-import authService from '../../../services/AuthService';
-import '../../../styles/LocationSelection.css';
-import { usePropertyInformationLocalization } from '../../../services/AgentLocalisation/localisation-propertyInformation';
-import ArrowDropDownOutlinedIcon from '@mui/icons-material/ArrowDropDownOutlined';
-import StepHeader from '../../features/Agent/components/StepHeader';
-import { useLocalization } from '../../../services/AgentLocalisation/formLocalisation';
-import { verifyButtonSx } from './styles/sharedStyles';
-import Button from '@mui/material/Button';
-import type { AlertType } from '../../models/AlertType.model';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import "../../../styles/NewPropertyForm.css";
+import { FaLocationCrosshairs } from "react-icons/fa6";
+import { MdEdit, MdClose } from "react-icons/md";
+import { usePropertyForm } from "../../../context/PropertyFormContext";
+import { useFormMode } from "../../../context/FormModeContext";
+import JsonService from "../../../services/jsonServerApiCalls";
+import authService from "../../../services/AuthService";
+import "../../../styles/LocationSelection.css";
+import { usePropertyInformationLocalization } from "../../../services/AgentLocalisation/localisation-propertyInformation";
+import StepHeader from "../../features/Agent/components/StepHeader";
+import { useLocalization } from "../../../services/AgentLocalisation/formLocalisation";
+import { uniformInputSx, verifyButtonSx } from "./styles/sharedStyles";
+import Button from "@mui/material/Button";
+import type { AlertType } from "../../models/AlertType.model";
 import {
   useLazyGetApplicationByIdQuery,
   useSubmitApplicationMutation,
-} from '../../../redux/apis/applicationApi';
+} from "../../../redux/apis/applicationApi";
 import {
   useDeleteGISDataMutation,
   useUpdateCoordinatesMutation,
-} from '../../../redux/apis/gisApi';
-import { usePropertyData } from '../../features/Agent/api/propertyData.hooks';
-import { fetchPropertyDetails } from '../../features/Agent/api/fetchProperty.hooks';
-import { NotificationPopup } from '../../components/Popup/NotificationPopup';
-import { useLazyGetOwnersByPropertyIdQuery } from '../../../redux/apis/ownerApi';
+} from "../../../redux/apis/gisApi";
+import { usePropertyData } from "../../features/Agent/api/propertyData.hooks";
+import { fetchPropertyDetails } from "../../features/Agent/api/fetchProperty.hooks";
+import { NotificationPopup } from "../../components/Popup/NotificationPopup";
+import { useLazyGetOwnersByPropertyIdQuery } from "../../../redux/apis/ownerApi";
+import CustomDropdown from "../../features/PropertyForm/components/IGRSDetail/IGRSdropdown";
+import type { DropdownOption } from "../../features/PropertyForm/components/IGRSDetail/IGRSdropdown";
+import FormTextField from "../../features/PropertyForm/components/IGRSDetail/IGRSFormTextFiled";
 
 /**
  * PropertyInformation component
  * Renders the property information form step, manages local and global state, handles location and polygon tagging, and validates required fields.
- */
+*/
 const PropertyInformation: React.FC = () => {
   // Context and navigation hooks
   const { formData, updateForm } = usePropertyForm();
-  const { mode, setMode } = useFormMode();
+  const { mode } = useFormMode();
   const navigate = useNavigate();
-
-  // Enum for ownership types
-  const ownershipTypeEnum = [
-    'VACANT_LAND',
-    'PRIVATE',
-    'CENTRAL_GOVERNMENT_50',
-    'CENTRAL_GOVERNMENT_75',
-    'STATE_GOVERNMENT',
-  ] as const;
-
+  
   // RTK Query hooks for property and GIS APIs
   const [getApplicationById] = useLazyGetApplicationByIdQuery();
   const [updateCoordinates] = useUpdateCoordinatesMutation();
   const [deleteGISData] = useDeleteGISDataMutation();
   const [getOwnerByPropId] = useLazyGetOwnersByPropertyIdQuery();
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasModified, setHasModified] = useState(false);
+
+  const markModified = () => {
+    if (mode === "verify") setHasModified(true);
+  };
+  const appId = localStorage.getItem("applicationId") || localStorage.getItem("applicationLogId") || "";
+  
   // Combine the first two useEffects
   // On mount: if in draft mode, fetch property details if needed; if mode is none, clear local storage
   useEffect(() => {
-    if (mode === 'draft') {
-      const propertyId = localStorage.getItem('propertyId')!;
-      const applicationId = localStorage.getItem('applicationId');
+    if (mode === "draft") {
+      const propertyId = localStorage.getItem("propertyId")!;
+      const applicationId = localStorage.getItem("applicationId") || localStorage.getItem("applicationLogId") || "";
 
       if (!applicationId) {
-        navigate('/agent');
+        navigate("/agent");
       } else if (!formData.id) {
         // Only fetch if formData is empty
         fetchPropertyDetails(
@@ -77,31 +78,12 @@ const PropertyInformation: React.FC = () => {
           showErrorPopup
         );
       }
-    } else if (mode === 'none') {
-      localStorage.removeItem('propertyId');
-      localStorage.removeItem('applicationId');
+    } else if (mode === "none") {
+      localStorage.removeItem("propertyId");
+      localStorage.removeItem("applicationId");
+      localStorage.removeItem("applicationLogId");
     }
   }, [mode]);
-
-  // Enum for property types
-  const propertyTypeEnum = ['MIXED', 'NON_RESIDENTIAL', 'RESIDENTIAL'] as const;
-
-  // Display labels for ownership types
-  const ownershipTypeDisplay: Record<string, string> = {
-    VACANT_LAND: 'Vacant Land',
-    PRIVATE: 'Private',
-    CENTRAL_GOVERNMENT_50: 'Central Govt 50%',
-    CENTRAL_GOVERNMENT_75: 'Central Govt 75%',
-    STATE_GOVERNMENT: 'State Government',
-    NULL: 'None',
-  };
-
-  // Display labels for property types
-  const propertyTypeDisplay: Record<string, string> = {
-    MIXED: 'Mixed',
-    NON_RESIDENTIAL: 'Non Residential',
-    RESIDENTIAL: 'Residential',
-  };
 
   // RTK Query hook for submitting application
   const [submitApplication] = useSubmitApplicationMutation();
@@ -138,103 +120,118 @@ const PropertyInformation: React.FC = () => {
   // Context for global property form data
 
   // Custom hooks for saving property and GIS data
-  const { savePropertyBasics, saveGISData, saveCoordinates } = usePropertyData();
+  const { savePropertyBasics, saveGISData, saveCoordinates } =
+    usePropertyData();
 
   // Local state for this form step (prepopulated from context)
   const [localData, setLocalData] = useState({
-    categoryOfOwnership: formData.categoryOfOwnership || '',
-    propertyType: formData.propertyType || '',
-    apartmentName: formData.apartmentName || '',
+    categoryOfOwnership: formData.categoryOfOwnership || "",
+    propertyType: formData.propertyType || "",
+    apartmentName: formData.apartmentName || ""
   });
 
-  // Dropdown options and open state
-  const [ownershipOptions, setOwnershipOptions] = useState<string[]>([]);
-  const [propertyTypeOptions, setPropertyTypeOptions] = useState<string[]>([]);
+
+  const [ownershipOptions, setOwnershipOptions] = useState<DropdownOption[]>(
+    []
+  );
+  const [propertyTypeOptions, setPropertyTypeOptions] = useState<
+    DropdownOption[]
+  >([]);
   const [showOwnershipDropdown, setShowOwnershipDropdown] = useState(false);
-  const [showPropertyTypeDropdown, setShowPropertyTypeDropdown] = useState(false);
+  const [showPropertyTypeDropdown, setShowPropertyTypeDropdown] =
+    useState(false);
+
+  // Validation state for dropdowns
+  const [touched, setTouched] = useState({
+    categoryOfOwnership: false,
+    propertyType: false,
+    apartmentName: false,
+  });
 
   // Fetch ownership and property type options from JSON service on mount
   useEffect(() => {
-    // Fetch ownership options
-    console.log(ownershipOptions, propertyTypeOptions);
-
+    // Fetch ownership options and map to DropdownOption format
     JsonService.getOwnershipOptions().then((data) => {
       if (Array.isArray(data)) {
-        setOwnershipOptions(data.map((item) => item.name));
+        setOwnershipOptions(
+          data
+            .filter((item) => item.name !== "select")
+            .map((item, index) => ({ id: index, label: item.name }))
+        );
       }
     });
 
-    // Fetch property type options
+    // Fetch property type options and map to DropdownOption format
     JsonService.getPropertyTypeOptions().then((data) => {
       if (Array.isArray(data)) {
-        setPropertyTypeOptions(data.map((item) => item.name));
+        setPropertyTypeOptions(
+          data
+            .filter((item) => item.name !== "select")
+            .map((item, index) => ({ id: index, label: item.name }))
+        );
       }
     });
   }, []);
 
   // Sync local state with context data when formData changes
+  // Also update original data to track if agent makes changes
   useEffect(() => {
     setLocalData({
-      categoryOfOwnership: formData.categoryOfOwnership || '',
-      propertyType: formData.propertyType || '',
-      apartmentName: formData.apartmentName || '',
+      categoryOfOwnership: formData.categoryOfOwnership || "",
+      propertyType: formData.propertyType || "",
+      apartmentName: formData.apartmentName || ""
     });
-  }, [formData.categoryOfOwnership, formData.propertyType, formData.apartmentName]);
+  }, [
+    formData.categoryOfOwnership,
+    formData.propertyType,
+    formData.apartmentName,
+    formData.typeOfLand,
+  ]);
 
-  // Handler for selecting ownership type
-  const handleOwnershipSelect = (option: string) => {
-    const updatedData = { ...localData, categoryOfOwnership: option };
-    setLocalData(updatedData);
-    updateForm(updatedData);
-    setShowOwnershipDropdown(false);
-  };
-
-  // Handler for selecting property type
-  const handlePropertyTypeSelect = (option: string) => {
-    const updatedData = { ...localData, propertyType: option };
-    setLocalData(updatedData);
-    updateForm(updatedData);
-    setShowPropertyTypeDropdown(false);
-  };
-
-  // Handler for apartment name input change
-  const handleApartmentNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const updatedData = { ...localData, apartmentName: e.target.value };
+  const handleDropdownSelect = (field: string, value: string) => {
+    markModified();
+    const updatedData = { ...localData, [field]: value };
     setLocalData(updatedData);
     updateForm(updatedData);
   };
 
-  /**
-   * Validates required fields for the property information step.
-   * Shows error popup if any required field is missing or location is not tagged.
-   */
+  // Handler for closing other dropdowns
+  const closeOtherDropdowns = (except?: string) => {
+    if (except !== "categoryOfOwnership") setShowOwnershipDropdown(false);
+    if (except !== "propertyType") setShowPropertyTypeDropdown(false);
+  };
+
   const validateForm = () => {
     const missingFields: string[] = [];
-    if (!localData.categoryOfOwnership) missingFields.push(categoryOwnershipLabel);
+    if (!localData.categoryOfOwnership)
+      missingFields.push(categoryOwnershipLabel);
     if (!localData.propertyType) missingFields.push(propertyTypeLabel);
     if (!localData.apartmentName.trim()) missingFields.push(apartmentNameLabel);
 
     if (missingFields.length > 0) {
-      showErrorPopup(`Please fill in: ${missingFields.join(', ')}.`, 3500);
+      // Mark fields as touched for validation display
+      setTouched({
+        categoryOfOwnership: !localData.categoryOfOwnership,
+        propertyType: !localData.propertyType,
+        apartmentName: !localData.apartmentName.trim(),
+      });
+      showErrorPopup(`Please fill in: ${missingFields.join(", ")}.`, 3500);
       return false;
     }
 
     if (
-      !formData.locationData ||
-      !formData.locationData.coordinates ||
-      typeof formData.locationData.coordinates.lat !== 'number' ||
-      typeof formData.locationData.coordinates.lng !== 'number'
+      typeof formData.locationData?.coordinates?.lat !== "number" ||
+      typeof formData.locationData?.coordinates?.lng !== "number"
     ) {
-      showErrorPopup('Please add a location tag before proceeding.', 3500);
+      showErrorPopup("Please add a location tag before proceeding.", 3500);
       return false;
     }
 
     if (
       authService.isCitizen() === false &&
-      (!formData.locationData.drawnShapes ||
-        formData.locationData.drawnShapes.length === 0)
+      formData.locationData?.drawnShapes?.length === 0
     ) {
-      showErrorPopup('Please add a polygon before proceeding.', 3500);
+      showErrorPopup("Please add a polygon before proceeding.", 3500);
       return false;
     }
 
@@ -247,15 +244,15 @@ const PropertyInformation: React.FC = () => {
 
     try {
       await handleSaveDraft();
-      navigate('/property-form/owner-details-two');
+      localStorage.removeItem("hasFieldModified");
+      navigate("/property-form/owner-details-two");
     } catch (error) {
       console.log(error);
     }
   };
 
-  // Handler for back navigation
   const handleBack = () => {
-    setMode('none');
+    localStorage.removeItem("hasFieldModified");
     navigate(-1);
   };
 
@@ -267,10 +264,10 @@ const PropertyInformation: React.FC = () => {
     message: string;
     duration: number;
   }>({
-    type: 'warning',
+    type: "warning",
     open: false,
-    title: '',
-    message: '',
+    title: "",
+    message: "",
     duration: 3000,
   });
 
@@ -279,9 +276,9 @@ const PropertyInformation: React.FC = () => {
     setPopup((prev) => ({ ...prev, open: false }));
     setTimeout(() => {
       setPopup({
-        type: 'warning',
+        type: "warning",
         open: true,
-        title: 'Warning!',
+        title: "Warning!",
         message,
         duration,
       });
@@ -293,14 +290,16 @@ const PropertyInformation: React.FC = () => {
    * Updates form context and local storage as needed.
    * Submits application as draft if not already present.
    */
-  const handleSaveDraft = async () => {
+      const handleSaveDraft = async () => {
     try {
-      const { propertyID: newPropertyID, propertyNo } = await savePropertyBasics(
-        formData.id
-      );
+      setIsSubmitting(true);
+      const hasFieldModified = localStorage.getItem("hasFieldModified") === "true";
+      const isVerifying = mode === "verify" && (hasModified || hasFieldModified);
+      const { propertyID: newPropertyID, propertyNo } =
+        await savePropertyBasics(appId, isVerifying, formData.id);
 
       if (!formData.id) {
-        localStorage.setItem('propertyId', newPropertyID);
+        localStorage.setItem("propertyId", newPropertyID);
       }
 
       updateForm({
@@ -323,38 +322,41 @@ const PropertyInformation: React.FC = () => {
 
         await saveCoordinates(gisDataId, !!formData.locationData.gisDataId);
       }
-
-      const applicationId = localStorage.getItem('applicationId');
+      const applicationId = localStorage.getItem("applicationId") || localStorage.getItem("applicationLogId") || "";
       if (!applicationId) {
-        const userString = sessionStorage.getItem('user');
+        const userString = localStorage.getItem("user");
         const user = userString ? JSON.parse(userString) : null;
 
         const result = await submitApplication({
           propertyId: newPropertyID,
           appliedBy: user?.username,
-          assesseeId: localStorage.getItem('user_id')!,
+          assesseeId: localStorage.getItem("user_id")!,
           isDraft: true,
-          priority: 'LOW',
+          priority: "LOW",
           dueDate: new Date().toISOString(),
         }).unwrap();
 
-        localStorage.setItem('applicationId', result.data.ID);
+        localStorage.setItem("applicationId", result.data.ID);
+        localStorage.setItem("applicationLogId", result.data.ID);
       }
+
+      setIsSubmitting(false);
     } catch (error) {
-      console.error('Failed to submit property data:', error);
-      showErrorPopup('Failed to save property details');
+      console.error("Failed to submit property data:", error);
+      showErrorPopup("Failed to save property details");
+      setIsSubmitting(false);
       throw error;
     }
   };
 
   // Handler for navigating to location tag selection
   const handleLocationTagClick = () => {
-    navigate('/property-form/location-selection');
+    navigate("/property-form/location-selection");
   };
 
   // Handler for navigating to polygon drawing mode
   const handleAddPolygon = () => {
-    navigate('/property-form/location-selection?mode=polygon');
+    navigate("/property-form/location-selection?mode=polygon");
   };
 
   // Handler for removing the location tag (GIS data)
@@ -365,18 +367,18 @@ const PropertyInformation: React.FC = () => {
       }
       updateForm({ locationData: undefined });
     } catch (error) {
-      console.error('Failed to remove location:', error);
-      showErrorPopup('Failed to remove location');
+      console.error("Failed to remove location:", error);
+      showErrorPopup("Failed to remove location");
     }
   };
 
   // Handler for editing the location tag
   const handleEditLocation = () => {
-    navigate('/property-form/location-selection');
+    navigate("/property-form/location-selection");
   };
 
   // Handler for removing a polygon shape from drawnShapes
-  const handleRemovePolygon = async (polygonIndex: number) => {
+ const handleRemovePolygon = async (polygonId: number) => {
     if (!formData.locationData?.drawnShapes) return;
     try {
       const gisDataId = formData.locationData.gisDataId;
@@ -386,30 +388,54 @@ const PropertyInformation: React.FC = () => {
           coordinates: [],
         }).unwrap();
       }
-      const existing = formData.locationData.drawnShapes;
-      let polyCount = -1;
-      const newShapes = existing.filter((s) => {
-        if (s.type === 'polygon') {
-          polyCount += 1;
-          if (polyCount === polygonIndex) return false;
-          return true;
+
+      // Filter out the polygon with the matching ID
+      const newShapes = formData.locationData.drawnShapes.filter((s) => {
+        if (s.type === "polygon" && s.id === polygonId) {
+          return false; // Remove this polygon
         }
-        return true;
+        return true; // Keep all other shapes
       });
+
       const newLocationData = {
         ...formData.locationData,
         drawnShapes: newShapes.length > 0 ? newShapes : [],
       };
       updateForm({ locationData: newLocationData });
     } catch (error) {
-      console.error('Failed to remove polygon:', error);
-      showErrorPopup('Failed to remove polygon');
+      console.error("Failed to remove polygon:", error);
+      showErrorPopup("Failed to remove polygon");
     }
   };
-
+  
   // Handler for editing a polygon shape
   const handleEditPolygon = () => {
-    navigate('/property-form/location-selection?mode=polygon');
+    navigate("/property-form/location-selection?mode=polygon");
+  };
+
+  // Get error messages for dropdowns
+  const getError = (
+    field: "categoryOfOwnership" | "propertyType" | "apartmentName"
+  ) => {
+    if (!localData[field]) {
+    let errorMsg = "";
+    if (field === "categoryOfOwnership") {
+      errorMsg = `Select an ownership category to proceed`;
+    } else if (field === "propertyType") {
+      errorMsg = `Select a property type to proceed`;
+    } else {
+      errorMsg = `Apartment/Complex name is mandatory`;
+    }
+    return errorMsg;
+  }
+    return "";
+  };
+
+  // Helper to get submit button text based on state
+  const getSubmitButtonText = () => {
+    if (isSubmitting) return "Submitting...";
+    if (mode === "verify") return "Verify";
+    return nextButtonText;
   };
 
   // Render the property information form UI
@@ -423,9 +449,11 @@ const PropertyInformation: React.FC = () => {
         onClose={() => setPopup((p) => ({ ...p, open: false }))}
       />
 
-      <div className="property-form-container" style={{ padding: '0' }}>
+      <div className="property-form-container" style={{ padding: "0" }}>
         <StepHeader
-          title={`${mode === 'new' ? `${newPropertyFormTitle}` : `${propertyFormTitle}`}`}
+          title={
+            mode === "new" ? `${newPropertyFormTitle}` : `${propertyFormTitle}`
+          }
           subtitle={propertyInfoSubtitle}
           steps={10}
           activeStep={0}
@@ -436,104 +464,84 @@ const PropertyInformation: React.FC = () => {
         />
 
         <div className="form-content" key={locale}>
-          <div className="form-field">
-            <label className="field-label">
-              {categoryOwnershipLabel}
-              <span style={{ color: 'red' }}> *</span>
-            </label>
-            <div className="dropdown-container">
-              <button
-                className="dropdown-button"
-                onClick={() => setShowOwnershipDropdown(!showOwnershipDropdown)}
-              >
-                <span>
-                  {ownershipTypeDisplay[localData.categoryOfOwnership] || 'Select'}
-                </span>
-                <ArrowDropDownOutlinedIcon />
-              </button>
-              {showOwnershipDropdown && (
-                <div className="dropdown-menu">
-                  {ownershipTypeEnum.map((option) => (
-                    <div
-                      key={option}
-                      className={`dropdown-option ${
-                        option === localData.categoryOfOwnership ? 'selected' : ''
-                      }`}
-                      onClick={() => handleOwnershipSelect(option)}
-                    >
-                      {ownershipTypeDisplay[option]}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+          <CustomDropdown
+            label={categoryOwnershipLabel}
+            name="categoryOfOwnership"
+            value={localData.categoryOfOwnership}
+            options={ownershipOptions}
+            showDropdown={showOwnershipDropdown}
+            setShowDropdown={setShowOwnershipDropdown}
+            onSelect={handleDropdownSelect}
+            closeOtherDropdowns={() =>
+              closeOtherDropdowns("categoryOfOwnership")
+            }
+            selectText="Select"
+            required={true}
+            error={getError("categoryOfOwnership")}
+            touched={touched.categoryOfOwnership}
+            onBlur={() => setTouched({ ...touched, categoryOfOwnership: true })}
+          />
 
-          <div className="form-field">
-            <label className="field-label">
-              {propertyTypeLabel}
-              <span style={{ color: 'red' }}> *</span>
-            </label>
-            <div className="dropdown-container">
-              <button
-                className="dropdown-button"
-                onClick={() => setShowPropertyTypeDropdown(!showPropertyTypeDropdown)}
-              >
-                <span>{propertyTypeDisplay[localData.propertyType] || 'Select'}</span>
-                <ArrowDropDownOutlinedIcon />
-              </button>
-              {showPropertyTypeDropdown && (
-                <div className="dropdown-menu">
-                  {propertyTypeEnum.map((option) => (
-                    <div
-                      key={option}
-                      className={`dropdown-option ${
-                        option === localData.propertyType ? 'selected' : ''
-                      }`}
-                      onClick={() => handlePropertyTypeSelect(option)}
-                    >
-                      {propertyTypeDisplay[option]}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+          <CustomDropdown
+            label={propertyTypeLabel}
+            name="propertyType"
+            value={localData.propertyType}
+            options={propertyTypeOptions}
+            showDropdown={showPropertyTypeDropdown}
+            setShowDropdown={setShowPropertyTypeDropdown}
+            onSelect={handleDropdownSelect}
+            closeOtherDropdowns={() => closeOtherDropdowns("propertyType")}
+            selectText="Select"
+            required={true}
+            error={getError("propertyType")}
+            touched={touched.propertyType}
+            onBlur={() => setTouched({ ...touched, propertyType: true })}
+          />
 
-          <div className="form-field">
-            <label className="field-label">
-              {apartmentNameLabel}
-              <span style={{ color: 'red' }}> *</span>
-            </label>
-            <input
-              type="text"
-              className="text-input"
-              placeholder={apartmentNamePlaceholder}
-              value={localData.apartmentName}
-              onChange={handleApartmentNameChange}
-              required
-            />
-          </div>
+          <FormTextField
+            label={apartmentNameLabel}
+            value={localData.apartmentName}
+            onChange={(value) => {
+              markModified();
+              
+              const updatedData = { ...localData, apartmentName: value };
+              setLocalData(updatedData);
+              updateForm(updatedData);
+            }}
+            onBlur={() => {
+              setTouched((prev) => ({ ...prev, apartmentName: true }));
+            }}
+            required
+            placeholder={apartmentNamePlaceholder}
+            error={getError("apartmentName")}
+            touched={touched.apartmentName}
+            sx={{ width: "100%", ...uniformInputSx }}
+            type="text"
+          />
 
           {/* Always show Add Location button */}
           <div
             style={{
-              display: 'flex',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
+              paddingTop: 24,
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "space-between",
             }}
           >
             <button
               className="location-tag-button"
               onClick={handleLocationTagClick}
-              // style={{ border: 'none' }}
             >
               <FaLocationCrosshairs size={16} />
               Add Location
             </button>
 
-            {authService.isCitizen() == false && (
-              <button className="polygon-tag-button" onClick={handleAddPolygon}>
+            {!authService.isCitizen() && (
+              <button
+                type="button"
+                className="polygon-tag-button"
+                onClick={handleAddPolygon}
+              >
                 <FaLocationCrosshairs size={16} />
                 {addPolygonBtn}
               </button>
@@ -545,14 +553,18 @@ const PropertyInformation: React.FC = () => {
               <div className="card-content">
                 <div className="card-field">
                   <span className="field-label-bold">{addressLabel}:</span>
-                  <span className="field-value">{formData.locationData.address}</span>
+                  <span className="field-value">
+                    {formData.locationData.address}
+                  </span>
                 </div>
                 {formData.locationData.coordinates?.lat !== undefined &&
                   formData.locationData.coordinates?.lng !== undefined && (
                     <div className="card-field">
-                      <span className="field-label-bold">{coordinatesLabel}</span>
+                      <span className="field-label-bold">
+                        {coordinatesLabel}:
+                      </span>
                       <span className="field-value-coordinates">
-                        {formData.locationData.coordinates.lat.toFixed(6)}°,{' '}
+                        {formData.locationData.coordinates.lat.toFixed(6)}°,
                         {formData.locationData.coordinates.lng.toFixed(6)}°
                       </span>
                     </div>
@@ -560,40 +572,38 @@ const PropertyInformation: React.FC = () => {
                 <div className="card-timestamp orange">
                   {formData.locationData.timestamp ? (
                     <>
-                      {addedAtText}{' '}
-                      {new Date(formData.locationData.timestamp).toLocaleTimeString(
-                        'en-GB',
-                        {
-                          hour12: false,
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          second: '2-digit',
-                        }
-                      )}{' '}
-                      {onText}{' '}
-                      {new Date(formData.locationData.timestamp).toLocaleDateString(
-                        'en-GB',
-                        {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                        }
-                      )}
+                      {addedAtText}{" "}
+                      {new Date(
+                        formData.locationData.timestamp
+                      ).toLocaleTimeString("en-GB", {
+                        hour12: false,
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                      })}{" "}
+                      {onText}{" "}
+                      {new Date(
+                        formData.locationData.timestamp
+                      ).toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                      })}
                     </>
                   ) : (
                     <>
-                      {addedAtText}{' '}
-                      {new Date().toLocaleTimeString('en-GB', {
+                      {addedAtText}{" "}
+                      {new Date().toLocaleTimeString("en-GB", {
                         hour12: false,
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                      })}{' '}
-                      {onText}{' '}
-                      {new Date().toLocaleDateString('en-GB', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                      })}{" "}
+                      {onText}{" "}
+                      {new Date().toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
                       })}
                     </>
                   )}
@@ -601,10 +611,10 @@ const PropertyInformation: React.FC = () => {
                 <div className="card-actions">
                   <button
                     style={{
-                      borderRadius: '10px',
-                      marginLeft: '-8%',
-                      width: '200%',
-                      fontSize: '14px',
+                      borderRadius: "10px",
+                      marginLeft: "-8%",
+                      width: "200%",
+                      fontSize: "14px",
                     }}
                     className="card-action-btn remove-btn orange"
                     onClick={handleRemoveLocationTag}
@@ -614,10 +624,10 @@ const PropertyInformation: React.FC = () => {
                   </button>
                   <button
                     style={{
-                      borderRadius: '10px',
-                      width: '200%',
-                      fontSize: '14px',
-                      background: 'white',
+                      borderRadius: "10px",
+                      width: "200%",
+                      fontSize: "14px",
+                      background: "white",
                     }}
                     className="card-action-btn edit-btn orange"
                     onClick={handleEditLocation}
@@ -631,36 +641,43 @@ const PropertyInformation: React.FC = () => {
           )}
 
           {formData.locationData?.drawnShapes &&
-            formData.locationData.drawnShapes.filter((s: any) => s.type === 'polygon')
-              .length > 0 && (
+            formData.locationData.drawnShapes.some(
+              (s: any) => s.type === "polygon"
+            ) && (
               <div style={{ marginTop: 16 }}>
                 {formData.locationData.drawnShapes
-                  .filter((s: any) => s.type === 'polygon')
-                  .map((poly: any, idx: number) => (
-                    <div key={idx} className="property-card-polygon green-border">
+                  .filter((s: any) => s.type === "polygon")
+                  .map((poly: any) => (
+                    <div
+                      key={poly.id}
+                      className="property-card-polygon green-border"
+                    >
                       <div className="card-content">
                         <div className="card-field-polygon">
-                          <span className="field-label-bold">{polygonLabel}</span>
+                          <span className="field-label-bold">
+                            {polygonLabel}
+                          </span>
                         </div>
                         <div className="card-field-coordinate">
                           <div
                             className="field-label-bold"
-                            style={{ marginBottom: '4px' }}
+                            style={{ marginBottom: "4px" }}
                           >
                             {coordinatesLabel}
                           </div>
                           <div className="summary-coordinates-list">
                             {((poly.coordinates as number[][]) || []).map(
-                              (c: number[], i: number) => {
-                                let lng = c[0];
-                                let lat = c[1];
+                              (cord: number[], cordCounter: number) => {
+                                let lng = cord[0];
+                                let lat = cord[1];
+                                let cordKey = cordCounter;
                                 if (Math.abs(lat) > 90 || Math.abs(lng) > 180) {
-                                  lat = c[0];
-                                  lng = c[1];
+                                  lat = cord[0];
+                                  lng = cord[1];
                                 }
                                 return (
-                                  <div key={i} className="coordinate-line">
-                                    {pointText} {i + 1} : {lat.toFixed(6)}°,{' '}
+                                  <div key={cordKey} className="coordinate-line">
+                                    {pointText} {cordKey + 1} : {lat.toFixed(6)}°,{" "}
                                     {lng.toFixed(6)}°
                                   </div>
                                 );
@@ -671,63 +688,69 @@ const PropertyInformation: React.FC = () => {
                         <div className="card-timestamp green">
                           {poly.addedAt ? (
                             <>
-                              {addedAtText}{' '}
-                              {new Date(poly.addedAt).toLocaleTimeString('en-GB', {
-                                hour12: false,
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                second: '2-digit',
-                              })}{' '}
-                              {onText}{' '}
-                              {new Date(poly.addedAt).toLocaleDateString('en-GB', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: 'numeric',
-                              })}
+                              {addedAtText}{" "}
+                              {new Date(poly.addedAt).toLocaleTimeString(
+                                "en-GB",
+                                {
+                                  hour12: false,
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  second: "2-digit",
+                                }
+                              )}{" "}
+                              {onText}{" "}
+                              {new Date(poly.addedAt).toLocaleDateString(
+                                "en-GB",
+                                {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  year: "numeric",
+                                }
+                              )}
                             </>
                           ) : (
                             <>
-                              {addedAtText}{' '}
-                              {new Date().toLocaleTimeString('en-GB', {
+                              {addedAtText}{" "}
+                              {new Date().toLocaleTimeString("en-GB", {
                                 hour12: false,
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                second: '2-digit',
-                              })}{' '}
-                              {onText}{' '}
-                              {new Date().toLocaleDateString('en-GB', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: 'numeric',
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                second: "2-digit",
+                              })}{" "}
+                              {onText}{" "}
+                              {new Date().toLocaleDateString("en-GB", {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
                               })}
                             </>
                           )}
                         </div>
                         <div className="card-actions">
                           <button
+                            type="button"
                             style={{
-                              width: '200%',
-                              padding: '2%',
-                              marginLeft: '-9%',
-                              fontSize: '14px',
+                              width: "200%",
+                              padding: "2%",
+                              marginLeft: "-9%",
+                              fontSize: "14px",
                             }}
                             className="card-action-btn remove-btn green"
-                            onClick={() => handleRemovePolygon(idx)}
+                            onClick={() => handleRemovePolygon(poly.id)}
                           >
                             <MdClose size={12} />
                             {removePolygonBtn}
                           </button>
                           <button
+                            type="button"
                             style={{
-                              borderRadius: '10px',
-                              fontSize: '14px',
-                              width: '200%',
-                              marginLeft: '-1%',
-                              padding: '2px',
-                              background: 'white',
+                              width: "200%",
+                              padding: "2%",
+                              fontSize: "14px",
+                              background: "white",
                             }}
                             className="card-action-btn edit-btn green"
-                            onClick={() => handleEditPolygon()}
+                            onClick={handleEditPolygon}
                           >
                             <MdEdit size={12} />
                             {editPolygonBtn}
@@ -740,8 +763,13 @@ const PropertyInformation: React.FC = () => {
             )}
         </div>
         <div className="form-submit">
-          <Button onClick={handleSubmit} sx={verifyButtonSx} variant="contained">
-            {mode === 'verify' ? 'Verify' : nextButtonText}
+          <Button
+            onClick={handleSubmit}
+            sx={verifyButtonSx}
+            variant="contained"
+            disabled={isSubmitting}
+          >
+            {getSubmitButtonText()}
           </Button>
         </div>
       </div>

@@ -150,7 +150,7 @@ export interface Application {
   AppliedBy: string;
   AssesseeID: string;
   Property: PropertyDetails;
-  ApplicationLogs: any | null;
+  ApplicationLogs: any;
   IsDraft: boolean;
   CreatedAt: string;
   UpdatedAt: string;

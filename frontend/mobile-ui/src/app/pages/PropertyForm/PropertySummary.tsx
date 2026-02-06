@@ -11,10 +11,8 @@ import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import { usePropertyForm } from '../../../context/PropertyFormContext';
 import { useFormMode } from '../../../context/FormModeContext';
 import { usePropertySummaryLocalization } from '../../../services/AgentLocalisation/localisation-propertysummary';
-// import editIcon from '../../assets/AgentAssets/edit_square.svg';
 import editIcon from '../../assets/Agent/edit_square.svg';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
-// import rectangle100Icon from '../../assets/Agent/Rectangle_100.svg';
 import rectangle100Icon from '../../assets/Agent/Rectangle_100.svg';
 import { useLocalization } from '../../../services/AgentLocalisation/formLocalisation';
 import type { AlertType } from '../../models/AlertType.model';
@@ -72,15 +70,8 @@ export const PropertySummary: React.FC = () => {
     emailText,
     addressText,
     buildingUsageText,
-    constructionYearText,
     floorCountText,
     builtupAreaText,
-    // annualRentalValueText,
-    // propertyTaxZoneText,
-    // assessmentStatusText,
-    // notesText,
-    // sqftText,
-    // floorsText,
   } = usePropertySummaryLocalization();
 
   // General localization hook for button and note text
@@ -165,6 +156,13 @@ export const PropertySummary: React.FC = () => {
     }, 10);
   }
 
+  // Helper to get success message based on mode
+  const getSuccessMessage = () => {
+    if (mode === 'verify') return 'Property verified successfully!';
+    if (mode === 'draft') return 'Property draft submitted!';
+    return 'Property created successfully!';
+  };
+
   /**
    * Handles final confirmation/verification of the property application.
    * Updates or verifies the application, sets success messages, and navigates to dashboard.
@@ -175,11 +173,10 @@ export const PropertySummary: React.FC = () => {
       setLoading(false);
 
       updateForm({ importantNotes: importantNote });
-      console.log(importantNote);
-      
+
       if (mode !== 'verify') {
         await updateApplication({
-          applicationId: localStorage.getItem('applicationId') || '',
+          applicationId: localStorage.getItem('applicationId') || localStorage.getItem('applicationLogId') || '',
           isDraft: false,
           importantNote: importantNote ?? '',
         }).unwrap();
@@ -187,21 +184,14 @@ export const PropertySummary: React.FC = () => {
 
       if (mode === 'verify') {
         await verifyApplication({
-          applicationId: localStorage.getItem('applicationId') || '',
+          applicationId: localStorage.getItem('applicationId') || localStorage.getItem('applicationLogId') || '',
           action: 'verify',
           verified: true,
           importantNote: importantNote ?? '',
         }).unwrap();
       }
 
-      localStorage.setItem(
-        'successMessage',
-        mode === 'verify'
-          ? 'Property verified successfully!'
-          : mode === 'draft'
-          ? 'Property draft submitted!'
-          : 'Property created successfully!'
-      );
+      localStorage.setItem('successMessage', getSuccessMessage());
 
       setMode('none');
 
@@ -210,7 +200,9 @@ export const PropertySummary: React.FC = () => {
       localStorage.setItem('showSuccessPropCreation', 'true');
       localStorage.setItem('propertyNo', propertyNo!);
 
+      // Remove applicationId and propertyId only after final submission
       localStorage.removeItem('applicationId');
+      localStorage.removeItem('applicationLogId');
       localStorage.removeItem('propertyId');
       if (authService.isCitizen()) {
         navigate('/citizen');
@@ -287,7 +279,7 @@ export const PropertySummary: React.FC = () => {
               <div className="header-buttons">
                 <button
                   className="edit-btn"
-                  onClick={() => navigate('/property-form/property-information')}
+                  onClick={() => navigate('/property-form/preliminary-information')}
                 >
                   <img src={editIcon} alt="Edit" className="edit-icon" />
                 </button>
@@ -432,13 +424,7 @@ export const PropertySummary: React.FC = () => {
                 <div className="detail-value">
                   {formData.assessmentDetails?.ReasonOfCreation || ''}
                 </div>
-              </div>
-              <div className="detail-row">
-                <div className="detail-label">{constructionYearText}</div>
-                <div className="detail-value">
-                  {formData.assessmentDetails?.OccupancyCertificateDate || ''}
-                </div>
-              </div>
+              </div>      
               <div className="detail-row">
                 <div className="detail-label">{floorCountText}</div>
                 <div className="detail-value">{formData.floors?.length || ``}</div>
@@ -483,7 +469,6 @@ export const PropertySummary: React.FC = () => {
               {documents.map((d) => (
                 <div key={d.id} className="document-icon">
                   <div className="doc-icon">
-                    {/* {d.type?.toUpperCase() || "PDF"} */}
                     <img src={rectangle100Icon} alt="Document" className="edit-icon" />
                   </div>
                   <div

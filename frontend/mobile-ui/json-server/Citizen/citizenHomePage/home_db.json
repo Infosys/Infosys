@@ -1,0 +1,58 @@
+
+
+{
+    "home": {
+        "properties": [
+            {
+                "id": "PROP-001",
+                "address": {
+                    "street": "Maple Street",
+                    "wardNo": "Ward 3",
+                    "zoneNo": "2",
+                    "blockNo": "Block A",
+                    "pincode": "560001",
+                    "locality": "Central Park",
+                    "electionWard": "EW-17",
+                    "secretariatWard": "SW-14",
+                    "isCorrespondenceAddressDifferent": false
+                },
+                "enumerationProgress": 20,
+                "locationData": {
+                    "address": "Vittal Mallya Road, Richmond Town, Bengaluru, Karnataka",
+                    "coordinates": {
+                        "lat": 12.9716,
+                        "lng": 77.5946
+                    },
+                    "timestamp": "2025-10-23T09:42:25.634Z"
+                }
+            }
+        ],
+        "urgentAttention": [
+            {
+                "date": "2024-10-04",
+                "id": 1,
+                "message": "Karnataka Professional Tax registration completed",
+                "status": "success",
+                "type": "casual"
+            },
+            {
+                "date": "2024-10-04",
+                "id": 2,
+                "message": "BWSSB water bill payment successful - ?1,250",
+                "status": "success",
+                "type": "casual"
+            },
+            {
+                "date": "2024-10-04",
+                "id": 3,
+                "message": "BBMP Trade License renewal due on Oct 20 - HSR Layout establishment",
+                "status": "pending",
+                "type": "immediate"
+            }
+        ],
+        "user": {
+            "activeLicenses": 2,
+            "numberOfProperties": 1
+        }
+    }
+}

@@ -21,7 +21,7 @@ export const allPropertiesApi = apiSlice.injectEndpoints({
     // Fetch draft properties assigned to the agent
     getDraftProperties: builder.query<HomePageResponse, {agentId: string}>({
       query: ({agentId}) => ({
-        url: `v1/applications/search?assesseeID=${agentId}&isDraft=true`,
+        url: `v1/applications/search?assesseeId=${agentId}&isDraft=true`,
         method: 'GET',
       }),
       providesTags: [TAG_TYPES.APPLICATION, TAG_TYPES.PROPERTY],

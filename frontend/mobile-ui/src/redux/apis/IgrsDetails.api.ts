@@ -13,9 +13,9 @@ export const igrsDetailsApi = apiSlice.injectEndpoints({
       }),
     }),
     // Update IGRS details by ID
-    updateIgrsDetails: builder.mutation<IgrsDetailsResponse, { id: string; body: IgrsDetailsUpdateRequest }>({
-      query: ({ id, body }) => ({
-        url: `/v1/igrs/${id}`,
+    updateIgrsDetails: builder.mutation<IgrsDetailsResponse, { id: string; applicationId: string; isVerifying: boolean; body: IgrsDetailsUpdateRequest }>({
+      query: ({ id, applicationId, isVerifying, body }) => ({
+        url: `/v1/igrs/${id}/${applicationId}?isVerifying=${isVerifying}`,
         method: 'PUT',
         body,
       }),

@@ -37,9 +37,6 @@ export const NotificationSettings: React.FC<{ isCitizenProfile: boolean }> = ({
       ...prev,
       [name]: checked,
     }));
-    if (checked) {
-      console.log(`${name} checkbox checked`);
-    }
   };
 
   const notificationCategories = isCitizenProfile
@@ -68,13 +65,13 @@ export const NotificationSettings: React.FC<{ isCitizenProfile: boolean }> = ({
     : [
         {
           key: 'application-updates',
-          title: 'application-updates',
-          desc: 'application-updates-desc',
+          title: messages['profile'][lang]['application-updates'],
+          desc: messages['profile'][lang]['application-updates-desc'],
         },
         {
           key: 'appointment-scheduling',
-          title: 'appointment-scheduling',
-          desc: 'appointment-scheduling-desc',
+          title: messages['profile'][lang]['appointment-scheduling'],
+          desc: messages['profile'][lang]['appointment-scheduling-desc'],
         },
       ];
 
@@ -107,7 +104,7 @@ export const NotificationSettings: React.FC<{ isCitizenProfile: boolean }> = ({
       {/* Header with icon and title */}
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
         <NotificationsNoneIcon sx={{ mr: 1, color: '#757575' }} />
-        <Typography fontWeight={500} fontSize={24} color={COLORS.text}>
+        <Typography fontWeight={300} fontSize={24} color={COLORS.text}>
           {/* Notification Settings */}
           {messages['profile'][lang]['notification-settings']}
         </Typography>
@@ -136,13 +133,30 @@ export const NotificationSettings: React.FC<{ isCitizenProfile: boolean }> = ({
             <Switch
               checked={toggles[item.key]}
               onChange={handleToggleChange(item.key)}
-              color="warning"
               sx={{
+                '& .MuiSwitch-track': {
+                  backgroundColor: toggles[item.key] ? '#C7501B' : '#ECECEC',
+                  opacity: 1,
+                  height: 22, // increase height here (default is ~14px)
+                  borderRadius: 11, // keep it more rounded (half of height)
+                },
+                '& .MuiSwitch-thumb': {
+                  backgroundColor: '#fff', // always white thumb/circle
+                  width: 18, // smaller width
+                  height: 18, // smaller height
+                  boxShadow: 'none',
+                  border: '1px solid #C7501B',
+                },
                 '& .MuiSwitch-switchBase.Mui-checked': {
-                  color: COLORS.toggle,
+                  paddingTop: 1.74,
+                  paddingLeft: 0.75,
+                },
+                '& .MuiSwitch-switchBase': {
+                  padding: 1.77,
                 },
                 '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                  backgroundColor: COLORS.toggle,
+                  backgroundColor: '#C7501B',
+                  opacity: 1,
                 },
               }}
             />
@@ -172,8 +186,8 @@ export const NotificationSettings: React.FC<{ isCitizenProfile: boolean }> = ({
                 onChange={handleCheckboxChange}
                 name="sms"
                 sx={{
-                  color: COLORS.toggle,
-                  '&.Mui-checked': { color: COLORS.toggle },
+                  color: COLORS.text,
+                  '&.Mui-checked': { color: COLORS.checkbox },
                 }}
               />
             }
@@ -192,8 +206,8 @@ export const NotificationSettings: React.FC<{ isCitizenProfile: boolean }> = ({
                 onChange={handleCheckboxChange}
                 name="whatsapp"
                 sx={{
-                  color: COLORS.toggle,
-                  '&.Mui-checked': { color: COLORS.toggle },
+                  color: COLORS.text,
+                  '&.Mui-checked': { color: COLORS.checkbox },
                 }}
               />
             }
@@ -212,8 +226,8 @@ export const NotificationSettings: React.FC<{ isCitizenProfile: boolean }> = ({
                 onChange={handleCheckboxChange}
                 name="email"
                 sx={{
-                  color: COLORS.toggle,
-                  '&.Mui-checked': { color: COLORS.toggle },
+                  color: COLORS.text,
+                  '&.Mui-checked': { color: COLORS.checkbox },
                 }}
               />
             }

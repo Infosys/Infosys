@@ -9,9 +9,9 @@
 //   - Uses localization for all labels and messages
 // Used in: Citizen workflow for property review and details
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Box, Typography, Chip, Button, Tabs, Tab, Paper } from '@mui/material';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 import markerSvg from '../../../assets/CitizenAssets/property_page/location.svg';
 import { CottageOutlined } from '@mui/icons-material';
@@ -30,8 +30,8 @@ import PlotInfo from '../../features/Citizen/components/ui/PlotInfoCard';
 import History from '../../features/Citizen/components/ui/HistoryCard';
 import Documents from '../../features/Citizen/components/ui/DocumentsTab';
 import LoadingPage from '../../components/Loader';
-import { useGetCitizenPropertyByIdQuery } from '../../features/Citizen/api/CitizenPropertiesPageApi/CitizenPropertyPageApi';
 import type { CitizenPropertyData } from '../../features/Citizen/models/CitizenPropertiesPageModel/CitizenPropertyPageModel';
+import { useLazyGetApplicationByIdQuery } from '../../../redux/apis/applicationApi';
 
 // Replace Leaflet icon creation with a plain icon-like object (no Leaflet dependency)
 const customIcon = {
@@ -44,7 +44,7 @@ const customIcon = {
 
 const statusStyles: Record<string, { bg: string; color: string }> = {
   'Under Enumeration': { bg: '#FFCDB6', color: '#000' },
-  Enumerated: { bg: '#85B9A1', color: '#fff' },
+  Enumerated: { bg: '#85B9A1', color: '#000' },
   Draft: { bg: '#FFC107', color: '#000' },
   Private: { bg: '#F8E8DB', color: '#D49C7A' },
   Government: { bg: '#E8FAE6', color: '#53C56C' },
@@ -68,7 +68,6 @@ const PropertyDetails: React.FC = () => {
   const [tab, setTab] = React.useState(0);
   const navigate = useNavigate();
   const location = useLocation();
-  const { propertyId } = useParams<{ propertyId: string }>();
 
   // Get state passed from PropertyCard
   const {
@@ -79,12 +78,21 @@ const PropertyDetails: React.FC = () => {
   } = location.state || {};
 
   // Fetch property details using RTK Query
-  const { data, isLoading, isError } = useGetCitizenPropertyByIdQuery({
-    propertyId: propertyId || '',
-  });
+  const [getApplicationById, { data, isLoading, isError }] =
+    useLazyGetApplicationByIdQuery();
+
   const lang = useAppSelector((state) => state.lang.citizenLang);
   const { loading: localizationLoading } = useLocalization();
   const messages = getMessagesFromSession('CITIZEN')!;
+
+  // Fetch application data when component mounts
+  useEffect(() => {
+    if (passedAppId) {
+      console.log(passedAppId);
+
+      getApplicationById(passedAppId.toString());
+    }
+  }, [passedAppId, getApplicationById]);
 
   // Show loader while data is being fetched
   if (isLoading || localizationLoading) {
@@ -108,45 +116,37 @@ const PropertyDetails: React.FC = () => {
     );
   }
 
-  const property = data.data;
+  const property = data.data.Property;
+
   const address = [
-    property.Address.Street,
-    property.Address.Locality,
-    property.Address.WardNo,
-    property.Address.ZoneNo,
-    property.Address.BlockNo,
-    property.Address.PinCode,
+    property.Address?.Street,
+    property.Address?.Locality,
+    property.Address?.WardNo,
+    property.Address?.ZoneNo,
+    property.Address?.BlockNo,
+    property.Address?.PinCode,
   ]
     .filter(Boolean)
     .join(', ');
 
-  // Use the enumeration progress from the passed state
-  // If not passed, fall back to mapping application status
-  let enumerationProgress = 20; // Default to INITIATED
+  // Calculate enumeration progress
+  let enumerationProgress: number; // Default to INITIATED
 
-  if (passedProgress == undefined) {
+  if (passedProgress) {
+    // Use the progress value passed from the previous screen
     enumerationProgress = passedProgress;
-    console.log(enumerationProgress);
-    
   } else {
-    // Fallback logic if state wasn't passed
-    if (isDraft) {
-      enumerationProgress = -1; // Draft
-    } else {
-      const status = applicationStatus?.toUpperCase() || 'INITIATED';
-      enumerationProgress = STATUS_PROGRESS_MAP[status] || 20;
-      console.log(status);
-      
-    }
+    enumerationProgress = STATUS_PROGRESS_MAP[data.data.Status?.toUpperCase()] ?? 20;
   }
 
-  let status = 'Under Enumeration';
+  // Determine display status based on enumeration progress
+  let status: string;
   if (enumerationProgress === -1) {
     status = 'Draft';
   } else if (enumerationProgress === 100) {
     status = 'Enumerated';
   } else {
-    status = 'Under Enumeration'; // All other statuses (20%, 40%, 60%, 80%)
+    status = 'Under Enumeration';
   }
 
   const badge = statusStyles[status] || { bg: '#F8E8DB', color: '#D49C7A' };
@@ -239,82 +239,31 @@ const PropertyDetails: React.FC = () => {
 
         <PropertyMapSection latLng={latLng} customIcon={customIcon} />
 
-        {/* View Location Button */}
-        {/* <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-          <Button
-            size="small"
-            // startIcon={<OpenInNew sx={{ fontSize: '8px' }} />}
-            sx={{
-              alignContent: 'center',
-              bgcolor: '#c84c0e',
-              color: '#ffffffff ',
-              borderRadius: '6px',
-              fontWeight: 500,
-              fontStyle: 'regular',
-              fontSize: 12,
-              textTransform: 'none',
-              p: '4px 10px',
-              minHeight: 20,
-              '&:hover': { bgcolor: '#d0f5d3' },
-            }}
-            onClick={() => {
-              localStorage.setItem('applicationId', passedAppId || '');
-              navigate('/citizen/application-logs/' + passedAppId);
-            }}
-          >
-            View Application Log
-          </Button>
-          <Button
-            size="small"
-            startIcon={<OpenInNew sx={{ fontSize: '8px' }} />}
-            sx={{
-              alignContent: 'center',
-              bgcolor: '#DBFAD3',
-              color: '#000',
-              borderRadius: '10px',
-              fontWeight: 400,
-              fontStyle: 'regular',
-              fontSize: 12,
-              textTransform: 'none',
-              p: '4px 10px',
-              minHeight: 24,
-              '&:hover': { bgcolor: '#d0f5d3' },
-            }}
-            onClick={() =>
-              navigate('/citizen/property-location', {
-                state: {
-                  property: extendedProperty,
-                },
-              })
-            }
-          >
-            {messages['citizen.commons'][lang]['view-location']}
-          </Button>
-        </Box> */}
-
         <Button
-            size="small"
-            // startIcon={<OpenInNew sx={{ fontSize: '8px' }} />}
-            sx={{
-              alignContent: 'center',
-              bgcolor: '#c84c0e',
-              color: '#ffffffff ',
-              borderRadius: '6px',
-              fontWeight: 500,
-              fontStyle: 'regular',
-              fontSize: 12,
-              textTransform: 'none',
-              p: '4px 10px',
-              minHeight: 20,
-              '&:hover': { bgcolor: '#d0f5d3' },
-            }}
-            onClick={() => {
-              localStorage.setItem('applicationId', passedAppId || '');
+          size="small"
+          sx={{
+            alignContent: 'center',
+            bgcolor: '#c84c0e',
+            color: '#ffffffff',
+            borderRadius: '6px',
+            fontWeight: 500,
+            fontStyle: 'regular',
+            fontSize: 12,
+            textTransform: 'none',
+            p: '4px 10px',
+            minHeight: 20,
+            marginBottom: 1,
+            '&:hover': { bgcolor: '#a03d0b' },
+          }}
+          onClick={() => {
+            if (passedAppId) {
+              localStorage.setItem('applicationId', passedAppId);
               navigate('/citizen/application-logs/' + passedAppId);
-            }}
-          >
-            View Application Log
-          </Button>
+            }
+          }}
+        >
+          View Application Log
+        </Button>
 
         <EnumOptComponent property={extendedProperty} />
 
@@ -323,12 +272,15 @@ const PropertyDetails: React.FC = () => {
             value={tab}
             onChange={(_, val) => setTab(val)}
             variant="fullWidth"
-            TabIndicatorProps={{ style: { display: 'none' } }}
+            slots={{
+              indicator: () => null,
+            }}
             sx={{
               bgcolor: '#fff',
               borderRadius: '20px',
               alignItems: 'center',
               minHeight: 44,
+              display: 'flex',
               mb: 1,
               '& .MuiTab-root': {
                 fontWeight: 400,

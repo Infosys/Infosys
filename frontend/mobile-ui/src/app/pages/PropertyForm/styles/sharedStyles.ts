@@ -13,8 +13,9 @@ export const uniformInputSx = {
   height: 30,
   minHeight: 30,
   boxSizing: 'border-box',
+  mt: 0.15,
   '& input': {
-    padding: '2px 8px', 
+    padding: '2px 8px 2px 16px', 
   },
   '& input[type=number]': {
     MozAppearance: 'textfield',

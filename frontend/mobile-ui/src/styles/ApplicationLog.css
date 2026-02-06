@@ -192,6 +192,9 @@
   color: #000000;
   margin-top: 4px;
   line-height: 1.6;
+  word-break: break-word;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
 }
 
 .app-log-error {
@@ -397,4 +400,20 @@
     margin-top: 20px;
     margin-bottom: 20px;
   }
+}
+
+.filebox-fileinfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filebox-filename {
+  color: gray;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+  display: inline-block;
+  vertical-align: middle;
 }

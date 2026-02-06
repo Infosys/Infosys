@@ -9,7 +9,7 @@
   right: 0;
   width: 100%;
   display: flex;
-  /* justify-content: center; */
+  justify-content: space-around;
   z-index: 1100;
   background: #f7e4db;
 }
@@ -57,7 +57,7 @@
 }
 
 .nav-item:active {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: transparent;
 }
 
 /* Nav Icons */

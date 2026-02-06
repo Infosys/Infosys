@@ -1,4 +1,3 @@
-
 // Card summarizing a single floor's details in the property form, with edit/delete actions.
 
 import React from 'react';
@@ -7,7 +6,7 @@ import deleteIcon from '../../../../assets/Agent/delete.svg';
 import editSquare from '../../../../assets/Agent/edit_square.svg';
 import type { FloorDetails } from '../../../../../context/PropertyFormContext';
 import { useFloorDetailsLocalization } from '../../../../../services/AgentLocalisation/localisation-floor-details';
-import '../../../../../styles/FloorSection.css'
+import '../../../../../styles/FloorSection.css';
 
 interface FloorCardProps {
   floor: FloorDetails;
@@ -53,7 +52,14 @@ const FloorCard: React.FC<FloorCardProps> = ({ floor, index, onEdit, onDelete })
         <div style={{ fontWeight: 600, fontSize: '16px' }}>
           {floorText}: {floor.floorNumber}
         </div>
-        <div style={{ fontSize: 14, color: '#555' }}>
+        <div
+          style={{
+            fontSize: 14,
+            color: '#555',
+            wordBreak: 'break-word',
+            paddingRight: 22,
+          }}
+        >
           {classificationText}: {floor.buildingClassification}
         </div>
         <div style={{ fontSize: 14, color: '#555' }}>

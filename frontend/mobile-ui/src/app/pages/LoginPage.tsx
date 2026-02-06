@@ -46,7 +46,7 @@ function isValidPhone(phone: string) {
 
 // Props for LoginScreen component
 interface LoginFormProps {
-  onLoginSuccess: () => void;
+  readonly onLoginSuccess: () => void;
 }
 
 /**
@@ -65,18 +65,20 @@ export default function LoginScreen({ onLoginSuccess }: LoginFormProps) {
   // Localization hook for login page
   const { t } = useLoginLocalization(selectedLanguage);
 
-  // const [error, setError] = useState('');
-  // const [showAlert, setShowAlert] = useState(false);
-  
+  // Handler to update language and save to localStorage
+  const handleLanguageChange = (langCode: string) => {
+    setSelectedLanguage(langCode);
+    localStorage.setItem('loginLocale', langCode);
+  };
+
   // Context and navigation hooks
   const { setUsername: setFormUsername, setOtp } = useSignUpForm();
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialRole = (searchParams.get('role')?.toLowerCase() === 'agent' ? 'agent' : 'citizen') as 'agent' | 'citizen';
+  const initialRole =
+    searchParams.get('role')?.toLowerCase() === 'agent' ? 'agent' : 'citizen';
   const navigate = useNavigate();
   const [loginType, setLoginType] = useState<'agent' | 'citizen'>(initialRole);
   const [fadeKey, setFadeKey] = useState(0);
-
-  
 
   // State for agent login fields
   const [agentUsername, setAgentUsername] = useState('');
@@ -103,11 +105,9 @@ export default function LoginScreen({ onLoginSuccess }: LoginFormProps) {
     duration: 3000,
   });
 
-  
-
   // Update URL search params when login type changes
   useEffect(() => {
-    const popup = sessionStorage.getItem("signupSuccessMessage");
+    const popup = sessionStorage.getItem('signupSuccessMessage');
     if (popup) {
       setPopup({
         type: 'success',
@@ -116,16 +116,15 @@ export default function LoginScreen({ onLoginSuccess }: LoginFormProps) {
         message: popup,
         duration: 3000,
       });
-      sessionStorage.removeItem("signupSuccessMessage");
+      sessionStorage.removeItem('signupSuccessMessage');
     }
-
 
     const roleParam = loginType === 'agent' ? 'Agent' : 'Citizen';
     setSearchParams({ role: roleParam }, { replace: true });
   }, [loginType, setSearchParams]);
 
   // Helper to show error notification popup
-  function showErrorPopup(message: string, duration = 3000, title?: string,) {
+  function showErrorPopup(message: string, duration = 3000, title?: string) {
     setPopup((prev) => ({ ...prev, open: false }));
     setTimeout(() => {
       setPopup({
@@ -143,7 +142,11 @@ export default function LoginScreen({ onLoginSuccess }: LoginFormProps) {
    */
   const handleAgentLogin = async () => {
     if (agentUsername === '' || password === '') {
-      showErrorPopup('Please enter both username and password.', 3000, 'Incomplete Details');
+      showErrorPopup(
+        'Please enter both username and password.',
+        3000,
+        'Incomplete Details'
+      );
       return;
     }
     if (!isValidUsername(agentUsername)) {
@@ -197,10 +200,18 @@ export default function LoginScreen({ onLoginSuccess }: LoginFormProps) {
         setFormUsername(result.data.users[0].username);
         navigate('/otp-verification', { state: { phone: phoneNumber } });
       } else {
-          showErrorPopup(t('login-failed-number', 'Login failed, Check your number.'), 3000, 'Number Not Registered');
+        showErrorPopup(
+          t('login-failed-number', 'Login failed, Check your number.'),
+          3000,
+          'Number Not Registered'
+        );
       }
     } catch {
-      showErrorPopup(t('error-occurred', 'An error occurred. Please try again.'), 3000, 'Something went wrong.');
+      showErrorPopup(
+        t('error-occurred', 'An error occurred. Please try again.'),
+        3000,
+        'Something went wrong.'
+      );
     }
   };
 
@@ -257,7 +268,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginFormProps) {
           <LanguageSettingsModal
             open={langModalOpen}
             selected={selectedLanguage}
-            onSelect={setSelectedLanguage}
+            onSelect={handleLanguageChange}
             onClose={() => setLangModalOpen(false)}
             onConfirm={() => setLangModalOpen(false)}
           />
@@ -493,7 +504,6 @@ export default function LoginScreen({ onLoginSuccess }: LoginFormProps) {
                   }}
                   onClick={handleAgentLogin}
                 >
-                  {/* {t('verify', 'Verify')} */}
                   Login
                 </Button>
               </Box>
@@ -529,7 +539,9 @@ export default function LoginScreen({ onLoginSuccess }: LoginFormProps) {
                   variant="outlined"
                   value={phoneNumber}
                   placeholder={t('phone-number', 'Enter Phone Number')}
-                  inputProps={{ maxLength: 10 }}
+                  slotProps={{
+                    htmlInput: { maxLength: 10 },
+                  }}
                   sx={{
                     mb: 0.2,
                     fontFamily: 'Roboto, sans-serif',
@@ -545,15 +557,15 @@ export default function LoginScreen({ onLoginSuccess }: LoginFormProps) {
                     },
                   }}
                   onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, '');
+                    const val = e.target.value.replaceAll(/\D/g, '');
                     setPhoneNumber(val);
                     setShowPhoneError(false);
                   }}
                   onBlur={(e) => {
-                    if (!isValidPhone(e.target.value)) {
-                      setShowPhoneError(true);
-                    } else {
+                    if (isValidPhone(e.target.value)) {
                       setShowPhoneError(false);
+                    } else {
+                      setShowPhoneError(true);
                     }
                   }}
                   error={showPhoneError}
@@ -579,41 +591,6 @@ export default function LoginScreen({ onLoginSuccess }: LoginFormProps) {
                       )}
                 </Typography>
               </Box>
-
-              {/* {showAlert && (
-                <Alert
-                  icon={
-                    <Box
-                      sx={{
-                        background: '#FFCE8B',
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: 26,
-                        height: 26,
-                      }}
-                    >
-                      <InfoOutlinedIcon sx={{ color: '#111', fontSize: 20 }} />
-                    </Box>
-                  }
-                  severity="warning"
-                  sx={{
-                    background: '#FFEFD8',
-                    color: '#444',
-                    mt: 2,
-                    mb: 2,
-                    fontFamily: 'Roboto, sans-serif',
-                    borderRadius: '12px',
-                    px: 2,
-                    py: 1,
-                    fontSize: 15,
-                    alignItems: 'center',
-                  }}
-                >
-                  {error ? error : 'Login failed, Check your number.'}
-                </Alert>
-              )} */}
 
               <Box
                 sx={{

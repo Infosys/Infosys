@@ -1,4 +1,7 @@
 // Service functions for file upload and download via filestore API
+
+import { env } from "../../config/env";
+
 // Response type for file upload
 export interface UploadResult {
   files: {
@@ -20,7 +23,7 @@ export async function uploadFileToFilestore(file: File): Promise<UploadResult> {
   formData.append('module', module);
   formData.append('tag', tag);
 
-  const response = await fetch(`${import.meta.env.VITE_FILESTORE_HOST}/filestore/v1/files/upload`, {
+  const response = await fetch(`${env.FILESTORE_HOST}/filestore/v1/files/upload`, {
     method: 'POST',
     body: formData,
   });
@@ -34,7 +37,7 @@ export async function uploadFileToFilestore(file: File): Promise<UploadResult> {
 
 // Download a file from the filestore by fileStoreId and tenantId
 export async function getFileFromFilestore(fileStoreId: string, tenantId: string = "pg"): Promise<Blob> {
-  const url = `${import.meta.env.VITE_FILESTORE_HOST}/filestore/v1/files/${fileStoreId}?tenantId=${tenantId}`;
+  const url = `${env.FILESTORE_HOST}/filestore/v1/files/${fileStoreId}?tenantId=${tenantId}`;
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error('Failed to download file');

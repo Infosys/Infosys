@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
+import env from '../../config/env';
 
 export interface LocationViewLocalizedTexts {
   previousText: string;
@@ -123,7 +124,7 @@ async function fetchLocalizedMessages(locale: string): Promise<{ [key: string]: 
   try {
     const codesParam = MESSAGE_CODES.join(',');
     const response = await fetch(
-      `${import.meta.env.VITE_LOCALIZATION_HOST}/localization/v1/messages?module=common&locale=${locale}&codes=${codesParam}`,
+      `${env.LOCALIZATION_HOST}/localization/v1/messages?module=common&locale=${locale}&codes=${codesParam}`,
       {
         method: 'GET',
         headers: {

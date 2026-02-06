@@ -1,6 +1,6 @@
 // PropertyFormVerification: Agent view for verifying property form details, showing map, required fields, and navigation
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useNavigate as useNavigateHook } from 'react-router-dom';
 import { usePropertyForm } from '../../../context/PropertyFormContext';
 import { usePropertyApplications } from '../../../context/PropertyApplicationsContext';
 import { usePropertyFormVerificationLocalization } from '../../../services/AgentLocalisation/localisation-propertyFormVerification';
@@ -10,12 +10,10 @@ import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
-//import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import LocationMapWithDrawing from '../PropertyForm/LocationMapWithDrawing';
 import appleMaps from '../../assets/Agent/Apple_Maps.svg';
 import openStreetMaps from '../../assets/Agent/open_street_maps.svg';
 // Comment/Note Card
-import { useNavigate as useNavigateHook } from 'react-router-dom';
 import { useLocalization } from '../../../services/AgentLocalisation/formLocalisation';
 import type { AlertType } from '../../models/AlertType.model';
 import { fetchPropertyDetails } from '../../features/Agent/api/fetchProperty.hooks';
@@ -24,9 +22,15 @@ import { useLazyGetApplicationByIdQuery } from '../../../redux/apis/applicationA
 import { useLazyGetOwnersByPropertyIdQuery } from '../../../redux/apis/ownerApi';
 
 // Card component for comment/note actions (application log, send email)
-const CommentOrNoteCard = ({ loc, propertyId }: { loc: any; propertyId: string | undefined }) => {
+const CommentOrNoteCard = ({
+  loc,
+  propertyId,
+}: {
+  loc: any;
+  propertyId: string | undefined;
+}) => {
   const navigate = useNavigateHook();
-  const appId = localStorage.getItem('applicationId');
+  const appId = localStorage.getItem('applicationId') || localStorage.getItem('applicationLogId');
   return (
     <div className="card comment-note-card">
       <div className="comment-note-header">
@@ -88,8 +92,6 @@ const AddressProgressSection = ({
   address: string;
   phoneNo: string;
   formCompletionPercent: number;
-  verificationCount: number;
-  missingCount: number;
   texts: any;
 }) => (
   <div className="card address-progress-card">
@@ -172,37 +174,6 @@ const PropertyFormVerification: React.FC = () => {
     }, 10);
   }
 
-  // req
-  // const getRequiredFields = () => [
-  //   {
-  //     key: 'owners',
-  //     label: texts.propertyOwnerNameText,
-  //     section: texts.ownerInformationText,
-  //     desc: texts.fullLegalNameText,
-  //     avatar: true,
-  //   },
-  //   {
-  //     key: 'assessmentDetails.ReasonOfCreation',
-  //     label: texts.surveyNumberText,
-  //     section: texts.propertyDetailsText,
-  //     desc: texts.governmentSurveyNumberText,
-  //     avatar: true,
-  //   },
-  //   {
-  //     key: 'assessmentDetails.ExtentOfSite',
-  //     label: texts.builtUpAreaText,
-  //     section: texts.propertyMeasurementsText,
-  //     desc: texts.totalBuiltUpAreaText,
-  //     avatar: false,
-  //   },
-  // ];
-
-  // const getRequiredFields = () => [
-  //   { key: 'owners', label: texts.propertyOwnerNameText, section: texts.ownerInformationText, desc: texts.fullLegalNameText, avatar: true },
-  //   { key: 'assessmentDetails.ReasonOfCreation', label: texts.surveyNumberText, section: texts.propertyDetailsText, desc: texts.governmentSurveyNumberText, avatar: true },
-  //   { key: 'assessmentDetails.ExtentOfSite', label: texts.builtUpAreaText, section: texts.propertyMeasurementsText, desc: texts.totalBuiltUpAreaText, avatar: false },
-  // ];
-
   // Build required-fields metadata from fetched formData (source of truth)
   const getRequiredFields = () => {
     const ownerLabel = (() => {
@@ -242,33 +213,6 @@ const PropertyFormVerification: React.FC = () => {
       },
     ];
   };
-  // Metadata for fields needing verification
-  const getVerificationFields = () => [
-    {
-      key: 'constructionDetails.floorType',
-      label: texts.constructionTypeText,
-      section: texts.propertyDetailsText,
-      desc: texts.primaryConstructionMaterialText,
-    },
-    {
-      key: 'assessmentDetails.natureOfUsage',
-      label: texts.propertyUsageText,
-      section: texts.propertyClassificationText,
-      desc: texts.primaryUsageText,
-    },
-    {
-      key: 'isgrAdditionalDetails',
-      label: texts.amenitiesText,
-      section: texts.propertyFeaturesText,
-      desc: texts.selectAmenitiesText,
-    },
-    {
-      key: 'floors',
-      label: texts.floorDetailsText,
-      section: texts.propertyStructureText,
-      desc: texts.floorWiseUsageText,
-    },
-  ];
 
   // On mount: if propertyId is present, update form with property details
   useEffect(() => {
@@ -276,7 +220,7 @@ const PropertyFormVerification: React.FC = () => {
       const found = fullProperties.find(
         (p) => p.propertyId === propertyId || p.id === propertyId
       );
-      if (found && found.property) updateForm(found.property);
+      if (found?.property) updateForm(found.property);
     }
     // eslint-disable-next-line
   }, [propertyId, fullProperties]);
@@ -287,7 +231,7 @@ const PropertyFormVerification: React.FC = () => {
     const propertyItem = properties.find(
       (p) => p.id === propertyId || p.pId === propertyId
     );
-    if (propertyItem && propertyItem.address) {
+    if (propertyItem?.address) {
       return propertyItem.address;
     }
 
@@ -309,11 +253,9 @@ const PropertyFormVerification: React.FC = () => {
 
   // Required and verification fields for the form
   const REQUIRED_FIELDS = getRequiredFields();
-  const VERIFICATION_FIELDS = getVerificationFields();
 
   // Find missing required fields
   const missingFields = REQUIRED_FIELDS.filter((field) => {
-    //if (field.key === 'owners') return !formData.owners || formData.owners.length === 0;
     const value = getValue(formData, field.key);
     return value === undefined || value === '' || value === null;
   });
@@ -321,17 +263,6 @@ const PropertyFormVerification: React.FC = () => {
   // Human readable list of missing field labels
   const missingFieldLabels = missingFields.map((f) => f.label || f.key);
   const missingLabelsStr = missingFieldLabels.join(', ');
-
-  // Find fields that need verification
-  const verificationFields = VERIFICATION_FIELDS.filter((field) => {
-    const value = getValue(formData, field.key);
-    if (field.key === 'isgrAdditionalDetails') {
-      if (!formData.isgrAdditionalDetails) return true;
-      return Object.values(formData.isgrAdditionalDetails).some((v) => v === undefined);
-    }
-    if (field.key === 'floors') return !formData.floors || formData.floors.length === 0;
-    return value !== undefined && value !== '' && value !== null;
-  });
 
   // Calculate form completion percentage
   const filledRequired = REQUIRED_FIELDS.length - missingFields.length;
@@ -341,7 +272,7 @@ const PropertyFormVerification: React.FC = () => {
 
   // Navigate to property information form
   const handleContinueToForm = () => {
-    navigate('/property-form/property-information');
+    navigate('/property-form/preliminary-information');
   };
 
   // On mount: fetch property details if in verify mode
@@ -349,7 +280,7 @@ const PropertyFormVerification: React.FC = () => {
     let applicationId;
     let propertyId;
     if (mode == 'verify') {
-      applicationId = localStorage.getItem('applicationId')!;
+      applicationId = localStorage.getItem('applicationLogId')! || localStorage.getItem('applicationId')!;
       propertyId = localStorage.getItem('propertyId')!;
 
       if (!propertyId) {
@@ -382,12 +313,10 @@ const PropertyFormVerification: React.FC = () => {
   // If formData is loaded but not marked as loaded, set as loaded
   useEffect(() => {
     // If we have formData but haven't loaded yet, set as loaded
-    if (formData && formData.id && !isDataLoaded) {
+    if (formData?.id && !isDataLoaded) {
       setIsDataLoaded(true);
       setIsMapLoading(false);
     }
-
-    console.log(formData);
   }, [formData, isDataLoaded]);
 
   // Handle back navigation: reset form and state
@@ -491,52 +420,17 @@ const PropertyFormVerification: React.FC = () => {
 
           <div
             className="map-container-main"
-            style={{ position: 'relative', minHeight: '400px' }}
+            style={{ position: 'relative', minHeight: '240px', borderRadius: '20px' }}
           >
-            {isMapLoading ? (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: '8px',
-                  zIndex: 1000,
-                }}
-              >
-                <div style={{ textAlign: 'center' }}>
-                  <div
-                    style={{
-                      width: '40px',
-                      height: '40px',
-                      border: '4px solid #f3f3f3',
-                      borderTop: '4px solid #c84c03',
-                      borderRadius: '50%',
-                      animation: 'spin 1s linear infinite',
-                      margin: '0 auto 12px',
-                    }}
-                  />
-                  <p style={{ color: '#666', fontSize: '14px' }}>Loading map...</p>
-                </div>
-              </div>
-            ) : (
-              isDataLoaded && (
-                <LocationMapWithDrawing
-                  center={[getLocationData().lat!, getLocationData().lng!]}
-                  onLocationUpdate={() => {
-                    /* verification map: no-op for readOnly */
-                  }}
-                  readOnly={true}
-                  addressLabel={address}
-                  initialShapes={formData.locationData?.drawnShapes}
-                />
-              )
-            )}
+            <LocationMapWithDrawing
+              center={[getLocationData().lat!, getLocationData().lng!]}
+              onLocationUpdate={() => {
+                /* verification map: no-op for readOnly */
+              }}
+              readOnly={true}
+              addressLabel={address}
+              initialShapes={formData.locationData?.drawnShapes}
+            />
           </div>
 
           {/* Map Provider Buttons */}
@@ -581,8 +475,6 @@ const PropertyFormVerification: React.FC = () => {
               address={address}
               phoneNo={formData.owners?.[0]?.ContactNo}
               formCompletionPercent={formCompletionPercent}
-              verificationCount={verificationFields.length}
-              missingCount={missingFields.length}
               texts={texts}
             />
 
@@ -602,19 +494,6 @@ const PropertyFormVerification: React.FC = () => {
                 </span>
               </div>
             )}
-            {/* {verificationFields.length > 0 && (
-              <div className="card alert-card info">
-                <span className="alert-icon">
-                  <WarningAmberOutlinedIcon
-                    style={{ color: 'black', fontSize: '1.3rem' }}
-                  />
-                </span>
-                <span style={{ fontWeight: '300' }} className="alert-text">
-                  {verificationFields.length} {texts.fieldsNeedVerificationText}
-                </span>
-              </div>
-            )} */}
-
             {/* Missing Required Fields */}
             {missingFields.length > 0 && (
               <div className="card fields-section missing-section">
@@ -645,7 +524,6 @@ const PropertyFormVerification: React.FC = () => {
                       </div>
                       {/* <div className="field-sub-description">{field.desc}</div> */}
                     </div>
-                    {/* {field.avatar && <OwnerAvatar />} */}
                     <span className="field-status required-badge">
                       {texts.requiredText}
                     </span>
@@ -693,10 +571,7 @@ const PropertyFormVerification: React.FC = () => {
             <CommentOrNoteCard loc={texts} propertyId={propertyId} />
 
             {/* Continue Button */}
-            <div
-              className="action-section"
-              style={{ display: 'flex', justifyContent: 'end' }}
-            >
+            <div className="action-section">
               <button
                 className="continue-button orange-btn"
                 style={{
@@ -704,6 +579,8 @@ const PropertyFormVerification: React.FC = () => {
                   alignItems: 'center',
                   justifyContent: 'center',
                   textAlign: 'center',
+                  opacity: isMapLoading ? 0.5 : 1,
+                  cursor: isMapLoading ? 'not-allowed' : 'pointer',
                 }}
                 onClick={handleContinueToForm}
               >

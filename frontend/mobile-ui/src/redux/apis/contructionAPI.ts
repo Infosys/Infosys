@@ -80,9 +80,9 @@ export const constructionApi = apiSlice.injectEndpoints({
         const headers = meta?.response?.headers;
         return {
           ...response,
-          totalCount: headers?.get('X-Total-Count') ? parseInt(headers.get('X-Total-Count') || '0') : undefined,
-          currentPage: headers?.get('X-Current-Page') ? parseInt(headers.get('X-Current-Page') || '0') : undefined,
-          perPage: headers?.get('X-Per-Page') ? parseInt(headers.get('X-Per-Page') || '20') : undefined,
+          totalCount: headers?.get('X-Total-Count') ? Number.parseInt(headers.get('X-Total-Count') || '0') : undefined,
+          currentPage: headers?.get('X-Current-Page') ? Number.parseInt(headers.get('X-Current-Page') || '0') : undefined,
+          perPage: headers?.get('X-Per-Page') ? Number.parseInt(headers.get('X-Per-Page') || '20') : undefined,
         };
       },
     }),
@@ -100,9 +100,9 @@ export const constructionApi = apiSlice.injectEndpoints({
     }),
 
     // Update construction details by ID
-    updateConstructionDetails: builder.mutation<ConstructionDetailsResponse, { id: string | number; data: ConstructionDetailsRequest }>({
-      query: ({ id, data }) => ({
-        url: `/v1/construction-details/${id}`,
+    updateConstructionDetails: builder.mutation<ConstructionDetailsResponse, { id: string | number; applicationId: string; isVerifying: boolean; data: ConstructionDetailsRequest }>({
+      query: ({ id, applicationId, isVerifying, data }) => ({
+        url: `/v1/construction-details/${id}/${applicationId}?isVerifying=${isVerifying}`,
         method: 'PUT',
         body: data,
       }),

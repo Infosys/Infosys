@@ -1,3 +1,5 @@
+import env from '../config/env';
+
 // Owner type for property owner details
 export type Owner = {
   id: string | number;
@@ -39,7 +41,7 @@ interface MdmsResponse {
 
 // MDMS API configuration for endpoints and headers
 const MDMS_CONFIG = {
-  baseUrl: `${import.meta.env.VITE_MDMS_HOST}/mdms-v2/v2`,
+  baseUrl: `${env.MDMS_HOST}/mdms-v2/v2`,
   tenantId: 'pb.amritsar',
   schemaCode: 'PropertyTax.Enumeration',
   clientId: 'test-client'
@@ -296,7 +298,7 @@ export default JsonService;
 // Fetch MDMS data for a specific schema code (used for units, etc.)
 const fetchMdmsDataBySchema = async (schemaCode: string): Promise<any> => {
   try {
-    const url = `${import.meta.env.VITE_MDMS_HOST}/mdms-v2/v2?schemaCode=${schemaCode}`;
+    const url = `${env.MDMS_HOST}/mdms-v2/v2?schemaCode=${schemaCode}`;
     const response = await fetch(url, {
       method: 'GET',
       headers: {

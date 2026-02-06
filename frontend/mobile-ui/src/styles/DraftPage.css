@@ -132,7 +132,7 @@
   border: none;
   font-size: 18px;
   cursor: pointer;
-  color: #dc3545;
+  color: #dc3545 ;
   padding: 2px;
   width: 29.231473922729492;
 height: 25.858612060546875;
@@ -196,8 +196,8 @@ background-color: transparent;
 }
 
 .continue-button {
-  background: #e67e22;
-  color: #f9f9f9;
+  background: #C84C0E;
+  color: #fff;
   border: none;
   padding: var(--spacing-xs) var(--spacing-md);
   border-radius: 5px;

@@ -1,16 +1,17 @@
 // HomePage component for Agent portal: displays property list, map, filters, and actions
 // Handles fetching, filtering, and paginating property data, as well as locale and notification popups
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import LocationOffIcon from '@mui/icons-material/LocationOff';
 import { useNavigate } from 'react-router-dom';
-import deleteIcon from '../../../assets/AgentAssets/delete.svg';
+import draftDeleteIcon from '../../../assets/AgentAssets/draft_delete.svg';
 import ArrowDropDownOutlinedIcon from '@mui/icons-material/ArrowDropDownOutlined';
 import MapComponent from '../../../components/common/MapComponent';
 import '../../../styles/HomePage.css';
+import '../../../styles/DraftPage.css';
 import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
 import AccessAlarmIcon from '@mui/icons-material/AccessAlarm';
 import Layout from '../../features/Agent/components/Layout';
-import type { NavigationTab } from '../../../types';
-import type { PropertyItem } from '../../../types';
+import type { NavigationTab, PropertyItem } from '../../../types';
 import { fetchData, filterProperties } from '../../../services/dataService';
 import type { DatabaseData } from '../../../services/dataService';
 import CheckBoxRoundedIcon from '@mui/icons-material/CheckBoxRounded';
@@ -37,7 +38,7 @@ import { useDeleteApplicationMutation } from '../../../redux/apis/applicationApi
 import { NotificationPopup } from '../../components/Popup/NotificationPopup';
 import LoadingPage from '../../components/Loader';
 
-type CalendarTab = 'All' | 'New' | 'Drafts';
+type CalendarTab = 'All' | 'New' | 'Drafts' | 'Others';
 
 interface HomePageProps {
   properties?: PropertyItem[];
@@ -110,6 +111,12 @@ const HomePage: React.FC<HomePageProps> = () => {
 
   const { mode, setMode } = useFormMode();
 
+  const getDateSortLabel = (sortValue: string): string => {
+    if (sortValue === 'earliest') return earliestText;
+    if (sortValue === 'oldest') return oldestText;
+    return dateLabelText;
+  };
+
   // Localization: fetches localized strings for UI labels
   const {
     agentIdText,
@@ -124,8 +131,6 @@ const HomePage: React.FC<HomePageProps> = () => {
     noPropertiesText,
     noDataSelectedDateText,
     dateLabelText,
-    earliestText,
-    oldestText,
   } = useHomePageLocalization();
 
   // Helper function to get localized tab text for calendar tabs
@@ -137,6 +142,8 @@ const HomePage: React.FC<HomePageProps> = () => {
         return newTabText;
       case 'Drafts':
         return draftsTabText;
+      case 'Others':
+        return 'Others';
       default:
         return tab;
     }
@@ -157,8 +164,9 @@ const HomePage: React.FC<HomePageProps> = () => {
     if (mode == 'none') {
       localStorage.removeItem('applicationId');
       localStorage.removeItem('propertyId');
+      localStorage.removeItem('applicationLogId');
     }
-  }, [localStorage.getItem('applicationId'), localStorage.getItem('propertyId')]);
+  }, [mode]);
 
   // Load database data (not directly used in main UI, but may be for location info)
   useEffect(() => {
@@ -174,16 +182,18 @@ const HomePage: React.FC<HomePageProps> = () => {
   }, []);
 
   // Filter properties based on selected tab and date
+  // Filter properties based on selected tab and date
   useEffect(() => {
     let filtered = allProperties;
 
-    if (activeCalendarTab !== 'Drafts') {
+    if (activeCalendarTab !== 'Drafts' && activeCalendarTab !== 'Others') {
       const filterType = activeCalendarTab.toLowerCase() as 'all' | 'new';
       filtered = filterProperties(allProperties, filterType);
-    } else {
+    } else if (activeCalendarTab === 'Drafts') {
       // Show only drafts
       filtered = allProperties.filter((property) => property.isDraft);
     }
+    // For 'Others' tab, filtered remains as allProperties (empty logic can be added later)
 
     if (selectedDate && activeCalendarTab !== 'Drafts') {
       filtered = filtered.filter((property) => {
@@ -193,8 +203,19 @@ const HomePage: React.FC<HomePageProps> = () => {
       });
     }
 
+    // Apply date sorting if selected
+    if (selectedDateSort === 'earliest') {
+      filtered = [...filtered].sort(
+        (a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime()
+      );
+    } else if (selectedDateSort === 'oldest') {
+      filtered = [...filtered].sort(
+        (a, b) => new Date(a.createdDate).getTime() - new Date(b.createdDate).getTime()
+      );
+    }
+
     setFilteredProperties(filtered);
-  }, [allProperties, activeCalendarTab, selectedDate]);
+  }, [allProperties, activeCalendarTab, selectedDate, selectedDateSort]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -236,7 +257,10 @@ const HomePage: React.FC<HomePageProps> = () => {
   const handleNewPropertyClick = () => {
     resetForm();
     setMode('new');
-    navigate('/property-form/property-information');
+    localStorage.removeItem('propertyId');
+    localStorage.removeItem('applicationId');
+    localStorage.removeItem('applicationLogId');
+    navigate('/property-form/preliminary-information');
   };
 
   // Mutation hook for deleting applications
@@ -244,7 +268,7 @@ const HomePage: React.FC<HomePageProps> = () => {
 
   // Delete a draft property after confirmation
   const handleDeleteDraft = async (draftId: string) => {
-    if (window.confirm('Are you sure you want to delete this draft?')) {
+    if (globalThis.window.confirm('Are you sure you want to delete this draft?')) {
       try {
         const response = await deleteApplication({ applicationId: draftId }).unwrap();
 
@@ -257,14 +281,7 @@ const HomePage: React.FC<HomePageProps> = () => {
           });
         }
       } catch (error: any) {
-        // setPopup({
-        //   type: 'success',
-        //   title: 'Error',
-        //   message: error?.data?.message || 'Failed to delete draft',
-        //   open: true,
-        // });
         console.log(error);
-        
       }
     }
   };
@@ -304,7 +321,7 @@ const HomePage: React.FC<HomePageProps> = () => {
     }
 
     setMode('draft');
-    navigate('/property-form/property-information');
+    navigate('/property-form/preliminary-information');
   };
 
   // View details/verification for a submitted property
@@ -314,6 +331,7 @@ const HomePage: React.FC<HomePageProps> = () => {
     localStorage.setItem('propertyId', propertyId);
 
     if (application?.ID) {
+      localStorage.setItem('applicationLogId', application.ID);
       localStorage.setItem('applicationId', application.ID);
     }
     setMode('verify');
@@ -381,7 +399,7 @@ const HomePage: React.FC<HomePageProps> = () => {
       sessionStorage.removeItem('showWelcomePopup');
     }
   }, []);
-  
+
   // Show success popup after property creation
   useEffect(() => {
     const showSuccess = localStorage.getItem('showSuccessPropCreation');
@@ -389,7 +407,8 @@ const HomePage: React.FC<HomePageProps> = () => {
       setPopup({
         type: 'success',
         title: 'Success!',
-        message: localStorage.getItem('successMessage') || 'Operation completed successfully!',
+        message:
+          localStorage.getItem('successMessage') || 'Operation completed successfully!',
         open: true,
       });
       localStorage.removeItem('propertyNo');
@@ -408,6 +427,8 @@ const HomePage: React.FC<HomePageProps> = () => {
   }, [lang, loginLocale]);
 
   // Date sorting options for dropdown
+  const earliestText = "New to Old";
+  const oldestText = "Old to New";
   const dateOptions = useMemo(
     () => [
       { id: '', label: dateLabelText },
@@ -457,9 +478,200 @@ const HomePage: React.FC<HomePageProps> = () => {
       }),
     }));
 
+// Helper function to render map or location unavailable message
+const renderPropertyMap = (propertyId: string) => {
+  const loc = propertyLocations.find((pl) => pl.id === propertyId);
+  
+  if (loc && typeof loc.lat === "number" && typeof loc.lng === "number") {
+    return (
+      <div className="thumbnail-map-container">
+        <LocationMapWithDrawing
+          center={[loc.lat, loc.lng]}
+          onLocationUpdate={() => {}}
+          readOnly={true}
+        />
+      </div>
+    );
+  }
+  
+  return (
+    <div className="no-location-message">
+      <span> <LocationOffIcon /></span>{''}
+      Location not available
+    </div>
+  );
+};
+
+// Helper function to render a single draft property card
+const renderDraftCard = (draft: typeof draftProperties[0]) => {
+  return (
+    <div key={draft.id} className="draft-property-card">
+      <div className="draft-header">
+        <h3 className="draft-title">{draft.title}</h3>
+        <button
+          className="draft-delete-button"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDeleteDraft(draft.id);
+          }}
+          aria-label={deleteText}
+        >
+          <img
+            src={draftDeleteIcon}
+            alt={deleteText}
+            style={{ width: 20, height: 20 }}
+          />
+        </button>
+      </div>
+      <div className="draft-card-parent">
+        <div className="draft-card-content">
+          <p className="draft-id">{draft.pid}</p>
+          <div className="draft-meta">
+            <span className="saved-info">
+              <AccessAlarmIcon /> {draft.savedDate}
+            </span>
+          </div>
+          <div className="draft-address">
+            <span className="location-icon">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 28 28"
+                fill="currentColor"
+              >
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+              </svg>
+            </span>
+            <span>{draft.address}</span>
+          </div>
+        </div>
+        <div className="draft-card-map">
+          <div className="property-card-map-placeholder">
+            {renderPropertyMap(draft.id)}
+          </div>
+        </div>
+      </div>
+      <div className="draft-footer">
+        <Button sx={buttonStyleSx}>{draft.dueDate}</Button>
+        <button
+          className="continue-button"
+          onClick={() => {
+            handleContinueClick(draft.id);
+          }}
+        >
+          {continueText}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Helper function to render a single property card
+const renderPropertyCard = (item: PropertyItem) => {
+  const showGreenTick = !item.isNew && !item.isDraft;
+
+  return (
+    <div
+      key={item.id}
+      className="property-card"
+      onClick={() => handlePropertyClick(item.id)}
+    >
+      <div className="property-card-inner">
+        <div className="property-card-left">
+          <div className="property-card-id">{item.pId}</div>
+          <div className="property-card-status-section">
+            <span className={`status-badge ${getStatusColor(item.status)}`}>
+              {item.status}
+            </span>
+          </div>
+          <div className="property-card-field">
+            <div className="property-field-label">Category ID</div>
+            <div className="property-field-value">
+              {item.description || item.pId}
+            </div>
+          </div>
+          <div className="property-card-field">
+            <div className="property-field-label">Address</div>
+            <div className="property-field-value">{item.address}</div>
+          </div>
+        </div>
+        <div className="property-card-right">
+          <div className="property-card-map-placeholder">
+            {renderPropertyMap(item.id)}
+          </div>
+          {!showGreenTick && (
+            <div className="property-card-date-badge">
+              {new Date(item.dueDate).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Helper function to render draft properties
+const renderDrafts = () => {
+  if (draftProperties.length > 0) {
+    return draftProperties.map(renderDraftCard);
+  }
+  
+  return (
+    <div className="no-properties">
+      <p>{noPropertiesText}</p>
+    </div>
+  );
+};
+
+// Helper function to render regular properties
+const renderRegularProperties = () => {
+  if (paginatedProperties.length > 0) {
+    return paginatedProperties.map(renderPropertyCard);
+  }
+
+  // No properties found
+  if (selectedDate) {
+    return (
+      <div className="no-properties">
+        <p>{noDataSelectedDateText}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="no-properties">
+      <p>{noPropertiesText}</p>
+    </div>
+  );
+};
+
+// Main helper function to render property list based on active tab
+const renderPropertyList = () => {
+  // Handle 'Others' tab
+  if (activeCalendarTab === "Others") {
+    return (
+      <div className="no-properties">
+        {/* Other Properties tab is under construction. */}
+      </div>
+    );
+  }
+
+  // Handle 'Drafts' tab
+  if (activeCalendarTab === "Drafts") {
+    return renderDrafts();
+  }
+
+  // Handle 'All' and 'New' tabs (regular properties)
+  return renderRegularProperties();
+};
+
   // Show loading state while fetching properties
   if (isLoading) {
-    return <LoadingPage message='Brewing up your content...' />;
+    return <LoadingPage message="Brewing up your content..." />;
   }
 
   // Show error state if property fetch fails
@@ -468,7 +680,6 @@ const HomePage: React.FC<HomePageProps> = () => {
       <Layout
         activeTab={activeTab}
         onTabChange={handleTabChange}
-        showHeader={false}
         showNavigation={true}
         headerProps={{
           showLanguage: true,
@@ -507,7 +718,7 @@ const HomePage: React.FC<HomePageProps> = () => {
       <Layout
         activeTab={activeTab}
         onTabChange={handleTabChange}
-        showHeader={false}
+
         showNavigation={true}
         headerProps={{
           showLanguage: true,
@@ -542,22 +753,25 @@ const HomePage: React.FC<HomePageProps> = () => {
           </div>
 
           {/* Add New Property button */}
-          <div>
+          <div className="property-section-buttons">
             <button
-              style={{
-                marginLeft: '5%',
-                height: '29px',
-                width: '50%',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-              className="add-property-btn"
+              className="property-btn"
               type="button"
               aria-label="Add new property"
               onClick={() => handleNewPropertyClick()}
             >
               <span className="add-property-content">{newPropertyText}</span>
             </button>
+
+            {/* uncomment below code when the no dues generation is to be enabled */}
+            {/* <button
+              className="property-btn"
+              type="button"
+              aria-label="Add new property"
+              onClick={() => "" }
+            >
+              <span className="add-property-content">Generate no dues</span>
+            </button> */}
           </div>
 
           {/* Filter and Map Section */}
@@ -593,12 +807,22 @@ const HomePage: React.FC<HomePageProps> = () => {
                   }}
                 />
                 {selectedDate && (
-                  <span
-                    style={{ marginLeft: '0px', cursor: 'pointer' }}
+                  <button
+                    type="button"
+                    style={{
+                      marginLeft: '0px',
+                      cursor: 'pointer',
+                      background: 'none',
+                      border: 'none',
+                      padding: 0,
+                      font: 'inherit',
+                      color: 'inherit',
+                    }}
                     onClick={() => setShowCalendar(true)}
+                    aria-label="Open calendar to change date"
                   >
                     {new Date(selectedDate).toLocaleDateString()}
-                  </span>
+                  </button>
                 )}
               </div>
 
@@ -633,12 +857,12 @@ const HomePage: React.FC<HomePageProps> = () => {
                     className="dropdown-button"
                     onClick={() => setShowDateDropdown(!showDateDropdown)}
                     style={{
-                      width: '100px',
+                      width: '120px',
                       height: '36px',
                       padding: '6px 32px 6px 12px',
                       borderRadius: '16px',
                       marginRight: '16px',
-                      border: '2px solid #C84A00',
+                      border: '1.5px solid #c84c03',
                       cursor: 'pointer',
                       backgroundColor: 'white',
                       fontSize: '14px',
@@ -654,11 +878,7 @@ const HomePage: React.FC<HomePageProps> = () => {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {selectedDateSort
-                        ? selectedDateSort === 'earliest'
-                          ? earliestText
-                          : oldestText
-                        : dateLabelText}
+                      {getDateSortLabel(selectedDateSort)}
                     </span>
                     <ArrowDropDownOutlinedIcon
                       className="dropdown-arrow"
@@ -675,36 +895,39 @@ const HomePage: React.FC<HomePageProps> = () => {
                     <div
                       className="dropdown-menu"
                       style={{
-                        position: 'absolute',
+                        position: 'absolute',                        
                         top: '100%',
                         right: '0',
                         marginTop: '4px',
                         marginRight: '30px',
                         backgroundColor: 'white',
-                        border: '2px solid #C84A00',
+                        border: '2px solid #fff',
                         borderRadius: '8px',
                         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                         zIndex: 1000,
-                        width: '100px',
+                        width: '120px',
                         overflow: 'hidden',
                       }}
                     >
-                      {dateOptions.map((opt) => (
-                        <div
+                      {dateOptions.map((opt, index) => (
+                        <button
                           key={opt.id}
-                          className={`dropdown-option ${
-                            opt.id === selectedDateSort ? '' : ''
-                          }`}
+                          type="button"
+                          className={'dropdown-option'}
                           onClick={() => handleDateSortChange(opt.id)}
                           style={{
                             backgroundColor: 'white',
                             cursor: 'pointer',
                             fontSize: '14px',
                             color: opt.id === '' ? '#666' : '#000',
+                            border: 'none',
                             borderBottom:
-                              opt.id !== dateOptions[dateOptions.length - 1].id
+                              index < dateOptions.length - 1
                                 ? '1px solid #f0f0f0'
                                 : 'none',
+                            width: '100%',
+                            textAlign: 'left',
+                            padding: '8px 12px',
                           }}
                           onMouseEnter={(e) =>
                             (e.currentTarget.style.backgroundColor = '#f5f5f5')
@@ -715,7 +938,7 @@ const HomePage: React.FC<HomePageProps> = () => {
                           }
                         >
                           {opt.label}
-                        </div>
+                        </button>
                       ))}
                     </div>
                   )}
@@ -725,6 +948,7 @@ const HomePage: React.FC<HomePageProps> = () => {
 
             {/* Calendar tabs */}
             <div className="calendar-tabs">
+              {/* ['All', 'New', 'Drafts', 'Others' ] add others tab in the below array to render the other tab */}
               {(['All', 'New', 'Drafts'] as CalendarTab[]).map((tab) => (
                 <button
                   key={tab}
@@ -746,170 +970,24 @@ const HomePage: React.FC<HomePageProps> = () => {
 
           {/* Property Items List - USING PAGINATED DATA */}
           <div className="property-list">
-            {activeCalendarTab === 'Drafts' ? (
-              // Draft Properties - use paginatedProperties
-              draftProperties.length > 0 ? (
-                draftProperties.map((draft) => (
-                  <div key={draft.id} className="draft-property-card">
-                    <div className="draft-header">
-                      <h3 className="draft-title">{draft.title}</h3>
-                      <button
-                        className="delete-button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteDraft(draft.id);
-                        }}
-                        aria-label={deleteText}
-                      >
-                        <img
-                          src={deleteIcon}
-                          alt={deleteText}
-                          style={{ width: 20, height: 20, color: '#c84f03' }}
-                        />
-                      </button>
-                    </div>
-                    <p className="draft-id">{draft.pid}</p>
-                    <div className="draft-meta">
-                      <span className="saved-info">
-                        <AccessAlarmIcon /> {draft.savedDate}
-                      </span>
-                    </div>
-                    <div className="draft-address">
-                      <span className="location-icon">
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 28 28"
-                          fill="currentColor"
-                        >
-                          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-                        </svg>
-                      </span>
-                      <span>{draft.address}</span>
-                    </div>
-                    <div className="draft-footer">
-                      <Button sx={buttonStyleSx}>{draft.dueDate}</Button>
-                      {/* <span className="draft-date">{draft.dueDate}</span> */}
-                      <button
-                        className="continue-button"
-                        onClick={() => {
-                          handleContinueClick(draft.id);
-                        }}
-                      >
-                        {continueText}
-                      </button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="no-properties">
-                  <p>{noPropertiesText}</p>
-                </div>
-              )
-            ) : // Regular Properties - use paginatedProperties
-            paginatedProperties.length > 0 ? (
-              paginatedProperties.map((item) => {
-                const showGreenTick = !item.isNew && !item.isDraft;
+            {renderPropertyList()}
 
-                return (
-                  <div
-                    key={item.id}
-                    className="property-card"
-                    onClick={() => handlePropertyClick(item.id)}
-                  >
-                    <div className="property-card-inner">
-                      {/* Left Section - ID and Status */}
-                      <div className="property-card-left">
-                        {/* Property ID */}
-                        <div className="property-card-id">{item.pId}</div>
-
-                        {/* Status Badge - Directly Below ID */}
-                        <div className="property-card-status-section">
-                          <span className={`status-badge ${getStatusColor(item.status)}`}>
-                            {item.status}
-                          </span>
-                        </div>
-
-                        {/* Category ID */}
-                        <div className="property-card-field">
-                          <label className="property-field-label">Category ID</label>
-                          <div className="property-field-value">
-                            {item.description || item.pId}
-                          </div>
-                        </div>
-
-                        {/* Address */}
-                        <div className="property-card-field">
-                          <label className="property-field-label">Address</label>
-                          <div className="property-field-value">{item.address}</div>
-                        </div>
-                      </div>
-
-                      {/* Right Section - Map and Date */}
-                      <div className="property-card-right">
-                        {/* Map Placeholder */}
-                        <div className="property-card-map-placeholder">
-                          {(() => {
-                            const loc = propertyLocations.find((pl) => pl.id === item.id);
-                            if (
-                              loc &&
-                              typeof loc.lat === 'number' &&
-                              typeof loc.lng === 'number'
-                            ) {
-                              return (
-                                <div className="thumbnail-map-container">
-                                  <LocationMapWithDrawing
-                                    center={[loc.lat, loc.lng]}
-                                    onLocationUpdate={() => {}}
-                                    readOnly={true}
-                                  />
-                                </div>
-                              );
-                            }
-                            return null;
-                          })()}
-                        </div>
-
-                        {/* Date Badge */}
-                        {!showGreenTick && (
-                          <div className="property-card-date-badge">
-                            {new Date(item.dueDate).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            ) : selectedDate ? (
-              <div className="no-properties">
-                <p>{noDataSelectedDateText}</p>
-              </div>
-            ) : (
-              <div className="no-properties">
-                <p>{noPropertiesText}</p>
-              </div>
-            )}
-
-            {/* Pagination - show only if there are multiple pages */}
-            {filteredProperties.length > 0 && totalPages > 1 && (
-              <Pagination
-                page={page}
-                totalPages={totalPages}
-                onPageChange={(newPage) => setPage(newPage)}
-              />
-            )}
+            {/* Pagination - show only if there are multiple pages and not on Others tab */}
+            {activeCalendarTab !== 'Others' &&
+              filteredProperties.length > 0 &&
+              totalPages > 1 && (
+                <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  onPageChange={(newPage) => setPage(newPage)}
+                />
+              )}
           </div>
         </div>
       </Layout>
     </>
   );
 };
-
 
 // Export the HomePage component as default
 export default HomePage;

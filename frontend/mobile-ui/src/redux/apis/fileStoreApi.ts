@@ -41,5 +41,5 @@ export const filestoreApi = filestoreApiSlice.injectEndpoints({
 });
 
 // Export hooks for using file store endpoints in components
-export const { useGetFileFromFilestoreQuery, useUploadFileToFilestoreMutation } = filestoreApi;
+export const { useGetFileFromFilestoreQuery, useUploadFileToFilestoreMutation, useLazyGetFileFromFilestoreQuery } = filestoreApi;
 export default filestoreApi;

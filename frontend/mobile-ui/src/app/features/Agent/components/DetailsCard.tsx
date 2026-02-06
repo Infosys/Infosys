@@ -29,7 +29,7 @@ const DetailsCard: React.FC<DetailsCardProps> = ({ heading, items }) => (
     <div className="details-card-heading">{heading}</div>
     <div className="details-card-list">
       {items.map(({ key, value }, i) => (
-        <div className="details-card-row" key={i}>
+        <div className="details-card-row" key={key + i}>
           <span className="details-card-key">{key} :</span>
           <span className="details-card-value">{value}</span>
         </div>

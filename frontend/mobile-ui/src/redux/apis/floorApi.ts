@@ -3,6 +3,8 @@ import { apiSlice } from '../apiSlice';
 
 // Floor details data models and API types
 export interface FloorDetailsRequest {
+  applicationId: string;
+  isVerifying: boolean;
   floorNo: number;
   classification: string;
   natureOfUsage: string;
@@ -86,8 +88,8 @@ export const floorApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     // Create new floor details
     createFloorDetails: builder.mutation<SingleFloorDetailsResponse, FloorDetailsRequest>({
-      query: (data) => ({
-        url: '/v1/floor-details',
+      query: ({ applicationId, isVerifying, ...data }) => ({
+        url: `/v1/floor-details/${applicationId}?isVerifying=${isVerifying}`,
         method: 'POST',
         body: data,
       }),
@@ -116,10 +118,10 @@ export const floorApi = apiSlice.injectEndpoints({
     // Update floor details by ID (full update)
     updateFloorDetails: builder.mutation<
       SingleFloorDetailsResponse,
-      { id: string; data: FloorDetailsRequest }
+      { id: string; applicationId: string; isVerifying: boolean; data: FloorDetailsRequest }
     >({
-      query: ({ id, data }) => ({
-        url: `/v1/floor-details/${id}`,
+      query: ({ id, applicationId, isVerifying, data }) => ({
+        url: `/v1/floor-details/${id}/${applicationId}?isVerifying=${isVerifying}`,
         method: 'PUT',
         body: data,
       }),
@@ -140,12 +142,12 @@ export const floorApi = apiSlice.injectEndpoints({
     }),
 
     // Delete floor details by ID
-    deleteFloorDetails: builder.mutation<{ success: boolean; message: string }, string>({
-      query: (id) => ({
-        url: `/v1/floor-details/${id}`,
+    deleteFloorDetails: builder.mutation<{ success: boolean; message: string }, { id: string; applicationId: string; isVerifying: boolean }>({
+      query: ({ id, applicationId, isVerifying }) => ({
+        url: `/v1/floor-details/${id}/${applicationId}?isVerifying=${isVerifying}`,
         method: 'DELETE',
       }),
-      invalidatesTags: (_result, _error, id) => [{ type: 'Floor', id }, 'Floor'],
+      invalidatesTags: (_result, _error, { id }) => [{ type: 'Floor', id }, 'Floor'],
     }),
 
     // Get all floor details for a construction details ID

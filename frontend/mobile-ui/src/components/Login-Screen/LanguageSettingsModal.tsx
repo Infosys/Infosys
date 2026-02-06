@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Box, Modal, Typography, IconButton, Button } from "@mui/material";
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
@@ -61,7 +61,23 @@ export const LanguageSettingsModal: React.FC<LanguageSettingsModalProps> = ({
     onSelect,
     onClose,
     onConfirm,
-}) => (
+}) => {
+    // Keep a temporary selection that only applies on confirm
+    const [tempSelected, setTempSelected] = useState(selected);
+
+    // Update temp selection when modal opens with new selected value
+    useEffect(() => {
+        if (open) {
+            setTempSelected(selected);
+        }
+    }, [open, selected]);
+
+    const handleConfirm = () => {
+        onSelect(tempSelected);
+        onConfirm();
+    };
+
+    return (
     <Modal
         open={open}
         onClose={onClose}
@@ -138,11 +154,11 @@ export const LanguageSettingsModal: React.FC<LanguageSettingsModalProps> = ({
                             key={lang.code}
                             sx={{
                                 height: 110,
-                                bgcolor: selected === lang.code ? "#FFF7F1" : "#f5f6f7",
+                                bgcolor: tempSelected === lang.code ? "#FFF7F1" : "#f5f6f7",
                                 borderRadius: "12px",
-                                boxShadow: selected === lang.code ? "0 0 0 2px #C84C0E inset" : "none",
+                                boxShadow: tempSelected === lang.code ? "0 0 0 2px #C84C0E inset" : "none",
                                 cursor: lang.available ? "pointer" : "not-allowed",
-                                border: selected === lang.code ? "1.5px solid #C84C0E" : "none",
+                                border: tempSelected === lang.code ? "1.5px solid #C84C0E" : "none",
                                 display: "flex",
                                 flexDirection: "column",
                                 alignItems: "flex-start",
@@ -153,7 +169,7 @@ export const LanguageSettingsModal: React.FC<LanguageSettingsModalProps> = ({
                                 position: "relative",
                                 transition: "box-shadow .2s, border .2s, background .2s",
                             }}
-                            onClick={() => lang.available && onSelect(lang.code)}
+                            onClick={() => lang.available && setTempSelected(lang.code)}
                         >
                             <Box sx={{ display: "flex", alignItems: "center" }}>
                                 <Typography
@@ -168,7 +184,7 @@ export const LanguageSettingsModal: React.FC<LanguageSettingsModalProps> = ({
                                 >
                                     {lang.script}
                                 </Typography>
-                                {selected === lang.code && (
+                                {tempSelected === lang.code && (
                                     <CheckCircleRoundedIcon sx={{ color: "#21713c", fontSize: 22, ml: 8, mt: -1.5 }} />
                                 )}
                             </Box>
@@ -183,14 +199,10 @@ export const LanguageSettingsModal: React.FC<LanguageSettingsModalProps> = ({
 
                 {/* Confirm button */}
                 <Box sx={{
-                    position: "fixed",
-                    bottom: 0,
-                    left: 0,
+                    mt: "auto",
                     px: 3,
                     pt: 6,
                     pb: 8,
-                    width: "100vw",
-                    zIndex: 350,
                 }}>
                     <Button
                         variant="contained"
@@ -209,7 +221,7 @@ export const LanguageSettingsModal: React.FC<LanguageSettingsModalProps> = ({
                                 boxShadow: "none"
                             }
                         }}
-                        onClick={onConfirm}
+                        onClick={handleConfirm}
                     >
                         Confirm
                     </Button>
@@ -217,4 +229,5 @@ export const LanguageSettingsModal: React.FC<LanguageSettingsModalProps> = ({
             </Box>
         </Box>
     </Modal>
-);
+    );
+};

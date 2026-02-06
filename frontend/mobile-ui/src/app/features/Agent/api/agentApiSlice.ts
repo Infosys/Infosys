@@ -5,6 +5,7 @@
 // Endpoints for agent features should be defined in feature-specific slices that extend this base.
 // Used for all network requests made by Agent screens/components.
 
+import { env } from '../../../../config/env';
 import authService from '../../../../services/AuthService';
 
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
@@ -14,7 +15,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 export const agentApiSlice = createApi({
     reducerPath: 'agentApi', // Unique key for agent API slice in Redux store
     baseQuery: fetchBaseQuery({
-        baseUrl: import.meta.env.VITE_ENUMERATION_HOST, // Backend base URL for agent operations
+        baseUrl: env.ENUMERATION_HOST, // Backend base URL for agent operations
 
         // Prepare headers for every request (add auth token, content type)
         prepareHeaders: async (headers, { getState: _getState }) => {

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
+import env from '../../config/env';
 
 interface LocalizationMessage {
   uuid: string;
@@ -113,7 +114,7 @@ export const useApplicationLogLocalization = () => {
       // Convert locale to backend format if needed
       const backendLocale = newLocale.includes('_') ? newLocale : `${newLocale}_IN`;
       const codesParam = messageCodes.join(',');
-      const url = `${import.meta.env.VITE_LOCALIZATION_HOST}/localization/v1/messages?module=common&locale=${backendLocale}&codes=${codesParam}`;
+      const url = `${env.LOCALIZATION_HOST}/localization/v1/messages?module=common&locale=${backendLocale}&codes=${codesParam}`;
 
       const response = await fetch(url, {
         headers: {

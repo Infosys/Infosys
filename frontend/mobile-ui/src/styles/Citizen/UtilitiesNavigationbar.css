@@ -1,0 +1,69 @@
+.xr {
+  width: 360px;
+  border-radius: 28px !important;
+  padding: 10px;
+  background: #F7E4DB !important;
+  box-sizing: border-box;
+  font-family: 'Roboto';
+}
+
+.xr-row {
+  display: flex;
+  gap: 16px;
+  justify-content: space-around;
+  align-items: center;
+  height: 50px;
+  width: 100%;
+}
+
+.xr-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.xr-btn {
+  width: 64px;
+  height: 32px;
+  border-radius: 28px;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-shadow: none;
+  border: none;
+  cursor: pointer;
+  color: #333; /* default icon/text color */
+}
+
+.xr-btn.selected {
+  background: #f0bca7;
+  color: #C84C0E;
+  box-shadow: 0 6px 18px rgba(200,76,3,0.08);
+}
+
+/* ensure icons are not translucent */
+.xr-icon-wrapper svg,
+.xr-icon-wrapper img {
+  width: 22px;
+  height: 22px;
+  color: currentColor;
+  opacity: 1;
+  margin-top: 10px;
+}
+
+/* specifically ensure bolt is outlined/black when shown */
+.xr-btn .MuiSvgIcon-root.BoltOutlined,
+.xr-btn .MuiSvgIcon-root.BoltOutlined * {
+  fill: none;
+  stroke: currentColor;
+}
+
+/* label */
+.xr-label {
+  font-size: 13px;
+  margin-top: 4px;
+  color: #333;
+  font-family: Roboto, Arial, sans-serif;
+}

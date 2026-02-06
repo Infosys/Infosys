@@ -47,7 +47,7 @@ const StepHeader: React.FC<StepHeaderProps> = ({
       </div>
       {/* Step progress indicator */}
       <div className="step-header-tabs-group">
-        {[...Array(steps)].map((_, i) => (
+        {Array.from({ length: steps }, (_, i) => (
           <div
             key={i}
             className={`step-header-tab${i <= activeStep ? ' active' : ''}`}

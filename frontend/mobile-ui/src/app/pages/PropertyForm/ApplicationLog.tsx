@@ -18,6 +18,9 @@ import '../../../styles/ApplicationLog.css';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useApplicationLogLocalization } from '../../../services/AgentLocalisation/localisation-applicationLog';
 import { ApplicationApi } from '../../../redux/apis/ApplicationLog/getApplication';
+import authService from '../../../services/AuthService';
+import Button from '@mui/material/Button';
+import { env } from '../../../config/env';
 
 // LogItem: structure for each timeline event
 interface LogItem {
@@ -34,10 +37,27 @@ interface LogItem {
   isAdmin?: boolean;
 }
 
+const buttonStyleSx = {
+  borderRadius: '10px',
+  py: 0.4,
+  px: 2,
+  my: 1,
+  color: '#c84c03',
+  borderColor: '#c84c03',
+  background: '#fff',
+  fontWeight: 600,
+  '&:hover': {
+    borderColor: '#c84c03',
+    background: '#fbeee6',
+  },
+};
+
 // Mock data generator function (to be called with localized text)
 const mapLogData = (data: any[]): LogItem[] =>
   [...data]
-    .sort((a, b) => new Date(a.PerformedDate).getTime() - new Date(b.PerformedDate).getTime())
+    .sort(
+      (a, b) => new Date(a.PerformedDate).getTime() - new Date(b.PerformedDate).getTime()
+    )
     .map((item, idx) => ({
       id: idx + 1,
       actor: item.Actor,
@@ -55,7 +75,7 @@ export const ApplicationLog: React.FC = () => {
   const navigate = useNavigate();
   const { propertyId } = useParams();
 
-  const applicationId = localStorage.getItem('applicationId');
+  const applicationId = localStorage.getItem('applicationId') || localStorage.getItem('applicationLogId');
   // Use RTK Query hook to fetch application data
   const { data } = ApplicationApi.useGetApplicationByPropertyIdQuery(
     applicationId ?? '',
@@ -87,19 +107,50 @@ export const ApplicationLog: React.FC = () => {
     const mapped = mapLogData(applicationLogs);
     setLogItems(mapped);
     setLoading(false);
-
-    // Log each log item with labels
-    mapped.forEach((item, idx) => {
-      console.log(`Log Item #${idx + 1}:`);
-      console.log(`  Actor: ${item.actor}`);
-      console.log(`  Performed By: ${item.performedBy}`);
-      console.log(`  Comments: ${item.title}`);
-      console.log(`  Date: ${item.date}`);
-      // Add more fields if needed
-    });
   }, [applicationLogs]);
-  // Check if any log item actor is 'citizen' 
-  const isCitizenActor = logItems.some(item => item.actor?.toUpperCase() === 'CITIZEN');
+  // Check if any log item actor is 'citizen'
+  // const isCitizenActor = logItems.some(item => item.actor?.toUpperCase() === 'CITIZEN');
+  const isCitizenActor = authService.isCitizen();
+
+  // Helper function to preview images and PDFs
+  const previewFile = async (fileStoreId: string, fileName: string) => {
+    const ext = fileName.split('.').pop()?.toLowerCase();
+    const url = `${env.FILESTORE_HOST}/filestore/v1/files/${fileStoreId}?tenantId=pg`;
+
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(ext || '')) {
+        // Open image in new tab
+        const imgWindow = globalThis.window.open('', '_blank');
+        if (imgWindow) {
+          const img = imgWindow.document.createElement('img');
+          img.src = blobUrl;
+          img.style.maxWidth = '100%';
+          img.style.maxHeight = '100vh';
+          imgWindow.document.body.appendChild(img);
+        }
+      } else if (ext === 'pdf') {
+        // Open PDF in new tab
+        const pdfWindow = globalThis.window.open('', '_blank');
+        if (pdfWindow) {
+          const embed = pdfWindow.document.createElement('embed');
+          embed.src = blobUrl;
+          embed.type = 'application/pdf';
+          embed.width = '100%';
+          embed.height = '100%';
+          pdfWindow.document.body.appendChild(embed);
+        }
+      } else {
+        // Fallback: open blob URL (browser will download if unsupported)
+        globalThis.window.open(blobUrl, '_blank');
+      }
+    } catch (err) {
+      alert(err);
+    }
+  };
 
   return (
     <div className="log-outer-bg">
@@ -191,9 +242,14 @@ export const ApplicationLog: React.FC = () => {
                                   fileName && (
                                     <div className="filebox-fileinfo">
                                       <span className="filebox-icon">
-                                          <DescriptionIcon style={{color:'gray'}}/>
+                                        <DescriptionIcon style={{ color: '#333' }} />
                                       </span>
-                                      <span className="filebox-filename" style={{color:'gray'}}>{fileName}</span>
+                                      <span
+                                        className="filebox-filename"
+                                        style={{ color: 'gray' }}
+                                      >
+                                        {fileName}
+                                      </span>
                                     </div>
                                   )
                                 );
@@ -203,35 +259,50 @@ export const ApplicationLog: React.FC = () => {
                         )}
                         {/* Download card if FileStoreID is present for this log */}
                         {logObj?.FileStoreID && (
-                          <div className="commentreq-filebox" style={{ marginTop: '0px' }}>
+                          <div
+                            className="commentreq-filebox"
+                            style={{ marginTop: '0px', display: 'flex', gap: '8px' }}
+                          >
                             {isCitizenActor ? (
-                              <button
+                              <Button
+                                variant="outlined"
+                                sx={buttonStyleSx}
                                 className="filebox-download"
-                                onClick={() => {
-                                  const url = `${
-                                    import.meta.env.VITE_FILESTORE_HOST
-                                  }/filestore/v1/files/${
-                                    logObj.FileStoreID
-                                  }?tenantId=pg`;
-                                  window.open(url, '_blank');
+                                onClick={async () => {
+                                  // Get file name from metadata or fallback
+                                  let fileName = 'Document';
+                                  if (logObj?.Metadata) {
+                                    try {
+                                      const meta = JSON.parse(logObj.Metadata);
+                                      if (meta?.file?.name) fileName = meta.file.name;
+                                    } catch (e) {
+                                      console.log(e);
+                                    }
+                                  }
+                                  await previewFile(logObj.FileStoreID ?? '', fileName);
                                 }}
+                                startIcon={<VisibilityIcon />}
                               >
-                                <VisibilityIcon style={{ marginRight: 0 }} /> <span style={{fontWeight:'600'}}>View Doc</span>
-                              </button>
+                                View Doc
+                              </Button>
                             ) : (
-                              <button
+                              <Button
+                                variant="outlined"
+                                sx={buttonStyleSx}
                                 className="filebox-download"
                                 onClick={() => {
-                                  const url = `${
-                                    import.meta.env.VITE_FILESTORE_HOST
-                                  }/filestore/v1/files/${
-                                    logObj.FileStoreID
-                                  }?tenantId=pg`;
-                                  window.open(url, '_blank');
+                                  const url = `${env.FILESTORE_HOST}/filestore/v1/files/${logObj.FileStoreID}?tenantId=pg`;
+                                  const link = document.createElement('a');
+                                  link.href = url;
+                                  link.download = '';
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  link.remove();
                                 }}
+                                startIcon={<Download />}
                               >
-                                <Download style={{ marginRight: 0 }} /> <span style={{fontWeight:'600'}}>Download Doc</span>
-                              </button>
+                                Download Doc
+                              </Button>
                             )}
                           </div>
                         )}

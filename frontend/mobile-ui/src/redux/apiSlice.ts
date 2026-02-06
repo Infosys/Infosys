@@ -5,6 +5,7 @@
 // and cache invalidation tags. Feature-specific API endpoints will extend this base slice
 // to ensure consistent API access and state management across the app.
 
+import { env } from '../config/env';
 import authService from '../services/AuthService';
 import { ALL_TAG_TYPES } from './tagTypes'
 // import { SERVER_URL } from '../utils/constants'
@@ -16,7 +17,7 @@ export const apiSlice = createApi({
     // Key for the API reducer in the Redux store
     reducerPath: 'api',
     baseQuery: fetchBaseQuery({
-        baseUrl: import.meta.env.VITE_ENUMERATION_HOST, // Dynamic API base URL from environment
+        baseUrl: env.ENUMERATION_HOST, // Dynamic API base URL from environment
         // Always attach latest auth token and content type for secure API access
         prepareHeaders: async (headers) => {
             // Ensure token is valid (refresh if needed) before every request
@@ -26,6 +27,7 @@ export const apiSlice = createApi({
                 headers.set('authorization', `Bearer ${token}`)
             }
             headers.set('content-type', 'application/json')
+            headers.set('X-Tenant-ID', `${env.TENANT_ID}`)
             return headers
         },
     }),

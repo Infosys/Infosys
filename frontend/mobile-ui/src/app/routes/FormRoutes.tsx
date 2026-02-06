@@ -4,9 +4,7 @@
 import type { FC } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import ProtectedRoute from '../../components/ProtectedRoute';
-import LocationPage from '../pages/PropertyForm/LocationPage';
 import LocationSelectionPage from '../pages/PropertyForm/LocationSelectionPage';
-import LocationViewPage from '../pages/PropertyForm/LocationViewPage';
 import PropertyInformation from '../pages/PropertyForm/PropertyInformation';
 import OwnerDetails from '../pages/PropertyForm/OwnerDetails';
 import OwnerDetailsTwo from '../pages/PropertyForm/OwnerDetailsTwo';
@@ -40,24 +38,6 @@ export const FormRoutes: FC = () => {
           </ProtectedRoute>
         }
       />
-      {/* Location page route (with and without propertyId) */}
-      <Route
-        path="location"
-        element={
-          <ProtectedRoute allowedRoles={['AGENT', 'CITIZEN']}>
-            <LocationPage />
-          </ProtectedRoute>
-        }
-      />
-      {/* Location selection page route */}
-      <Route
-        path="location/:propertyId"
-        element={
-          <ProtectedRoute allowedRoles={['AGENT', 'CITIZEN']}>
-            <LocationPage />
-          </ProtectedRoute>
-        }
-      />
 
       {/* Location view page route */}
       <Route
@@ -65,15 +45,6 @@ export const FormRoutes: FC = () => {
         element={
           <ProtectedRoute allowedRoles={['AGENT', 'CITIZEN']}>
             <LocationSelectionPage />
-          </ProtectedRoute>
-        }
-      />
-      {/* Property information page route */}
-      <Route
-        path="location-view"
-        element={
-          <ProtectedRoute allowedRoles={['AGENT', 'CITIZEN']}>
-            <LocationViewPage />
           </ProtectedRoute>
         }
       />

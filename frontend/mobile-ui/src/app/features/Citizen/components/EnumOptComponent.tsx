@@ -15,6 +15,7 @@ import {
 } from '../../../../services/Citizen/Localization/LocalizationContext';
 import LoadingPage from '../../../components/Loader';
 import type { CitizenPropertyData } from '../models/CitizenPropertiesPageModel/CitizenPropertyPageModel';
+import { useNavigate } from 'react-router-dom';
 
 interface ExtendedPropertyData extends CitizenPropertyData {
   enumerationProgress?: number;
@@ -32,6 +33,7 @@ const EnumOptComponent: FC<EnumOptComponentProps> = ({ property }) => {
   const lang = useAppSelector((state) => state.lang.citizenLang); // Current language
   const { loading } = useLocalization(); // Global loading state
   const messages = getMessagesFromSession('CITIZEN')!; // Localized messages
+  const navigate = useNavigate();
 
   // No property: render nothing
   if (!property) return null;
@@ -69,9 +71,11 @@ const EnumOptComponent: FC<EnumOptComponentProps> = ({ property }) => {
       issuedLicenses={0} // Replace with actual licenses count from API
       onViewBills={() => {
         /* handle view bills */
+        navigate('/under-construction');
       }}
       onViewLicenses={() => {
         /* handle view licenses */
+        navigate('/under-construction');
       }}
     />
   ) : (

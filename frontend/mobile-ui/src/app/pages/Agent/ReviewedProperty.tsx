@@ -1,6 +1,5 @@
 // ReviewedProperty: Agent view for listing, searching, and filtering reviewed properties with map and pagination
-import React, { useState, useRef, useEffect, useMemo } from 'react';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +11,7 @@ import { useReviewedPropertyLocalization } from '../../../services/AgentLocalisa
 import { useGetApplicationsQuery } from '../../features/Agent/api/reviewPageApi';
 import '../../../styles/HomePage.css';
 import '../../../styles/ReviewedProperty.css';
+import ArrowDropDownOutlinedIcon from '@mui/icons-material/ArrowDropDownOutlined';
 
 // Props for the custom dropdown filter component
 interface CustomDropdownProps {
@@ -20,7 +20,7 @@ interface CustomDropdownProps {
   onChange: (value: string) => void;
   width?: number | string;
   placeholder?: string;
-  className?: string;
+  getLabel?: (value: string) => string;
 }
 
 // Custom dropdown component for date sorting
@@ -28,100 +28,128 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   options,
   value,
   onChange,
-  width = 120,
+  width = 100,
   placeholder = 'Select',
-  className = '',
+  getLabel,
 }) => {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement | null>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Click outside handler
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        setOpen(false);
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const selected = options.find(opt => opt.value === value);
+  const handleOptionClick = (optionValue: string) => {
+    onChange(optionValue);
+    setShowDropdown(false);
+  };
+
+  const getDisplayLabel = (val: string): string => {
+    if (getLabel) return getLabel(val);
+    const option = options.find((opt) => opt.value === val);
+    return option ? option.label : placeholder;
+  };
+
+  const widthValue = typeof width === 'number' ? `${width}px` : width;
 
   return (
     <div
-      ref={ref}
-      className={`custom-dropdown ${className}`}
-      style={{ width, minWidth: width, maxWidth: width, position: 'relative' }}
+      ref={dropdownRef}
+      className="dropdown-container dropdown-container-date-sort"
+      style={{ position: 'relative' }}
     >
       <button
         type="button"
-        className="custom-dropdown-btn"
-        onClick={() => setOpen(o => !o)}
+        className="dropdown-button"
+        onClick={() => setShowDropdown(!showDropdown)}
         style={{
-          width: '120px',
-          minWidth: '120px',
-          maxWidth: '120px',
+          width: widthValue,
+          height: '36px',
+          padding: '6px 12px',
+          borderRadius: '16px',
+          border: '1.5px solid #c84c03',
+          cursor: 'pointer',
+          backgroundColor: 'white',
+          fontSize: '14px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          textAlign: 'right',
-          border: '2px solid #C6561A',
-          borderRadius: '32px'
+          color: value ? '#000' : '#666',
+          position: 'relative',
         }}
-        aria-haspopup="listbox"
-        aria-expanded={open}
       >
-        <span style={{ flex: 1, textAlign: 'center' }}>{selected ? selected.label : placeholder}</span>
-        <span className="custom-dropdown-arrow" style={{ marginLeft: 8, display: 'flex', alignItems: 'center' }}>
-          <KeyboardArrowDownIcon style={{ fontSize: 20, color: '#000' }} />
-        </span>
-      </button>
-      {open && (
-        <ul
-          className="custom-dropdown-list"
+        <span
           style={{
-            width: '120px',
-            minWidth: '120px',
-            maxWidth: '120px',
-            position: 'absolute',
-            left: 0,
-            top: '100%',
-            zIndex: 1000,
-            background: '#fff',
-            border: '1.5px solid #000',
-            borderRadius: 12,
-            margin: 0,
-            padding: 0,
-            listStyle: 'none',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+            textOverflow: 'ellipsis',
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+            paddingRight: '8px',
           }}
-          role="listbox"
         >
-          {options.map(opt => (
-            <li
+          {getDisplayLabel(value)}
+        </span>
+        <ArrowDropDownOutlinedIcon
+          style={{
+            color: '#C84A00',
+            fontSize: 20,
+            flexShrink: 0,
+          }}
+        />
+      </button>
+      {showDropdown && (
+        <div
+          className="dropdown-menu"
+          style={{
+            position: 'absolute',
+            top: '100%',
+            right: '0',
+            marginTop: '4px',
+            backgroundColor: 'white',
+            border: '2px solid #fff',
+            borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            zIndex: 1000,
+            width: widthValue,
+            overflow: 'hidden',
+          }}
+        >
+          {options.map((opt, index) => (
+            <button
               key={opt.value}
-              className={`custom-dropdown-item${opt.value === value ? ' selected' : ''}`}
+              type="button"
+              className="dropdown-option"
+              onClick={() => handleOptionClick(opt.value)}
               style={{
-                padding: '10px 16px',
+                backgroundColor: opt.value === value ? '#f5f5f5' : 'white',
                 cursor: 'pointer',
-                background: opt.value === value ? '#f5f5f5' : '#fff',
-                color: '#000',
-                fontWeight: 500,
-                fontSize: 14,
-                borderBottom: '1px solid #f0f0f0',
-                borderRadius: 0
+                fontSize: '14px',
+                color: opt.value === '' ? '#666' : '#000',
+                border: 'none',
+                borderBottom:
+                  index < options.length - 1 ? '1px solid #f0f0f0' : 'none',
+                width: '100%',
+                textAlign: 'left',
+                padding: '8px 12px',
               }}
-              onClick={() => {
-                onChange(opt.value);
-                setOpen(false);
-              }}
-              role="option"
-              aria-selected={opt.value === value}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.backgroundColor = '#f5f5f5')
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.backgroundColor =
+                  opt.value === value ? '#f5f5f5' : 'white')
+              }
             >
               {opt.label}
-            </li>
+            </button>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );
@@ -130,6 +158,10 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
 // Main component for reviewed property list page
 const ReviewedProperty: React.FC = () => {
   const loc = useReviewedPropertyLocalization();
+
+  loc.earliestText = "New to Old";
+  loc.oldestText = "Old to New";
+
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const navigate = useNavigate();
@@ -137,22 +169,27 @@ const ReviewedProperty: React.FC = () => {
   const [selectedDateSort, setSelectedDateSort] = useState('');
 
   // Get assigned agent ID from localStorage (fallback to default)
-  const assignedAgent = localStorage.getItem('agentId') || 'e09421f8-ab1a-4e62-a96b-5b26dff739ef';
+  const assignedAgent =
+    localStorage.getItem('agentId') || 'e09421f8-ab1a-4e62-a96b-5b26dff739ef';
 
   // RTK Query - fetch reviewed property applications
-  const { data: apiResponse, isLoading, error } = useGetApplicationsQuery({ 
-    AssignedAgent: assignedAgent 
+  const {
+    data: apiResponse,
+    isLoading,
+    error,
+  } = useGetApplicationsQuery({
+    AssignedAgent: assignedAgent,
   });
 
   // Convert API applications to PropertyItem format for display
   const allProperties = useMemo((): PropertyItem[] => {
     if (!apiResponse?.data) return [];
-    
-    return apiResponse.data.map(app => ({
+
+    return apiResponse.data.map((app) => ({
       id: app.ID,
       pId: app.ApplicationNo,
       description: app.Property?.PropertyType || 'N/A',
-      address: app.Property?.Address 
+      address: app.Property?.Address
         ? `${app.Property.Address.Street}, ${app.Property.Address.Locality}, ${app.Property.Address.ZoneNo}`
         : 'Address not available',
       status: app.Status,
@@ -179,7 +216,7 @@ const ReviewedProperty: React.FC = () => {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
-        p =>
+        (p) =>
           p.pId.toLowerCase().includes(query) ||
           p.address.toLowerCase().includes(query) ||
           p.description.toLowerCase().includes(query)
@@ -189,11 +226,11 @@ const ReviewedProperty: React.FC = () => {
     // Sort by date if selected
     if (selectedDateSort === 'earliest') {
       filtered = [...filtered].sort(
-        (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+        (a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime()
       );
     } else if (selectedDateSort === 'oldest') {
       filtered = [...filtered].sort(
-        (a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime()
+        (a, b) => new Date(a.createdDate).getTime() - new Date(b.createdDate).getTime()
       );
     }
 
@@ -220,14 +257,18 @@ const ReviewedProperty: React.FC = () => {
   // Extract property locations for map display
   const propertyLocations = useMemo(() => {
     if (!apiResponse?.data) return [];
-    
+
     return apiResponse.data
-      .filter(app => app.Property?.GISData?.Coordinates && app.Property.GISData.Coordinates.length > 0)
-      .map(app => ({
+      .filter(
+        (app) =>
+          app.Property?.GISData?.Coordinates &&
+          app.Property.GISData.Coordinates.length > 0
+      )
+      .map((app) => ({
         id: app.ID,
         applicationNo: app.ApplicationNo,
-        lat: app.Property!.GISData!.Coordinates[0].Latitude,
-        lng: app.Property!.GISData!.Coordinates[0].Longitude,
+        lat: app.Property?.GISData?.Coordinates[0].Latitude,
+        lng: app.Property?.GISData?.Coordinates[0].Longitude,
         address: app.Property?.Address
           ? `${app.Property.Address.Street}, ${app.Property.Address.Locality}`
           : 'Address not available',
@@ -238,16 +279,29 @@ const ReviewedProperty: React.FC = () => {
   // Handle navigation tab changes (home, search, etc.)
   const handleTabChange = (tab: NavigationTab) => {
     switch (tab) {
-      case 'home': navigate('/agent'); break;
-      case 'search': navigate('/agent/search'); break;
-      case 'inbox': break;
-      case 'notifications': break;
+      case 'home':
+        navigate('/agent');
+        break;
+      case 'search':
+        navigate('/agent/search');
+        break;
+      case 'inbox':
+        break;
+      case 'notifications':
+        break;
     }
   };
 
   // Navigate to property information submitted page
-  const handlePropertyClick = (_propertyId: string) => {
-    navigate('/PropertyInformationSubmitted');
+  const handlePropertyClick = (propertyId: string) => {
+    // Find the property data to get the application details
+    const propertyData = apiResponse?.data.find((app) => app.ID === propertyId);
+
+    if (propertyData) {
+      localStorage.setItem('propertyId', propertyData.PropertyID);
+      localStorage.setItem('applicationId', propertyData.ID);
+    }
+    navigate('/agent/property-information-submitted');
   };
 
   // Handle date sort dropdown change
@@ -261,7 +315,7 @@ const ReviewedProperty: React.FC = () => {
       <Layout
         activeTab="home"
         onTabChange={handleTabChange}
-        showHeader={false}
+        
         showNavigation={false}
         hideLocationIcon={true}
       >
@@ -280,7 +334,7 @@ const ReviewedProperty: React.FC = () => {
       <Layout
         activeTab="home"
         onTabChange={handleTabChange}
-        showHeader={false}
+      
         showNavigation={false}
         hideLocationIcon={true}
       >
@@ -298,7 +352,6 @@ const ReviewedProperty: React.FC = () => {
     <Layout
       activeTab="home"
       onTabChange={handleTabChange}
-      showHeader={false}
       showNavigation={false}
       hideLocationIcon={true}
     >
@@ -306,7 +359,7 @@ const ReviewedProperty: React.FC = () => {
         {/* HEADER */}
         <div style={{ padding: '24px 16px 0 16px' }}>
           <button
-            onClick={() => navigate("/agent")}
+            onClick={() => navigate('/agent')}
             aria-label="Back"
             style={{
               background: 'transparent',
@@ -320,17 +373,26 @@ const ReviewedProperty: React.FC = () => {
               marginBottom: '16px',
               color: '#FC670C',
               fontSize: '15px',
-              fontWeight: 500
+              fontWeight: 500,
             }}
           >
             <ArrowBackIosIcon style={{ fontSize: '18px' }} />
             <span>{loc.previousText}</span>
           </button>
-          <h1 className="reviewed-title" style={{ margin: 0, padding: 0 }}>{loc.reviewedPropertiesTitleText}</h1>
+          <h1 className="reviewed-title" style={{ margin: 0, padding: 0 }}>
+            {loc.reviewedPropertiesTitleText}
+          </h1>
         </div>
 
         {/* SEARCH + FILTER */}
-        <div style={{ padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div
+          style={{
+            padding: '24px 16px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px',
+          }}
+        >
           <div className="search-container">
             <div className="search-input-wrapper">
               <input
@@ -394,17 +456,25 @@ const ReviewedProperty: React.FC = () => {
                     <div className="card-right">
                       <div className="propertyCard-location">
                         {(() => {
-                          const locItem = propertyLocations.find(pl =>
-                            pl.id === item.id ||
-                            pl.applicationNo === item.pId
+                          const locItem = propertyLocations.find(
+                            (pl) => pl.id === item.id || pl.applicationNo === item.pId
                           );
-                          if (locItem && typeof locItem.lat === 'number' && typeof locItem.lng === 'number') {
+                          if (
+                            locItem &&
+                            typeof locItem.lat === 'number' &&
+                            typeof locItem.lng === 'number'
+                          ) {
                             return (
                               <div style={{ width: '100%', height: '100%' }}>
-                                <div className="map-container-main" style={{ width: '100%', height: '100%' }}>
+                                <div
+                                  className="map-container-main"
+                                  style={{ width: '100%', height: '100%' }}
+                                >
                                   <LocationMapWithDrawing
                                     center={[locItem.lat, locItem.lng]}
-                                    onLocationUpdate={() => { /* thumbnail no-op */ }}
+                                    onLocationUpdate={() => {
+                                      /* thumbnail no-op */
+                                    }}
                                     readOnly={true}
                                   />
                                 </div>
@@ -414,9 +484,7 @@ const ReviewedProperty: React.FC = () => {
                           return null;
                         })()}
                       </div>
-                      <div className="reviewed-date">
-                        {item.dueDate}
-                      </div>
+                      <div className="reviewed-date">{item.dueDate}</div>
                     </div>
                   </div>
                 </div>
@@ -424,7 +492,7 @@ const ReviewedProperty: React.FC = () => {
             })
           ) : (
             <div className="no-properties">
-              <p>{searchQuery ? loc.noPropertiesFoundText : loc.noPropertiesFoundText}</p>
+              <p>{loc.noPropertiesFoundText}</p>
             </div>
           )}
 
@@ -432,7 +500,7 @@ const ReviewedProperty: React.FC = () => {
             <Pagination
               page={page}
               totalPages={totalPages}
-              onPageChange={newPage => setPage(newPage)}
+              onPageChange={(newPage) => setPage(newPage)}
             />
           )}
         </div>
@@ -440,7 +508,6 @@ const ReviewedProperty: React.FC = () => {
     </Layout>
   );
 };
-
 
 // Export the ReviewedProperty component as default
 export default ReviewedProperty;

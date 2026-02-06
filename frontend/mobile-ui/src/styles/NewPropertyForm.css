@@ -443,9 +443,6 @@ button.polygon-tag-button:hover {
   border: 2px solid #00000033;
   border-radius: 0%;
 }
-.active {
-  background-color: #C8504B;
-}
 
 
 /* ---------- Single Button ---------- */

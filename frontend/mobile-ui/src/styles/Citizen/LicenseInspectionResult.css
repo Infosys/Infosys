@@ -1,0 +1,106 @@
+/* Unique prefix "irc-" to avoid collisions and increase specificity */
+
+.irc-card {
+  width: 320px;
+  border-radius: 10px;
+  padding: 12px;
+  box-sizing: border-box;
+  background: #F2F2F2;
+  font-family: Roboto, Arial, sans-serif;
+  color: #111;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+  /* subtle elevation */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+/* Header: title + date */
+.irc-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.irc-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0;
+  color: #000;
+  text-align: left;
+}
+
+.irc-date {
+  font-size: 12px;
+  font-style: italic;
+  color : #000000;
+  margin: 0;
+  margin-top: -4px;
+}
+
+/* Body rows */
+.irc-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* each row aligns items inline with small gaps */
+.irc-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* labels */
+.irc-label {
+  font-size: 12px;
+  color: #000000;
+  font-weight: 500;
+  margin-bottom: -4px;
+}
+
+.irc-label-result {
+  font-size: 12px;
+  color: #000000;
+  font-weight: 600;
+  margin-top: -6px;
+}
+
+/* inspector value and bandge */
+.irc-value {
+  font-size: 12px;
+  color: #000000;
+  font-weight: 500;
+  margin-bottom: -4px;
+}
+
+.irc-bandge {
+  font-size: 12px;
+  color: #000000;
+  margin-left: 4px;
+}
+
+/* result row: label + emphasized result */
+.irc-result-row { gap: 6px; }
+
+.irc-result-value {
+  font-size: 13px;
+  color: #000000; /* green for approved; adjust as needed */
+  font-weight: 600;
+  margin-top: -6px;
+}
+
+/* increase selector specificity to avoid global overrides */
+.irc-card .irc-title,
+.irc-card .irc-date,
+.irc-card .irc-label,
+.irc-card .irc-value,
+.irc-card .irc-result-value {
+  -webkit-font-smoothing: antialiased;
+}
+
+/* fallback if global rules interfere: enforce border-radius and background */
+body .irc-card { border-radius: 10px !important;}

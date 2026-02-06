@@ -8,46 +8,48 @@
 //   - Responsive UI with MUI components and localization
 //   - Dynamic dropdowns populated from backend services
 // Used in: Property form workflow for IGRS details step
-import React, { useEffect, useState } from 'react';
-import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
-import Button from '@mui/material/Button';
-import { useNavigate } from 'react-router-dom';
-import { useFormMode } from '../../../context/FormModeContext';
-import { usePropertyForm } from '../../../context/PropertyFormContext';
+import React, { useEffect, useState } from "react";
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+import Button from "@mui/material/Button";
+import { useNavigate } from "react-router-dom";
+import { useFormMode } from "../../../context/FormModeContext";
+import { usePropertyForm } from "../../../context/PropertyFormContext";
 import JsonService, {
   getUnitOfMeasurementOptions,
-} from '../../../services/jsonServerApiCalls';
-import { useLocalization } from '../../../services/AgentLocalisation/formLocalisation';
-import StepHeader from '../../features/Agent/components/StepHeader';
-import { useAssessmentDetailsLocalization } from '../../../services/AgentLocalisation/localisation-AssessmentDetails';
-import CustomDropdown from '../../features/PropertyForm/components/IGRSDetail/IGRSdropdown';
-import type { DropdownOption } from '../../features/PropertyForm/components/IGRSDetail/IGRSdropdown';
-import FormTextField from '../../features/PropertyForm/components/IGRSDetail/IGRSFormTextFiled';
-import { uniformInputSx, verifyButtonSx } from './styles/sharedStyles';
-import type { AlertType } from '../../models/AlertType.model';
+} from "../../../services/jsonServerApiCalls";
+import { useLocalization } from "../../../services/AgentLocalisation/formLocalisation";
+import StepHeader from "../../features/Agent/components/StepHeader";
+import { useAssessmentDetailsLocalization } from "../../../services/AgentLocalisation/localisation-AssessmentDetails";
+import CustomDropdown from "../../features/PropertyForm/components/IGRSDetail/IGRSdropdown";
+import type { DropdownOption } from "../../features/PropertyForm/components/IGRSDetail/IGRSdropdown";
+import FormTextField from "../../features/PropertyForm/components/IGRSDetail/IGRSFormTextFiled";
+import { uniformInputSx, verifyButtonSx } from "./styles/sharedStyles";
+import type { AlertType } from "../../models/AlertType.model";
 import {
   useGetIgrsDetailsByIdQuery,
   useCreateIgrsDetailsMutation,
   useUpdateIgrsDetailsMutation,
-} from '../../../redux/apis/IgrsDetails.api';
-import { NotificationPopup } from '../../components/Popup/NotificationPopup';
+} from "../../../redux/apis/IgrsDetails.api";
+import { NotificationPopup } from "../../components/Popup/NotificationPopup";
+import CountIncrementor from "../../features/PropertyForm/components/CountIncrementors";
+import { Typography } from "@mui/material";
 
 // Inline styles for layout and UI
 const containerSx = {
-  width: '100%',
+  width: "100%",
   // maxWidth: 480,
-  margin: '0 auto',
-  minHeight: '100vh',
-  display: 'flex',
-  flexDirection: 'column' as const,
-  fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-  bgcolor: '#fff',
+  margin: "0 auto",
+  minHeight: "100vh",
+  display: "flex",
+  flexDirection: "column" as const,
+  fontFamily:
+    "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+  bgcolor: "#fff",
 };
 
-const headerSx = { backgroundColor: '#F9E6E0', padding: '16px' };
-const formContentSx = { flex: 1, px: '8%', py: 3, backgroundColor: '#FFFFFF' };
-const formSubmitSx = { padding: '16px 0', backgroundColor: '#FFFFFF' };
+const formContentSx = { flex: 1, px: "8%", py: 3, backgroundColor: "#FFFFFF" };
+const formSubmitSx = { padding: "16px 0", backgroundColor: "#FFFFFF" };
 
 const ISGRDetailsPage: React.FC = () => {
   // Contexts and hooks for form mode, navigation, and property form data
@@ -56,6 +58,42 @@ const ISGRDetailsPage: React.FC = () => {
   const { formData, updateForm } = usePropertyForm();
   const propertyId = formData.id;
   const igrsId = formData.isgrDetails?.id;
+  const [hasModified, setHasModified] = useState(false);
+
+  const markModified = () => {
+    if (mode === "verify") setHasModified(true);
+  };
+
+  const getEmptyFieldError = (field: string): string => {
+  switch (field) {
+    case 'habitation':
+      return 'Select Habitation to proceed';
+    case 'igrsWard':
+      return 'Select IGRS Ward to proceed';
+    case 'igrsLocality':
+      return 'Select IGRS Locality to proceed';
+    case 'igrsBlock':
+      return 'Select IGRS Block to proceed';
+    case 'doorNoFrom':
+      return 'IGRS Door No. From is mandatory';
+    case 'doorNoTo':
+      return 'IGRS Door No. To is mandatory';
+    case 'igrsClassification':
+      return 'Select IGRS Classification to proceed';
+    case 'builtUpAreaPct':
+      return 'Built Up Area is mandatory';
+    case 'frontSetback':
+      return 'FrontSetback is mandatory';
+    case 'rearSetback':
+      return 'Rear Setback is mandatory';
+    case 'sideSetback':
+      return 'Side Setback is mandatory';
+    case 'totalPlinthArea':
+      return 'Total Plinth Area is mandatory';
+    default:
+      return '';
+  }
+};
 
   // RTK Query hooks for fetching and mutating IGRS details
   const { data: igrsDetailsData } = useGetIgrsDetailsByIdQuery(igrsId!, {
@@ -84,50 +122,38 @@ const ISGRDetailsPage: React.FC = () => {
     //IGRSAndBuildingDetailsText,
     newPropertyForm,
     previousText,
-    translateDropdownOptions,
     onlyNumbersAreAllowedMSG,
-    ThisFieldIsRequiredMSG,
     PercentagePlaceholder,
   } = useLocalization();
 
-  const { saveDraftText, propertyFormTitle } = useAssessmentDetailsLocalization();
+  const { saveDraftText, propertyFormTitle } =
+    useAssessmentDetailsLocalization();
 
   const [habitations, setHabitations] = useState<DropdownOption[]>([]);
   const [wards, setWards] = useState<DropdownOption[]>([]);
   const [localities, setLocalities] = useState<DropdownOption[]>([]);
   const [blocks, setBlocks] = useState<DropdownOption[]>([]);
-  const [doorNoFrom, setDoorNoFrom] = useState<DropdownOption[]>([]);
-  const [doorNoTo, setDoorNoTo] = useState<DropdownOption[]>([]);
-  const [igrsClassification, setIgrsClassification] = useState<DropdownOption[]>([]);
-
-  const [rawHabitations, setRawHabitations] = useState<DropdownOption[]>([]);
-  const [rawWards, setRawWards] = useState<DropdownOption[]>([]);
-  const [rawLocalities, setRawLocalities] = useState<DropdownOption[]>([]);
-  const [rawBlocks, setRawBlocks] = useState<DropdownOption[]>([]);
-  const [rawDoorNoFrom, setRawDoorNoFrom] = useState<DropdownOption[]>([]);
-  const [rawDoorNoTo, setRawDoorNoTo] = useState<DropdownOption[]>([]);
-  const [rawIgrsClassification, setRawIgrsClassification] = useState<DropdownOption[]>(
-    []
-  );
+  const [igrsClassification, setIgrsClassification] = useState<
+    DropdownOption[]
+  >([]);
 
   const [showHabitationDropdown, setShowHabitationDropdown] = useState(false);
   const [showIgrsWardDropdown, setShowIgrsWardDropdown] = useState(false);
-  const [showIgrsLocalityDropdown, setShowIgrsLocalityDropdown] = useState(false);
+  const [showIgrsLocalityDropdown, setShowIgrsLocalityDropdown] =
+    useState(false);
   const [showIgrsBlockDropdown, setShowIgrsBlockDropdown] = useState(false);
-  const [showDoorNoFromDropdown, setShowDoorNoFromDropdown] = useState(false);
-  const [showDoorNoToDropdown, setShowDoorNoToDropdown] = useState(false);
   const [showIgrsClassificationDropdown, setShowIgrsClassificationDropdown] =
     useState(false);
 
-  const [unitOfMeasurement, setUnitOfMeasurement] = useState<string>('');
+  const [unitOfMeasurement, setUnitOfMeasurement] = useState<string>("");
   // Effect: Fetch unit of measurement from MDMS
   useEffect(() => {
     getUnitOfMeasurementOptions()
       .then((data) => {
-        setUnitOfMeasurement(data?.unitOfmeasurement || '');
+        setUnitOfMeasurement(data?.unitOfmeasurement || "");
       })
       .catch(() => {
-        console.log('Failed to fetch Unit of Measurement Options');
+        console.log("Failed to fetch Unit of Measurement Options");
       });
   }, []);
 
@@ -136,18 +162,18 @@ const ISGRDetailsPage: React.FC = () => {
       updateForm({
         isgrDetails: {
           id: formData.isgrDetails?.id,
-          habitation: formData.isgrDetails?.habitation ?? '',
-          igrsWard: formData.isgrDetails?.igrsWard ?? '',
-          igrsLocality: formData.isgrDetails?.igrsLocality ?? '',
-          igrsBlock: formData.isgrDetails?.igrsBlock ?? '',
-          doorNoFrom: formData.isgrDetails?.doorNoFrom ?? '',
-          doorNoTo: formData.isgrDetails?.doorNoTo ?? '',
-          igrsClassification: formData.isgrDetails?.igrsClassification ?? '',
-          builtUpAreaPct: formData.isgrDetails?.builtUpAreaPct ?? '',
-          frontSetback: formData.isgrDetails?.frontSetback ?? '',
-          rearSetback: formData.isgrDetails?.rearSetback ?? '',
-          sideSetback: formData.isgrDetails?.sideSetback ?? '',
-          totalPlinthArea: formData.isgrDetails?.totalPlinthArea ?? '',
+          habitation: formData.isgrDetails?.habitation ?? "",
+          igrsWard: formData.isgrDetails?.igrsWard ?? "",
+          igrsLocality: formData.isgrDetails?.igrsLocality ?? "",
+          igrsBlock: formData.isgrDetails?.igrsBlock ?? "",
+          doorNoFrom: formData.isgrDetails?.doorNoFrom ?? "",
+          doorNoTo: formData.isgrDetails?.doorNoTo ?? "",
+          igrsClassification: formData.isgrDetails?.igrsClassification ?? "",
+          builtUpAreaPct: formData.isgrDetails?.builtUpAreaPct ?? "",
+          frontSetback: formData.isgrDetails?.frontSetback ?? "",
+          rearSetback: formData.isgrDetails?.rearSetback ?? "",
+          sideSetback: formData.isgrDetails?.sideSetback ?? "",
+          totalPlinthArea: formData.isgrDetails?.totalPlinthArea ?? "",
         },
       });
     }
@@ -155,93 +181,128 @@ const ISGRDetailsPage: React.FC = () => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
-  const [showNumberWarnings, setShowNumberWarnings] = useState<Record<string, boolean>>(
-    {}
-  );
+  const [showNumberWarnings, setShowNumberWarnings] = useState<
+    Record<string, boolean>
+  >({});
 
   useEffect(() => {
-    JsonService.getHabitations().then(setRawHabitations);
-    JsonService.getIgrsWards().then(setRawWards);
-    JsonService.getIgrsLocalities().then(setRawLocalities);
-    JsonService.getIgrsBlocks().then(setRawBlocks);
-    JsonService.getDoorNoFrom().then(setRawDoorNoFrom);
-    JsonService.getDoorNoTo().then(setRawDoorNoTo);
-    JsonService.getIgrsClassifications().then(setRawIgrsClassification);
+    JsonService.getHabitations().then((data) => {
+      if (Array.isArray(data)) {
+        setHabitations(
+          data
+            .filter((item) => item.label !== "select")
+            .map((item, index) => ({ id: index, label: item.label }))
+        );
+      }
+    });
+
+    JsonService.getIgrsWards().then((data) => {
+      if (Array.isArray(data)) {
+        setWards(
+          data
+            .filter((item) => item.label !== "select")
+            .map((item, index) => ({ id: index, label: item.label }))
+        );
+      }
+    });
+
+    JsonService.getIgrsLocalities().then((data) => {
+      if (Array.isArray(data)) {
+        setLocalities(
+          data
+            .filter((item) => item.label !== "select")
+            .map((item, index) => ({ id: index, label: item.label }))
+        );
+      }
+    });
+
+    JsonService.getIgrsBlocks().then((data) => {
+      if (Array.isArray(data)) {
+        setBlocks(
+          data
+            .filter((item) => item.label !== "select")
+            .map((item, index) => ({ id: index, label: item.label }))
+        );
+      }
+    });
+
+    JsonService.getIgrsClassifications().then((data) => {
+      if (Array.isArray(data)) {
+        setIgrsClassification(
+          data
+            .filter((item) => item.label !== "select")
+            .map((item, index) => ({ id: index, label: item.label }))
+        );
+      }
+    });
   }, []);
-
-  useEffect(() => {
-    const normalize = (arr: DropdownOption[]) =>
-      (translateDropdownOptions(arr) || []).map((o) => ({
-        id: o.id,
-        label: o.label ?? '',
-      }));
-
-    setHabitations(normalize(rawHabitations));
-    setWards(normalize(rawWards));
-    setLocalities(normalize(rawLocalities));
-    setBlocks(normalize(rawBlocks));
-    setDoorNoFrom(normalize(rawDoorNoFrom));
-    setDoorNoTo(normalize(rawDoorNoTo));
-    setIgrsClassification(normalize(rawIgrsClassification));
-  }, [
-    rawHabitations,
-    rawWards,
-    rawLocalities,
-    rawBlocks,
-    rawDoorNoFrom,
-    rawDoorNoTo,
-    rawIgrsClassification,
-    translateDropdownOptions,
-  ]);
 
   // === Validation helper
   const validateField = (name: string, value: string): string => {
-    if (!value || value.trim() === '')
-      return ThisFieldIsRequiredMSG || 'This field is required';
+    if (!value || value.trim() === '') {
+    return getEmptyFieldError(name);
+  }
+
     if (
       [
-        'builtUpAreaPct',
-        'frontSetback',
-        'rearSetback',
-        'sideSetback',
-        'totalPlinthArea',
+        "builtUpAreaPct",
+        "frontSetback",
+        "rearSetback",
+        "sideSetback",
+        "totalPlinthArea",
+        "doorNoFrom",
+        "doorNoTo",
       ].includes(name)
     ) {
-      if (!/^\d*\.?\d*$/.test(value)) return 'Must be a valid number';
-      if (value === '.') return 'Must contain at least one digit';
+      if (!/^\d*\.?\d*$/.test(value)) return "Must be a valid number";
+      if (value === ".") return "Must contain at least one digit";
       const num = Number(value);
-      if (isNaN(num) || num <= 0) return 'Must be a positive';
-      if (name === 'builtUpAreaPct' && num > 100) return 'Cannot exceed 100';
+      if (Number.isNaN(num) || num <= 0) return getEmptyFieldError(name);
     }
-    return '';
+    return "";
+  };
+
+  const handleCountChange = (field: string) => (val: number) => {
+    markModified();
+    updateForm({
+      isgrDetails: {
+        ...formData.isgrDetails,
+        [field]: String(val),
+      },
+    });
+    if (touched[field]) setErrors((prev) => ({ ...prev, [field]: '' }));
+
+    setTouched((prev) => ({ ...prev, [field]: true }));
   };
 
   // === ENHANCED: strip leading zeros from number fields on blur!
   const handleBlur = (name: string) => {
     setTouched((prev) => ({ ...prev, [name]: true }));
-    let value = String(formData.isgrDetails?.[name as keyof typeof formData.isgrDetails] ?? '');
+    let value = String(
+      formData.isgrDetails?.[name as keyof typeof formData.isgrDetails] ?? ""
+    );
 
     // Strip leading zeros for numeric fields on blur
     if (
       [
-        'builtUpAreaPct',
-        'frontSetback',
-        'rearSetback',
-        'sideSetback',
-        'totalPlinthArea',
+        "builtUpAreaPct",
+        "frontSetback",
+        "rearSetback",
+        "sideSetback",
+        "totalPlinthArea",
       ].includes(name) &&
-      value !== ''
+      value !== ""
     ) {
       if (/^\d+(\.\d*)?$/.test(value)) {
-        const parts = value.split('.');
+        const parts = value.split(".");
         parts[0] = String(Number(parts[0]));
-        value = parts.length > 1 ? parts.join('.') : parts[0];
+        value = parts.length > 1 ? parts.join(".") : parts[0];
         // Update in formData via updateForm!
         updateForm({
           isgrDetails: {
             ...formData.isgrDetails,
             [name]: value,
-          }
+          },
         });
       }
     }
@@ -251,15 +312,16 @@ const ISGRDetailsPage: React.FC = () => {
   };
 
   const handleNumberKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    const forbidden = ['-', 'e', '+'];
+    const forbidden = ["-", "e", "+"];
     if (forbidden.includes(e.key)) {
       e.preventDefault();
     }
   };
 
   const handleInputChange = (field: string) => (value: string) => {
+    markModified();
     const isValid = /^\d*\.?\d*$/.test(value);
-    if (!isValid && value !== '') {
+    if (!isValid && value !== "") {
       setShowNumberWarnings((prev) => ({ ...prev, [field]: true }));
       return;
     }
@@ -272,9 +334,10 @@ const ISGRDetailsPage: React.FC = () => {
     });
 
     if (showNumberWarnings[field]) {
-      if (isValid) setShowNumberWarnings((prev) => ({ ...prev, [field]: false }));
+      if (isValid)
+        setShowNumberWarnings((prev) => ({ ...prev, [field]: false }));
     }
-    if (touched[field]) setErrors((prev) => ({ ...prev, [field]: '' }));
+    if (touched[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
   // closeAllDropdowns: Helper to close all dropdowns before opening one
@@ -283,20 +346,19 @@ const ISGRDetailsPage: React.FC = () => {
     setShowIgrsWardDropdown(false);
     setShowIgrsLocalityDropdown(false);
     setShowIgrsBlockDropdown(false);
-    setShowDoorNoFromDropdown(false);
-    setShowDoorNoToDropdown(false);
     setShowIgrsClassificationDropdown(false);
   };
 
   // handleDropdownSelect: Handles selection from dropdowns
   const handleDropdownSelect = (field: string) => (val: string) => {
+    markModified();
     updateForm({
       isgrDetails: {
         ...formData.isgrDetails,
         [field]: val,
       },
     });
-    setErrors((prev) => ({ ...prev, [field]: '' }));
+    setErrors((prev) => ({ ...prev, [field]: "" }));
     setTouched((prev) => ({ ...prev, [field]: true }));
   };
 
@@ -305,47 +367,59 @@ const ISGRDetailsPage: React.FC = () => {
     e.preventDefault();
 
     const fieldsToValidate = [
-      'habitation',
-      'igrsWard',
-      'igrsLocality',
-      'igrsBlock',
-      'doorNoFrom',
-      'doorNoTo',
-      'igrsClassification',
-      'builtUpAreaPct',
-      'frontSetback',
-      'rearSetback',
-      'sideSetback',
-      'totalPlinthArea',
+      "habitation",
+      "igrsWard",
+      "igrsLocality",
+      "igrsBlock",
+      "doorNoFrom",
+      "doorNoTo",
+      "igrsClassification",
+      "builtUpAreaPct",
+      "frontSetback",
+      "rearSetback",
+      "sideSetback",
+      "totalPlinthArea",
     ];
+
+    const touchedState = fieldsToValidate.reduce(
+    (acc, field) => ({ ...acc, [field]: true }),
+    {}
+    );
+    setTouched(touchedState);
 
     const submitErrors: Record<string, string> = {};
     fieldsToValidate.forEach((field) => {
-      const value =
-        String(formData.isgrDetails?.[field as keyof typeof formData.isgrDetails] ?? '');
+      const value = String(
+        formData.isgrDetails?.[field as keyof typeof formData.isgrDetails] ?? ""
+      );
       const error = validateField(field, value);
       submitErrors[field] = error;
     });
 
     setErrors(submitErrors);
-    setTouched(fieldsToValidate.reduce((acc, k) => ({ ...acc, [k]: true }), {}));
+    setTouched(
+      fieldsToValidate.reduce((acc, k) => ({ ...acc, [k]: true }), {})
+    );
 
     if (Object.values(submitErrors).some(Boolean)) return;
 
     if (!propertyId) {
-      showErrorPopup('Property ID is required.');
+      showErrorPopup("Property ID is required.");
       return;
     }
 
+    const applicationId = localStorage.getItem("applicationLogId") || "";
+    const isVerifying = hasModified;
+
     const requestBody = {
       propertyId: propertyId,
-      habitation: formData.isgrDetails?.habitation ?? '',
-      igrsWard: formData.isgrDetails?.igrsWard ?? '',
-      igrsLocality: formData.isgrDetails?.igrsLocality ?? '',
-      igrsBlock: formData.isgrDetails?.igrsBlock ?? '',
-      doorNoFrom: formData.isgrDetails?.doorNoFrom ?? '',
-      doorNoTo: formData.isgrDetails?.doorNoTo ?? '',
-      igrsClassification: formData.isgrDetails?.igrsClassification ?? '',
+      habitation: formData.isgrDetails?.habitation ?? "",
+      igrsWard: formData.isgrDetails?.igrsWard ?? "",
+      igrsLocality: formData.isgrDetails?.igrsLocality ?? "",
+      igrsBlock: formData.isgrDetails?.igrsBlock ?? "",
+      doorNoFrom: formData.isgrDetails?.doorNoFrom ?? "",
+      doorNoTo: formData.isgrDetails?.doorNoTo ?? "",
+      igrsClassification: formData.isgrDetails?.igrsClassification ?? "",
       builtUpAreaPct: Number(formData.isgrDetails?.builtUpAreaPct || 0),
       frontSetback: Number(formData.isgrDetails?.frontSetback || 0),
       rearSetback: Number(formData.isgrDetails?.rearSetback || 0),
@@ -359,6 +433,8 @@ const ISGRDetailsPage: React.FC = () => {
         resp = await updateIgrsDetails({
           id: igrsId,
           body: requestBody,
+          applicationId,
+          isVerifying,
         }).unwrap();
       } else {
         resp = await createIgrsDetails(requestBody).unwrap();
@@ -367,14 +443,14 @@ const ISGRDetailsPage: React.FC = () => {
       if (resp?.data) {
         updateForm({
           isgrDetails: {
-            id: resp.data.id || '',
-            habitation: resp.data.habitation || '',
-            igrsWard: resp.data.igrsWard || '',
-            igrsLocality: resp.data.igrsLocality || '',
-            igrsBlock: resp.data.igrsBlock || '',
-            doorNoFrom: resp.data.doorNoFrom || '',
-            doorNoTo: resp.data.doorNoTo || '',
-            igrsClassification: resp.data.igrsClassification || '',
+            id: resp.data.id || "",
+            habitation: resp.data.habitation || "",
+            igrsWard: resp.data.igrsWard || "",
+            igrsLocality: resp.data.igrsLocality || "",
+            igrsBlock: resp.data.igrsBlock || "",
+            doorNoFrom: resp.data.doorNoFrom || "",
+            doorNoTo: resp.data.doorNoTo || "",
+            igrsClassification: resp.data.igrsClassification || "",
             builtUpAreaPct: resp.data.builtUpAreaPct ?? 0,
             frontSetback: resp.data.frontSetback ?? 0,
             rearSetback: resp.data.rearSetback ?? 0,
@@ -384,10 +460,10 @@ const ISGRDetailsPage: React.FC = () => {
         });
       }
 
-      navigate('/property-form/igrs-additional-details');
+      navigate("/property-form/igrs-additional-details");
     } catch (error) {
-      console.error('Error saving IGRS details:', error);
-      showErrorPopup('Failed to save IGRS details.');
+      console.error("Error saving IGRS details:", error);
+      showErrorPopup("Failed to save IGRS details.");
     }
   };
 
@@ -399,10 +475,10 @@ const ISGRDetailsPage: React.FC = () => {
     message: string;
     duration: number;
   }>({
-    type: 'warning',
+    type: "warning",
     open: false,
-    title: '',
-    message: '',
+    title: "",
+    message: "",
     duration: 3000,
   });
 
@@ -410,9 +486,9 @@ const ISGRDetailsPage: React.FC = () => {
     setPopup((prev) => ({ ...prev, open: false }));
     setTimeout(() => {
       setPopup({
-        type: 'warning',
+        type: "warning",
         open: true,
-        title: 'Warning!',
+        title: "Warning!",
         message,
         duration,
       });
@@ -427,8 +503,9 @@ const ISGRDetailsPage: React.FC = () => {
   };
 
   const getFieldValue = (field: string) => {
-    const v = formData.isgrDetails?.[field as keyof typeof formData.isgrDetails];
-    return v ?? '';
+    const v =
+      formData.isgrDetails?.[field as keyof typeof formData.isgrDetails];
+    return v ?? "";
   };
 
   // UI rendering: WarningPopup, header, form with dropdowns, text fields, and submit button
@@ -442,39 +519,39 @@ const ISGRDetailsPage: React.FC = () => {
         onClose={() => setPopup((p) => ({ ...p, open: false }))}
       />
       <Box sx={containerSx}>
-        <Box sx={headerSx}>
-          <StepHeader
-            title={`${mode === 'new' ? `${newPropertyForm}` : `${propertyFormTitle}`}`}
-            // subtitle={IGRSAndBuildingDetailsText}
-            subtitle= {"IGRS and Building setback Details"}
-            steps={10}
-            activeStep={4}
-            onPrevious={handleGoBack}
-            onSaveDraft={handleSaveDraft}
-            previousText={previousText}
-            saveDraftText={saveDraftText}
-          />
-        </Box>
+        <StepHeader
+          title={mode === "new" ? newPropertyForm : propertyFormTitle}
+          // subtitle={IGRSAndBuildingDetailsText}
+          subtitle={"IGRS and Building setback Details"}
+          steps={10}
+          activeStep={4}
+          onPrevious={handleGoBack}
+          onSaveDraft={handleSaveDraft}
+          previousText={previousText}
+          saveDraftText={saveDraftText}
+        />
 
         <Box component="main" sx={formContentSx}>
           <form onSubmit={handleSubmit}>
             <Stack spacing={1}>
-              <Box sx={{ display: 'flex', gap: 1 }}>
+              <Box sx={{ display: "flex", gap: 1 }}>
                 <Box sx={{ flex: 1 }}>
                   <CustomDropdown
                     label={habitationText}
                     name="habitation"
-                    value={String(getFieldValue('habitation'))}
+                    value={String(getFieldValue("habitation"))}
                     options={habitations}
                     showDropdown={showHabitationDropdown}
                     setShowDropdown={setShowHabitationDropdown}
-                    onSelect={(_n, val) => handleDropdownSelect('habitation')(val)}
+                    onSelect={(_n, val) =>
+                      handleDropdownSelect("habitation")(val)
+                    }
                     closeOtherDropdowns={closeAllDropdowns}
                     selectText={selectText}
                     required
                     error={errors.habitation}
                     touched={touched.habitation}
-                    onBlur={() => handleBlur('habitation')}
+                    onBlur={() => handleBlur("habitation")}
                   />
                 </Box>
 
@@ -482,17 +559,19 @@ const ISGRDetailsPage: React.FC = () => {
                   <CustomDropdown
                     label={IGRSwardText}
                     name="igrsWard"
-                    value={String(getFieldValue('igrsWard'))}
+                    value={String(getFieldValue("igrsWard"))}
                     options={wards}
                     showDropdown={showIgrsWardDropdown}
                     setShowDropdown={setShowIgrsWardDropdown}
-                    onSelect={(_n, val) => handleDropdownSelect('igrsWard')(val)}
+                    onSelect={(_n, val) =>
+                      handleDropdownSelect("igrsWard")(val)
+                    }
                     closeOtherDropdowns={closeAllDropdowns}
                     selectText={selectText}
                     required
                     error={errors.igrsWard}
                     touched={touched.igrsWard}
-                    onBlur={() => handleBlur('igrsWard')}
+                    onBlur={() => handleBlur("igrsWard")}
                   />
                 </Box>
               </Box>
@@ -500,114 +579,123 @@ const ISGRDetailsPage: React.FC = () => {
               <CustomDropdown
                 label={IGRSLocalityText}
                 name="igrsLocality"
-                value={String(getFieldValue('igrsLocality'))}
+                value={String(getFieldValue("igrsLocality"))}
                 options={localities}
                 showDropdown={showIgrsLocalityDropdown}
                 setShowDropdown={setShowIgrsLocalityDropdown}
-                onSelect={(_n, val) => handleDropdownSelect('igrsLocality')(val)}
+                onSelect={(_n, val) =>
+                  handleDropdownSelect("igrsLocality")(val)
+                }
                 closeOtherDropdowns={closeAllDropdowns}
                 selectText={selectText}
                 required
                 error={errors.igrsLocality}
                 touched={touched.igrsLocality}
-                onBlur={() => handleBlur('igrsLocality')}
+                onBlur={() => handleBlur("igrsLocality")}
               />
 
               <CustomDropdown
                 label={IGRSBlockText}
                 name="igrsBlock"
-                value={String(getFieldValue('igrsBlock'))}
+                value={String(getFieldValue("igrsBlock"))}
                 options={blocks}
                 showDropdown={showIgrsBlockDropdown}
                 setShowDropdown={setShowIgrsBlockDropdown}
-                onSelect={(_n, val) => handleDropdownSelect('igrsBlock')(val)}
+                onSelect={(_n, val) => handleDropdownSelect("igrsBlock")(val)}
                 closeOtherDropdowns={closeAllDropdowns}
                 selectText={selectText}
                 required
                 error={errors.igrsBlock}
                 touched={touched.igrsBlock}
-                onBlur={() => handleBlur('igrsBlock')}
+                onBlur={() => handleBlur("igrsBlock")}
               />
 
-              <Box sx={{ display: 'flex', gap: 1 }}>
+              <Box sx={{ display: "flex", gap: 1 }}>
                 <Box sx={{ flex: 1 }}>
-                  <CustomDropdown
+                  <CountIncrementor
                     label={IGRSDoorNoFromText}
-                    name="doorNoFrom"
-                    value={String(getFieldValue('doorNoFrom'))}
-                    options={doorNoFrom}
-                    showDropdown={showDoorNoFromDropdown}
-                    setShowDropdown={setShowDoorNoFromDropdown}
-                    onSelect={(_n, val) => handleDropdownSelect('doorNoFrom')(val)}
-                    closeOtherDropdowns={closeAllDropdowns}
-                    selectText={selectText}
+                    value={Number(getFieldValue("doorNoFrom")) || 0}
+                    setValue={handleCountChange("doorNoFrom")}
                     required
-                    error={errors.doorNoFrom}
-                    touched={touched.doorNoFrom}
-                    onBlur={() => handleBlur('doorNoFrom')}
+                    min={0}
+                    max={9999}
                   />
+                  {touched.doorNoFrom && errors.doorNoFrom && (
+                    <Typography
+                      sx={{ color: "error.main", fontSize: 12, mt: 0.5, ml: 1 }}
+                    >
+                      {errors.doorNoFrom}
+                    </Typography>
+                  )}
                 </Box>
 
                 <Box sx={{ flex: 1 }}>
-                  <CustomDropdown
+                  <CountIncrementor
                     label={IGRSDoorNoToText}
-                    name="doorNoTo"
-                    value={String(getFieldValue('doorNoTo'))}
-                    options={doorNoTo}
-                    showDropdown={showDoorNoToDropdown}
-                    setShowDropdown={setShowDoorNoToDropdown}
-                    onSelect={(_n, val) => handleDropdownSelect('doorNoTo')(val)}
-                    closeOtherDropdowns={closeAllDropdowns}
-                    selectText={selectText}
+                    value={Number(getFieldValue("doorNoTo")) || 0}
+                    setValue={handleCountChange("doorNoTo")}
                     required
-                    error={errors.doorNoTo}
-                    touched={touched.doorNoTo}
-                    onBlur={() => handleBlur('doorNoTo')}
+                    min={0}
+                    max={9999}
                   />
+                  {touched.doorNoTo && errors.doorNoTo && (
+                    <Typography
+                      sx={{ color: "error.main", fontSize: 12, mt: 0.5, ml: 1 }}
+                    >
+                      {errors.doorNoTo}
+                    </Typography>
+                  )}
                 </Box>
               </Box>
-
               <CustomDropdown
                 label={IGRSClassification}
                 name="igrsClassification"
-                value={String(getFieldValue('igrsClassification'))}
+                value={String(getFieldValue("igrsClassification"))}
                 options={igrsClassification}
                 showDropdown={showIgrsClassificationDropdown}
                 setShowDropdown={setShowIgrsClassificationDropdown}
-                onSelect={(_n, val) => handleDropdownSelect('igrsClassification')(val)}
+                onSelect={(_n, val) =>
+                  handleDropdownSelect("igrsClassification")(val)
+                }
                 closeOtherDropdowns={closeAllDropdowns}
                 selectText={selectText}
                 required
                 error={errors.igrsClassification}
                 touched={touched.igrsClassification}
-                onBlur={() => handleBlur('igrsClassification')}
+                onBlur={() => handleBlur("igrsClassification")}
               />
 
               <FormTextField
                 sx={{ ...uniformInputSx }}
                 label={builtUpArea}
-                value={String(getFieldValue('builtUpAreaPct'))}
-                onChange={handleInputChange('builtUpAreaPct')}
-                onBlur={() => handleBlur('builtUpAreaPct')}
+                value={String(getFieldValue("builtUpAreaPct"))}
+                onChange={handleInputChange("builtUpAreaPct")}
+                onBlur={() => handleBlur("builtUpAreaPct")}
                 placeholder={PercentagePlaceholder}
                 type="number"
                 required
-                inputProps={{ min: 0, max: 100, onKeyDown: handleNumberKeyDown }}
+                inputProps={{
+                  min: 0,
+                  max: 100,
+                  onKeyDown: handleNumberKeyDown,
+                }}
                 error={
                   showNumberWarnings.builtUpAreaPct
                     ? onlyNumbersAreAllowedMSG
                     : errors.builtUpAreaPct
                 }
-                touched={touched.builtUpAreaPct || showNumberWarnings.builtUpAreaPct}
+                touched={
+                  touched.builtUpAreaPct || showNumberWarnings.builtUpAreaPct
+                }
               />
 
-              <Box sx={{ display: 'flex', gap: 1 }}>
+              <Box sx={{ display: "flex", gap: 1 }}>
                 <FormTextField
                   sx={uniformInputSx}
                   label={`${frontSetBack} (${unitOfMeasurement})`}
-                  value={String(getFieldValue('frontSetback'))}
-                  onChange={handleInputChange('frontSetback')}
-                  onBlur={() => handleBlur('frontSetback')}
+                  value={String(getFieldValue("frontSetback"))}
+                  onChange={handleInputChange("frontSetback")}
+                  onBlur={() => handleBlur("frontSetback")}
                   type="number"
                   required
                   inputProps={{ onKeyDown: handleNumberKeyDown }}
@@ -616,14 +704,16 @@ const ISGRDetailsPage: React.FC = () => {
                       ? onlyNumbersAreAllowedMSG
                       : errors.frontSetback
                   }
-                  touched={touched.frontSetback || showNumberWarnings.frontSetback}
+                  touched={
+                    touched.frontSetback || showNumberWarnings.frontSetback
+                  }
                 />
                 <FormTextField
                   sx={uniformInputSx}
                   label={`${rearSetBack} (${unitOfMeasurement})`}
-                  value={String(getFieldValue('rearSetback'))}
-                  onChange={handleInputChange('rearSetback')}
-                  onBlur={() => handleBlur('rearSetback')}
+                  value={String(getFieldValue("rearSetback"))}
+                  onChange={handleInputChange("rearSetback")}
+                  onBlur={() => handleBlur("rearSetback")}
                   type="number"
                   required
                   inputProps={{ onKeyDown: handleNumberKeyDown }}
@@ -632,16 +722,18 @@ const ISGRDetailsPage: React.FC = () => {
                       ? onlyNumbersAreAllowedMSG
                       : errors.rearSetback
                   }
-                  touched={touched.rearSetback || showNumberWarnings.rearSetback}
+                  touched={
+                    touched.rearSetback || showNumberWarnings.rearSetback
+                  }
                 />
               </Box>
 
               <FormTextField
                 sx={uniformInputSx}
                 label={`${sideSetBack} (${unitOfMeasurement})`}
-                value={String(getFieldValue('sideSetback'))}
-                onChange={handleInputChange('sideSetback')}
-                onBlur={() => handleBlur('sideSetback')}
+                value={String(getFieldValue("sideSetback"))}
+                onChange={handleInputChange("sideSetback")}
+                onBlur={() => handleBlur("sideSetback")}
                 type="number"
                 required
                 inputProps={{ onKeyDown: handleNumberKeyDown }}
@@ -656,9 +748,9 @@ const ISGRDetailsPage: React.FC = () => {
               <FormTextField
                 sx={uniformInputSx}
                 label={`${totalPlintArea} (Sq.${unitOfMeasurement})`}
-                value={String(getFieldValue('totalPlinthArea'))}
-                onChange={handleInputChange('totalPlinthArea')}
-                onBlur={() => handleBlur('totalPlinthArea')}
+                value={String(getFieldValue("totalPlinthArea"))}
+                onChange={handleInputChange("totalPlinthArea")}
+                onBlur={() => handleBlur("totalPlinthArea")}
                 type="number"
                 required
                 inputProps={{ onKeyDown: handleNumberKeyDown }}
@@ -667,16 +759,22 @@ const ISGRDetailsPage: React.FC = () => {
                     ? onlyNumbersAreAllowedMSG
                     : errors.totalPlinthArea
                 }
-                touched={touched.totalPlinthArea || showNumberWarnings.totalPlinthArea}
+                touched={
+                  touched.totalPlinthArea || showNumberWarnings.totalPlinthArea
+                }
               />
 
               <Box sx={formSubmitSx}>
                 <Button
                   type="submit"
-                  sx={{ ...verifyButtonSx, display: 'block', marginLeft: 'auto' }}
+                  sx={{
+                    ...verifyButtonSx,
+                    display: "block",
+                    marginLeft: "auto",
+                  }}
                   variant="contained"
                 >
-                  {mode === 'verify' ? 'Verify' : nextButtonText}
+                  {mode === "verify" ? "Verify" : nextButtonText}
                 </Button>
               </Box>
             </Stack>

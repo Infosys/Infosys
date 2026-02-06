@@ -8,12 +8,22 @@
 // Used in: Citizen property listing views
 
 import React from 'react';
-import { Card, CardContent, Typography, Button, Box, LinearProgress } from '@mui/material';
+import {
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Box,
+  LinearProgress,
+} from '@mui/material';
 import LaunchOutlinedIcon from '@mui/icons-material/LaunchOutlined';
 import { useNavigate } from 'react-router-dom';
 import type { CitizenPropertySummary } from '../../Citizen/api/CitizenHomePageApi/CitizenHomePageModel';
 import { useAppSelector } from '../../../../redux/Hooks';
-import { getMessagesFromSession, useLocalization } from '../../../../services/Citizen/Localization/LocalizationContext';
+import {
+  getMessagesFromSession,
+  useLocalization,
+} from '../../../../services/Citizen/Localization/LocalizationContext';
 import LoadingPage from '../../../components/Loader';
 import CottageOutlinedIcon from '@mui/icons-material/CottageOutlined';
 
@@ -75,14 +85,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   };
 
   const handleViewDetails = () => {
-    navigate(
-      `/citizen/properties/${property.id}`,
-      {
-        state: {
-          applicationId : applicationId,
-        }
-      }
-    );
+    navigate(`/citizen/properties/${property.id}`, {
+      state: {
+        applicationId: applicationId,
+      },
+    });
   };
 
   const details = property.locationData || {};
@@ -102,7 +109,15 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
 
   // Render property card UI
   return (
-    <Card sx={{display: 'flex', mb: 2, bgcolor, border: '1.6px solid #000000ff', borderRadius: 3 }}>
+    <Card
+      sx={{
+        display: 'flex',
+        mb: 2,
+        bgcolor,
+        border: '1px solid #000000ff',
+        borderRadius: 3,
+      }}
+    >
       <CardContent sx={{ width: '18%' }}>
         <Box
           sx={{
@@ -128,6 +143,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
             {addressFields || 'Address not available'}
           </Typography>
         </Box>
+        <Typography fontWeight={300} sx={{ fontSize: 12 }}>
+          Enumertation Progress
+        </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <LinearProgress
             value={progress}

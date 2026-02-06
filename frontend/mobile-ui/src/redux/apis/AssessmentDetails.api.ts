@@ -20,9 +20,9 @@ export const assessmentDetailsApi = apiSlice.injectEndpoints({
       }),
     }),
     // Update existing assessment details by ID
-    updateAssessmentDetails: builder.mutation<AssessmentDetailsResponse, { id: string; body: AssessmentDetailsRequest }>({
-      query: ({ id, body }) => ({
-        url: `/v1/assessment-details/${id}`,
+    updateAssessmentDetails: builder.mutation<AssessmentDetailsResponse, { id: string; applicationId: string;isVerifying: boolean; body: AssessmentDetailsRequest ,}>({
+      query: ({ id, applicationId, isVerifying, body }) => ({
+        url: `/v1/assessment-details/${id}/${applicationId}?isVerifying=${isVerifying}`,
         method: 'PUT',
         body,
       }),

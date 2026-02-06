@@ -46,14 +46,6 @@ const SendEmail: React.FC = () => {
   // const { propertyId } = useParams();
   const navigate = useNavigate();
 
-
-//   const handlePrevious = () => {
-//  if (propertyId) {
-//     navigate(`/agent/verification/${propertyId}`);
-//  }else{
-//     navigate('/agent/verification');
-//  }
-// };
   const handlePrevious = () => {
     navigate(-1);
   };

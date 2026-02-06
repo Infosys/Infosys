@@ -10,7 +10,7 @@ import { Box, Paper, Stack, Typography } from "@mui/material";
 import type { FC } from "react";
 import OverviewStack from "../OverviewStack";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-// import MapIcon from "@mui/icons-material/Map";
+
 import { useAppSelector } from "../../../../../redux/Hooks";
 import { getMessagesFromSession, useLocalization } from "../../../../../services/Citizen/Localization/LocalizationContext";
 import LoadingPage from "../../../../components/Loader";
@@ -47,7 +47,10 @@ const OverviewCard: FC<OverviewCardProps> = ({ property }) => {
   const currentUse = property.PropertyType || 'N/A';
   const approvedUse = property.PropertyType || 'N/A';
   const zoning = property.Address?.ZoneNo || 'N/A';
-  const fsi = property.IGRS?.builtUpAreaPct ? `${property.IGRS.builtUpAreaPct}%` : 'N/A';
+
+  const fsiVal = (property.IGRS.builtUpAreaPct * 100 / property.IGRS.totalPlinthArea).toPrecision(4);
+
+  const fsi = property.IGRS?.builtUpAreaPct ? `${fsiVal}%` : 'N/A';
 
   // Render overview and land use/zoning cards
   return (
@@ -125,10 +128,10 @@ const OverviewCard: FC<OverviewCardProps> = ({ property }) => {
             </Typography>
           </Box>
           <Box>
-            <Typography fontSize={13} color="#888">
+            <Typography fontSize={13} color="#888" sx = {{textAlign:"right"}}>
               {messages['citizen.my-properties'][lang]['approved-use']}
             </Typography>
-            <Typography fontWeight={700} color="#222">
+            <Typography fontWeight={700} color="#222" sx = {{textAlign:"right"}}>
               {approvedUse}
             </Typography>
           </Box>
@@ -144,10 +147,10 @@ const OverviewCard: FC<OverviewCardProps> = ({ property }) => {
             </Typography>
           </Box>
           <Box>
-            <Typography fontSize={13} color="#888">
+            <Typography fontSize={13} color="#888" sx = {{textAlign:"right"}}>
               {messages['citizen.my-properties'][lang]['fsi']}
             </Typography>
-            <Typography fontWeight={700} color="#222">
+            <Typography fontWeight={700} color="#222" sx = {{textAlign:"right"}}>
               {fsi}
             </Typography>
           </Box>

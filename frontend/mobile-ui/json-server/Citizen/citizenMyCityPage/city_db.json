@@ -1,0 +1,122 @@
+{
+  "map": {
+    "userCenter": [12.9141, 77.6387],
+    "registrations": [
+      {
+        "name": "ChildCare Center",
+        "type": "Commercial",
+        "period": "2018 - present",
+        "date": "15-03-2018",
+        "info": "Registered Sale"
+      },
+      {
+        "name": "Sunita Properties Pvt Ltd",
+        "type": "Commercial",
+        "period": "2015 - 2018",
+        "date": "23-09-2014",
+        "info": "Development Rights"
+      },
+      {
+        "name": "Karnataka Transport Dept.",
+        "type": "Commercial",
+        "period": "2009 - 2015",
+        "date": "10-11-2009",
+        "info": "Directed Allotment"
+      },
+      {
+        "name": "Shobha Forest View",
+        "type": "Residential",
+        "period": "2000 - 2009",
+        "date": "31-05-1999",
+        "info": "Registered Sale"
+      }
+    ],
+    "contacts": [
+      { "label": "BBMP South Zone", "phone": "080-22970000" },
+      { "label": "BWSSB Helpline", "phone": "1916" },
+      { "label": "BESCOM Helpline", "phone": "1912" },
+      { "label": "HSR Police Station", "phone": "080-22970100" }
+    ]
+  },
+  "services": {
+    "cityServices": [
+      {
+        "serviceTitle": "Property Transfer",
+        "department": "BBMP Revenue Department",
+        "processingTime": "30-45 working days",
+        "serviceLocation": "Revenue Office, HSR Layout",
+        "contact": "080-22970000",
+        "requiredDocuments": true,
+        "applyLink": "/apply/property-transfer"
+      },
+      {
+        "title": "Building Plan Approval",
+        "serviceTitle": "BBMP Town Planning",
+        "processingTime": "60-90 working days",
+        "serviceLocation": "BBMP Head Office, KR Road",
+        "contact": "080-22970000",
+        "requiredDocuments": true,
+        "applyLink": "/apply/building-plan"
+      }
+    ]
+  },
+
+  "cityUpdates": [
+    {
+      "title": "Metro Construction Update",
+      "subtype": "building",
+      "description": "HSR Layout Metro station work in progress. 27th Main Road partially closed till Nov 15.",
+      "date": "Sept 13, 2025",
+      "type": "Construction",
+      "mapZone": {
+        "center": [12.9165, 77.6395],
+        "affectRadius": 400
+      }
+    },
+    {
+      "title": "Road Repair Work",
+      "subtype": "road",
+      "description": "19th Main Road pothole filling and resurfacing work completed. Road now open.",
+      "date": "Sept 26, 2025",
+      "type": "Construction",
+      "mapZone": {
+        "center": [12.910, 77.635],
+        "affectRadius": 180
+      }
+    },
+    {
+      "title": "Traffic Advisory",
+      "subtype": "traffic",
+      "description": "Heavy traffic expected on Outer Ring Road near Agara junction during peak hours.",
+      "date": "Sept 16, 2025",
+      "type": "Warning",
+      "mapZone": {
+        "center": [12.924, 77.637],
+        "affectRadius": 300
+      }
+    },
+    {
+      "title": "Power Outage Schedule",
+      "subtype": "electricity",
+      "description": "BESCOM maintenance work. Power cut in Sector 3, 4, 6 on Oct 9, 10 AM - 4 PM.",
+      "date": "Oct 4, 2025",
+      "type": "Warning",
+      "mapZone": {
+        "center": [12.913, 77.643],
+        "affectRadius": 200
+      }
+    },
+    {
+      "title": "Water Supply Maintenance",
+      "subtype": "water",
+      "description": "Scheduled water supply interruption in Sector 1 & 2 on Oct 10, 6 AM - 2 PM.",
+      "date": "Oct 06, 2025",
+      "type": "Info",
+      "mapZone": {
+        "center": [12.918, 77.641],
+        "affectRadius": 250
+      }
+    }
+  ]
+
+}

@@ -30,6 +30,11 @@ const SEARCH_FIELD_OPTIONS = [
 // Key for caching applications in localStorage
 const LOCAL_STORAGE_KEY = 'allApplications';
 
+// Custom dropdown icon component
+const CustomDropdownIcon = (props: any) => (
+  <ArrowDropDownIcon {...props} sx={{ color: '#C84C0E' }} />
+);
+
 // Main component for property search page
 const SearchProperty: React.FC = () => {
   const navigate = useNavigate();
@@ -57,7 +62,7 @@ const SearchProperty: React.FC = () => {
 
   // On mount: if no API data, restore from localStorage cache
   useEffect(() => {
-    if ((!apiData || !apiData.data) && !apiLoading) {
+    if (!apiData?.data && !apiLoading) {
       const cached = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (cached) {
         setLocalApplications(JSON.parse(cached));
@@ -104,7 +109,10 @@ const SearchProperty: React.FC = () => {
   // Go back to previous page
   const handleBack = () => navigate(-1);
   // Navigate to property location view
-  const handleViewLocation = (propertyId: string) => navigate(`agent//location/${propertyId}`);
+
+  const handleViewLocation = () => {
+    navigate(`/under-construction`);
+  };
 
   // Main UI rendering
   return (
@@ -164,9 +172,7 @@ const SearchProperty: React.FC = () => {
           fullWidth
           value={selectedField}
           onChange={(e) => setSelectedField(e.target.value)}
-          IconComponent={(props) => (
-            <ArrowDropDownIcon {...props} sx={{ color: '#C84C0E' }} />
-          )}
+          IconComponent={CustomDropdownIcon}
           input={
             <OutlinedInput
               sx={{
@@ -243,25 +249,20 @@ const SearchProperty: React.FC = () => {
           }`}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyPress={handleKeyPress}
+          onKeyDown={handleKeyPress}
           sx={{
+            borderRadius: '80px',
+            background: '#f0f0f0ff',
             bgcolor: '#f0f0f0ff',
-            borderRadius: '8px',
             '& .MuiOutlinedInput-input': {
               fontFamily: 'Roboto, sans-serif',
               boxSizing: 'border-box !important',
               minHeight: '52px',
             },
             '& .MuiOutlinedInput-root': {
-              borderRadius: '8px',
+              borderRadius: '80px',
               fontSize: '16px !important',
               boxSizing: 'border-box !important',
-            },
-          }}
-          inputProps={{
-            style: {
-              borderRadius: '8px',
-              background: '#f0f0f0ff',
             },
           }}
         />
@@ -309,7 +310,6 @@ const SearchProperty: React.FC = () => {
       <Box sx={{ px: 2 }}>
         {!apiLoading && filteredApplications && filteredApplications.length > 0
           ? filteredApplications.map((application) => {
-
               return (
                 <SearchPropertyResultCard
                   key={application.ID}
@@ -326,7 +326,9 @@ const SearchProperty: React.FC = () => {
                     lng: application.Property.GISData?.Longitude ?? 0,
                   }}
                   isVerified={application.Status === 'VERIFIED'}
-                  onViewLocation={() => handleViewLocation(application.PropertyID)}
+                  // onViewLocation={() => handleViewLocation(application.Property)}
+                  onViewLocation={() => handleViewLocation()}
+                  // onViewLocation={() => handleViewLocation(application.PropertyID)}
                 />
               );
             })

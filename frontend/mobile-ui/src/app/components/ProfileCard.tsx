@@ -41,7 +41,7 @@ export const ProfileCard: React.FC<{
 
   // Load user profile from session storage on mount or when profile type changes
   useEffect(() => {
-    const userString = sessionStorage.getItem('user');
+    const userString = localStorage.getItem('user');
     const user = userString ? JSON.parse(userString) : null;
     setUserProfile(user);
   }, [isCitizenProfile, sessionUser]);
@@ -73,7 +73,9 @@ export const ProfileCard: React.FC<{
   const aadharNo = getProfileValue('adhaarNo') as number | undefined;
   const email = displayProfile.email;
   const address = displayProfile.profile?.address || displayProfile.address;
-  const ward = displayProfile.ward;
+  const zoneData = displayProfile.zoneData || [];
+  const allWards = zoneData.flatMap((z) => z.wards).join(', ');
+  const allZones = zoneData.map((z) => z.zoneNumber).join(', ');
 
   // Helper to format address for display
   const formatAddress = (address: Address | undefined): string => {
@@ -143,7 +145,7 @@ export const ProfileCard: React.FC<{
           minWidth: '0.8vw',
         }}
       >
-        <AccountCircleOutlinedIcon sx={{ fontSize: 54, mr: 2, color: COLORS.text }} />
+        <AccountCircleOutlinedIcon sx={{ fontSize: 54, mr: 2, color: COLORS.text, backgroundColor: COLORS.bg, borderRadius: '50%' }} />
         <Box>
           <Typography fontWeight={700} fontSize={22} color={COLORS.text}>
             {fullName || 'Name not available'}
@@ -215,25 +217,19 @@ export const ProfileCard: React.FC<{
         {!isCitizenProfile && (
           <Box>
             <Typography
-              fontWeight={400}
+              fontWeight={500}
               fontSize={10}
               color="hsla(0, 0%, 0%, 0.50)"
               sx={{ mt: 1 }}
             >
               {personJurisdiction}:
             </Typography>
-            {(ward || ['Ward Nos. 24 && 38 of BBMP', 'Ward Nos. 46 of BBMP']).map(
-              (item: string, index: number) => (
-                <Typography
-                  key={index}
-                  fontWeight={300}
-                  fontSize={14}
-                  color={COLORS.text}
-                >
-                  {item}
-                </Typography>
-              )
-            )}
+            <Typography fontWeight={400} fontSize={14} color={COLORS.text}>
+              {`Zone Nos : ${allZones || 'N/A'}`}
+            </Typography>
+            <Typography fontWeight={400} fontSize={14} color={COLORS.text}>
+              {`Ward Nos : ${allWards || 'N/A'}`}
+            </Typography>
           </Box>
         )}
       </Box>

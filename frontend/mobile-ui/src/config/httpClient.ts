@@ -2,13 +2,14 @@
 // Configures a custom Axios HTTP client with authentication and token refresh logic for API requests.
 import axios from 'axios';
 import { authService } from '../services/AuthService';
+import { env } from './env';
 
 // Tenant ID for multi-tenant support, loaded from environment
-const TENANT_ID = import.meta.env.VITE_TENANT_ID;
+const TENANT_ID = env.TENANT_ID;
 
 // Create an Axios instance with base URL and default headers
 const httpClient = axios.create({
-  baseURL: import.meta.env.VITE_ONBOARDING_HOST,
+  baseURL: env.ONBOARDING_HOST,
   headers: {
     'Content-Type': 'application/json',
     'X-Tenant-ID': TENANT_ID,

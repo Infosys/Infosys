@@ -1,0 +1,95 @@
+/* scoped st- prefix to avoid collisions */
+
+.st-tabs-root {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  padding: 4px;
+  border-radius: 4px !important;
+  font-family: Roboto, Arial, sans-serif;
+}
+
+.st-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  /* increase vertical padding / min-height to change box size */
+  padding: 8px 14px;        /* was 6px 12px */
+  width: 99px;          /* adjust width if needed */
+  height: 19px;         /* new: controls visual height */
+  border-radius: 4px;
+  background: transparent;
+  border: 1px solid #7f5959; /* changed: visible border for all tabs */
+  cursor: pointer;
+  font-size: 13px;
+  color: #333333;
+  font-weight: 500;
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+
+/* content wrapper ensures icon appears before label and spacing is consistent */
+.st-tab .st-tab-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* selected state */
+.st-tab.st-selected {
+  background: #eaa584;
+  color: #653737;
+  font-weight: 700;
+  border: 1px solid rgba(200,76,3,0.12); /* fixed: single visible border for selected */
+  box-shadow: none;
+}
+
+
+/* check icon style */
+.st-tab-check-icon {
+  color: #533333;
+  /* font-size: 12px; */
+  line-height: 1;
+  /* display: inline-flex; */
+  vertical-align: middle;
+  height: 16px !important;
+  width: 16px !important;
+}
+
+/* label */
+.st-tab-label {
+  display: inline-block;
+  font-family: 'Roboto', Arial, sans-serif !important;
+  color: #573f3f;
+  text-align: center;
+}
+
+/* disabled */
+.st-tab.st-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* hover / focus */
+.st-tab:not(.st-disabled):hover {
+  background: rgba(200,76,3,0.04);
+}
+.st-tab:focus {
+  outline: 2px solid rgba(200,76,3,0.14);
+  outline-offset: 2px;
+}
+
+.st-tab.st-selected:focus {
+  outline: none;
+  box-shadow: none;
+}
+/* ensure label inherits the selected color */
+.st-tab.st-selected .st-tab-label {
+  color: inherit;
+}
+
+/* extra specificity to avoid global overrides */
+.st-tabs-root .st-tab .st-tab-check-icon,
+.st-tabs-root .st-tab .st-tab-label {
+  -webkit-font-smoothing: antialiased;
+}

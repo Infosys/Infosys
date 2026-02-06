@@ -99,7 +99,13 @@ export interface LocationData {
 export interface PropertyBasicsRequest {
   ownershipType: string;
   propertyType: string;
+  buildingName?: string;
+  noOfBuildings?: number;
   complexName?: string;
+  typeOfLand: string;
+  noOfFloors?: number;
+  noOfBasements?: number;
+  hasMezzanine?: boolean;
 }
 
 export interface LocationDataRequest {
@@ -122,6 +128,13 @@ export interface PropertyFormRequest {
   categoryOfOwnership: string;
   propertyType: string;
   apartmentName: string;
+  typeOfLand: string;
+  noOfFloors?: number;
+  noOfBasements?: number;
+  hasMezzanine?: boolean;
+  propertyNo?: string;
+  buildingName?: string;
+  noOfBuildings?: number;
   locationData?: LocationData;
   owners?: Owner[];
   propertyAddress?: Address;
@@ -170,10 +183,18 @@ export interface PropertyDraftResponse {
 
 export interface UpdatePropertyRequest {
   propertyId: string;
+  applicationId: string;
+  isVerifying: boolean;
   ownershipType: string;
   propertyType: string;
   complexName: string;
   address: Address;
+  typeOfLand: string;
+  noOfFloors: number;
+  buildingName?: string;
+  noOfBuildings?: number;
+  noOfBasements: number;
+  hasMezzanine?: boolean;
   propertyNo: string;
 }
 
@@ -183,17 +204,20 @@ export interface PropertyBasicsResponse {
     PropertyNo: string;
     OwnershipType: string;
     PropertyType: string;
+    TypeOfLand: string;
+    buildingName?: string;
+    noOfBuildings?: string;
     ComplexName: string;
-    Address: any | null;
-    AssessmentDetails: any | null;
-    Amenities: any | null;
-    ConstructionDetails: any | null;
-    AdditionalDetails: any | null;
-    GISData: any | null;
+    Address: any;
+    AssessmentDetails: any;
+    Amenities: any;
+    ConstructionDetails: any;
+    AdditionalDetails: any;
+    GISData: any;
     CreatedAt: string;
     UpdatedAt: string;
-    Documents: any | null;
-    IGRS: any | null;
+    Documents: any;
+    IGRS: any;
   };
   message: string;
   success: boolean;
@@ -209,6 +233,12 @@ export interface PropertyDetailsResponse {
     PropertyType: string;
     ComplexName: string;
     Owners: Owner[] | null;
+    TypeOfLand: string;
+    NoOfFloors: number | null;
+    NoOfBasements?: number;
+    NoOfBuildings?: number;
+    BuildingName: string | null;
+    HasMezzanine?: boolean;
     Address: {
       ID: string;
       Locality: string;
@@ -350,19 +380,15 @@ export const propertyApi = apiSlice.injectEndpoints({
       query: (data) => ({
         url: '/v1/properties',
         method: 'POST',
-        body: {
-          ownershipType: data.ownershipType,
-          propertyType: data.propertyType,
-          complexName: data.complexName
-        },
+        body: data,
       }),
       invalidatesTags: ['Property'],
     }),
 
     // Update the existing property by ID
     updateProperty: builder.mutation<UpdatePropertyResponse, UpdatePropertyRequest>({
-      query: ({ propertyId, ...body }) => ({
-        url: `/v1/properties/${propertyId}`,
+      query: ({ propertyId, applicationId, isVerifying, ...body }) => ({
+        url: `/v1/properties/${propertyId}/${applicationId}?isVerifying=${isVerifying}`,
         method: 'PUT',
         body,
       }),

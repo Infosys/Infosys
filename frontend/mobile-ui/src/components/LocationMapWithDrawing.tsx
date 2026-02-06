@@ -18,20 +18,27 @@ import locatePropertyIcon from '../app/assets/Agent/PropertyMarker.svg';
 const MAPTILER_STYLE =
   'https://api.maptiler.com/maps/base-v4/style.json?key=YguiTF06mLtcpSVKIQyc';
 
+// Constants
+const COORDINATE_EPSILON = 1e-7;
+const AREA_EPSILON = 1e-9;
+const GEOCODE_DEBOUNCE_MS = 1000;
+const MAP_ZOOM_LEVEL = 16;
+const MARKER_SIZE = 36;
+const PAN_DURATION = 500;
+
 // Props types adjusted to be generic (no Leaflet dependency)
 interface LocationMapWithDrawingProps {
   center: [number, number];
   onLocationUpdate: (lat: number, lng: number, address: string) => void;
-  addressLabel?: string;
-  onShapeDrawn?: (shapeData: any) => void;
+  onShapeDrawn?: (shapeData: ShapeData) => void;
   initialShapes?: Array<{
     type: 'polyline' | 'rectangle' | 'polygon' | 'point';
     coordinates: number[] | number[][];
     area?: number;
   }>;
   readOnly?: boolean;
-  externalMapRef?: React.MutableRefObject<any | null>;
-  externalFinishRef?: React.MutableRefObject<{
+  externalMapRef?: React.RefObject<maplibregl.Map | null>;
+  externalFinishRef?: React.RefObject<{
     finish?: () => void;
     start?: () => void;
     clear?: () => void;
@@ -53,29 +60,42 @@ interface ShapeData {
 
 type DrawingTool = 'polygon' | null;
 
+const buildAddressParts = (props: GeoJsonProperties | null): string[] => {
+  const parts: string[] = [];
+  if (!props) return parts;
+  if (props.housenumber) parts.push(props.housenumber);
+  if (props.street) parts.push(props.street);
+  if (props.district) parts.push(props.district);
+  if (props.city) parts.push(props.city);
+  if (props.state) parts.push(props.state);
+  return parts;
+};
+
 const getReverseGeocodedAddress = async (lat: number, lng: number): Promise<string> => {
   try {
     const response = await fetch(
       `https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}`
     );
-    if (response.ok) {
-      const data = await response.json();
-      if (data.features && data.features.length > 0) {
-        const props = data.features[0].properties || {};
-        const parts: string[] = [];
-        if (props.housenumber) parts.push(props.housenumber);
-        if (props.street) parts.push(props.street);
-        if (props.district) parts.push(props.district);
-        if (props.city) parts.push(props.city);
-        if (props.state) parts.push(props.state);
-        if (parts.length) return parts.join(', ');
-        if (props.name) return props.name;
-      }
+    if (!response.ok) {
+      return `Location: ${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`;
     }
-  } catch (e) {
-    console.warn('Geocoding failed', e);
+    
+    const data = await response.json();
+    const features = data.features;
+    if (!features?.length) {
+      return `Location: ${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`;
+    }
+
+    const props = features[0].properties || {};
+    const parts = buildAddressParts(props);
+    
+    if (parts.length) return parts.join(', ');
+    if (props.name) return props.name;
+    
+    return `Location: ${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`;
+  } catch {
+    return `Location: ${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`;
   }
-  return `Location: ${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`;
 };
 
 const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
@@ -84,7 +104,6 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
   onShapeDrawn,
   initialShapes = [],
   readOnly = false,
-  // addressLabel,
   externalMapRef,
   externalFinishRef,
   onClearAll,
@@ -94,7 +113,7 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
-  const debounceTimeoutRef = useRef<number | null>(null);
+  const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const programmaticPanRef = useRef<boolean>(false);
   const [activeTool, setActiveTool] = useState<DrawingTool>(null);
   const isDrawingRef = useRef<boolean>(false);
@@ -108,7 +127,8 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
   // Marker refs for MapLibre markers that are tied to geocoordinates
   const readOnlyMarkerRef = useRef<maplibregl.Marker | null>(null);
   const centroidMarkerRef = useRef<maplibregl.Marker | null>(null);
-  const createMarkerElement = (iconSrc: string, size = 36) => {
+  
+  const createMarkerElement = (iconSrc: string, size = MARKER_SIZE) => {
     const wrapper = document.createElement('div');
     wrapper.style.lineHeight = '0';
     wrapper.style.pointerEvents = 'auto';
@@ -123,38 +143,51 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
 
   // helpers
   const computePolygonCentroid = (coords: [number, number][]) => {
-    const pts = coords.map(([lat, lng]) => ({ x: lng, y: lat }));
+    const points = coords.map(([lat, lng]) => ({ xCoord: lng, yCoord: lat }));
     let twiceArea = 0;
     let xSum = 0;
     let ySum = 0;
-    for (let i = 0; i < pts.length; i++) {
-      const j = (i + 1) % pts.length;
-      const cross = pts[i].x * pts[j].y - pts[j].x * pts[i].y;
-      twiceArea += cross;
-      xSum += (pts[i].x + pts[j].x) * cross;
-      ySum += (pts[i].y + pts[j].y) * cross;
+    
+    for (let pointIndex = 0; pointIndex < points.length; pointIndex++) {
+      const nextIndex = (pointIndex + 1) % points.length;
+      const crossProduct = points[pointIndex].xCoord * points[nextIndex].yCoord - 
+                          points[nextIndex].xCoord * points[pointIndex].yCoord;
+      twiceArea += crossProduct;
+      xSum += (points[pointIndex].xCoord + points[nextIndex].xCoord) * crossProduct;
+      ySum += (points[pointIndex].yCoord + points[nextIndex].yCoord) * crossProduct;
     }
+    
     const area = twiceArea / 2;
-    if (Math.abs(area) < 1e-9) {
-      const avg = pts.reduce((acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }), {
-        x: 0,
-        y: 0,
-      });
-      return { lat: avg.y / pts.length, lng: avg.x / pts.length };
+    
+    if (Math.abs(area) < AREA_EPSILON) {
+      const average = points.reduce(
+        (accumulator, point) => ({ 
+          xCoord: accumulator.xCoord + point.xCoord, 
+          yCoord: accumulator.yCoord + point.yCoord 
+        }), 
+        { xCoord: 0, yCoord: 0 }
+      );
+      return { 
+        lat: average.yCoord / points.length, 
+        lng: average.xCoord / points.length 
+      };
     }
-    const cx = xSum / (6 * area);
-    const cy = ySum / (6 * area);
-    return { lat: cy, lng: cx };
+    
+    const centroidX = xSum / (6 * area);
+    const centroidY = ySum / (6 * area);
+    return { lat: centroidY, lng: centroidX };
   };
 
   const calculatePolygonArea = (coordinates: [number, number][]): number => {
     if (coordinates.length < 3) return 0;
+    
     let area = 0;
-    for (let i = 0; i < coordinates.length; i++) {
-      const j = (i + 1) % coordinates.length;
-      area += coordinates[i][0] * coordinates[j][1];
-      area -= coordinates[j][0] * coordinates[i][1];
+    for (let coordIndex = 0; coordIndex < coordinates.length; coordIndex++) {
+      const nextIndex = (coordIndex + 1) % coordinates.length;
+      area += coordinates[coordIndex][0] * coordinates[nextIndex][1];
+      area -= coordinates[nextIndex][0] * coordinates[coordIndex][1];
     }
+    
     return Math.abs(area / 2) * 111320 * 111320;
   };
 
@@ -171,7 +204,7 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
       container: containerRef.current,
       style: MAPTILER_STYLE,
       center: [center[1], center[0]],
-      zoom: 16,
+      zoom: MAP_ZOOM_LEVEL,
       attributionControl: false,
     });
 
@@ -213,16 +246,19 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
     });
 
     // click handler
-    const onMapClick = (e: maplibregl.MapMouseEvent) => {
-      const lng = e.lngLat.lng;
-      const lat = e.lngLat.lat;
+    const onMapClick = (event: maplibregl.MapMouseEvent) => {
+      const longitude = event.lngLat.lng;
+      const latitude = event.lngLat.lat;
+      
       if (activeToolRef.current === 'polygon' && isDrawingRef.current) {
-        setCurrentPath((prev) => {
-          const last = prev[prev.length - 1];
-          const eps = 1e-7;
-          if (last && Math.abs(last[0] - lat) < eps && Math.abs(last[1] - lng) < eps)
-            return prev;
-          return [...prev, [lat, lng]];
+        setCurrentPath((previousPath) => {
+          const lastPoint = previousPath.at(-1);
+          if (lastPoint && 
+              Math.abs(lastPoint[0] - latitude) < COORDINATE_EPSILON && 
+              Math.abs(lastPoint[1] - longitude) < COORDINATE_EPSILON) {
+            return previousPath;
+          }
+          return [...previousPath, [latitude, longitude]];
         });
       }
     };
@@ -235,32 +271,33 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
         programmaticPanRef.current = false;
         return;
       }
+      
       const centerLngLat = map.getCenter();
-      const lat = centerLngLat.lat;
-      const lng = centerLngLat.lng;
-      if (debounceTimeoutRef.current) window.clearTimeout(debounceTimeoutRef.current);
-      debounceTimeoutRef.current = window.setTimeout(async () => {
+      const latitude = centerLngLat.lat;
+      const longitude = centerLngLat.lng;
+      
+      if (debounceTimeoutRef.current) {
+        globalThis.clearTimeout(debounceTimeoutRef.current);
+      }
+      
+      debounceTimeoutRef.current = globalThis.setTimeout(async () => {
         try {
-          const address = await getReverseGeocodedAddress(lat, lng);
-          onLocationUpdate(lat, lng, address);
-        } catch (err) {
-          onLocationUpdate(lat, lng, `${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+          const address = await getReverseGeocodedAddress(latitude, longitude);
+          onLocationUpdate(latitude, longitude, address);
+        } catch {
+          onLocationUpdate(latitude, longitude, `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
         }
-      }, 1000);
+      }, GEOCODE_DEBOUNCE_MS);
     };
     map.on('moveend', onMoveEnd);
 
     // movestart unlock handling
     const onMoveStart = () => {
-      try {
-        if (locationLocked && !programmaticPanRef.current) {
-          setLocationLocked(false);
-          if (onLocationLockChange) onLocationLockChange(false);
-        }
-        if (typeof onMapMoveStart === 'function') onMapMoveStart();
-      } catch (e) {
-        /* ignore */
+      if (locationLocked && !programmaticPanRef.current) {
+        setLocationLocked(false);
+        onLocationLockChange?.(false);
       }
+      onMapMoveStart?.();
     };
     map.on('movestart', onMoveStart);
 
@@ -272,7 +309,7 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
       map.off('click', onMapClick);
       map.off('moveend', onMoveEnd);
       map.off('movestart', onMoveStart);
-      if (debounceTimeoutRef.current) window.clearTimeout(debounceTimeoutRef.current);
+      if (debounceTimeoutRef.current) globalThis.clearTimeout(debounceTimeoutRef.current);
       if (externalMapRef) externalMapRef.current = null;
       map.remove();
       mapRef.current = null;
@@ -284,6 +321,7 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
   useEffect(() => {
     isDrawingRef.current = isDrawing;
   }, [isDrawing]);
+  
   useEffect(() => {
     activeToolRef.current = activeTool;
   }, [activeTool]);
@@ -291,23 +329,23 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
   // Load initialShapes into drawnShapes state and compute centroid
   useEffect(() => {
     if (!initialShapes || initialShapes.length === 0) return;
+    
     const shapes = initialShapes
-      .filter((s) => s.type !== 'polyline')
-      .map(
-        (s, i) =>
-          ({
-            id: `initial_${s.type}_${i}`,
-            type: s.type === 'polygon' ? 'polygon' : 'polygon',
-            coordinates: s.coordinates,
-            area: (s as any).area,
-            address: (s as any).address,
-          } as ShapeData)
-      );
+      .filter((shape) => shape.type !== 'polyline')
+      .map((shape, shapeIndex) => ({
+        id: `initial_${shape.type}_${shapeIndex}`,
+        type: 'polygon' as const,
+        coordinates: shape.coordinates,
+        area: (shape as ShapeData).area,
+        address: (shape as ShapeData).address,
+      }));
+    
     setDrawnShapes(shapes);
-    const polygon = shapes.find((sh) => sh.type === 'polygon');
-    if (polygon && polygon.coordinates) {
+    
+    const polygon = shapes.find((shape) => shape.type === 'polygon');
+    if (polygon?.coordinates) {
       const coords = polygon.coordinates as number[][];
-      const latLngCoords = coords.map(([lng, lat]) => [lat, lng]) as [number, number][];
+      const latLngCoords = coords.map(([lng, lat]) => [lat, lng] as [number, number]);
       const centroid = computePolygonCentroid(latLngCoords);
       setPolygonCentroid([centroid.lat, centroid.lng]);
     }
@@ -317,7 +355,8 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
   // Keep map sources in sync with drawnShapes
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !map.isStyleLoaded()) return;
+    if (!map?.isStyleLoaded()) return;
+    
     const features: Feature<Polygon, GeoJsonProperties>[] = drawnShapes.map((shape) => {
       const coords = (shape.coordinates as number[][]).map(([lng, lat]) => [lng, lat]);
       return {
@@ -326,87 +365,93 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
         properties: { id: shape.id, address: shape.address, area: shape.area },
       } as Feature<Polygon, GeoJsonProperties>;
     });
-    const geo: FeatureCollection<Polygon, GeoJsonProperties> = {
+    
+    const geoJsonCollection: FeatureCollection<Polygon, GeoJsonProperties> = {
       type: 'FeatureCollection',
       features,
     };
-    const src = map.getSource('drawnShapes') as maplibregl.GeoJSONSource | undefined;
-    if (src) {
-      src.setData(geo as any);
-    }
+    
+    const source = map.getSource('drawnShapes') as maplibregl.GeoJSONSource;
+    source?.setData(geoJsonCollection as GeoJSON.GeoJSON);
   }, [drawnShapes]);
 
   // Update currentPath source (line) while drawing
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !map.isStyleLoaded()) return;
-    const src = map.getSource('currentPath') as maplibregl.GeoJSONSource | undefined;
+    if (!map?.isStyleLoaded()) return;
+    
+    const source = map.getSource('currentPath') as maplibregl.GeoJSONSource;
 
     if (currentPath.length === 0) {
-      const emptyGeo: FeatureCollection<LineString, GeoJsonProperties> = {
+      const emptyGeoJson: FeatureCollection<LineString, GeoJsonProperties> = {
         type: 'FeatureCollection',
         features: [],
       };
-      if (src) src.setData(emptyGeo as any);
+      source?.setData(emptyGeoJson as GeoJSON.GeoJSON);
       return;
     }
+    
     const coords = currentPath.map(([lat, lng]) => [lng, lat]);
     const lineFeature: Feature<LineString, GeoJsonProperties> = {
       type: 'Feature',
       geometry: { type: 'LineString', coordinates: coords },
       properties: {},
     };
-    const geo: FeatureCollection<LineString, GeoJsonProperties> = {
+    
+    const geoJsonCollection: FeatureCollection<LineString, GeoJsonProperties> = {
       type: 'FeatureCollection',
       features: [lineFeature],
     };
-    if (src) src.setData(geo as any);
+    
+    source?.setData(geoJsonCollection as GeoJSON.GeoJSON);
   }, [currentPath]);
 
   // finish drawing and create polygon
   const finishShape = async () => {
     if (currentPath.length < 3) return;
-    const eps = 1e-7;
-    const filtered: [number, number][] = [];
-    for (const pt of currentPath) {
-      const last = filtered[filtered.length - 1];
-      if (last && Math.abs(last[0] - pt[0]) < eps && Math.abs(last[1] - pt[1]) < eps)
+    
+    const filteredPoints: [number, number][] = [];
+    for (const point of currentPath) {
+      const lastPoint = filteredPoints.at(-1);
+      if (lastPoint && 
+          Math.abs(lastPoint[0] - point[0]) < COORDINATE_EPSILON && 
+          Math.abs(lastPoint[1] - point[1]) < COORDINATE_EPSILON) {
         continue;
-      filtered.push(pt);
+      }
+      filteredPoints.push(point);
     }
-    if (filtered.length < 3) return;
-    const centroid = computePolygonCentroid(filtered);
+    
+    if (filteredPoints.length < 3) return;
+    
+    const centroid = computePolygonCentroid(filteredPoints);
     const centroidAddress = await getReverseGeocodedAddress(centroid.lat, centroid.lng);
+    const area = calculatePolygonArea(filteredPoints);
+    
     const shapeData: ShapeData = {
       type: 'polygon',
-      coordinates: filtered.map(([lat, lng]) => [lng, lat]),
+      coordinates: filteredPoints.map(([lat, lng]) => [lng, lat]),
       id: `polygon_${Date.now()}`,
       address: centroidAddress,
       addedAt: new Date().toISOString(),
+      area,
     };
-    const area = calculatePolygonArea(filtered);
-    shapeData.area = area;
-    setDrawnShapes((prev) => [...prev, shapeData]);
+    
+    setDrawnShapes((previousShapes) => [...previousShapes, shapeData]);
     setPolygonCentroid([centroid.lat, centroid.lng]);
     setLocationLocked(true);
-    if (onLocationLockChange) onLocationLockChange(true);
-    if (onShapeDrawn) onShapeDrawn(shapeData);
-    try {
-      onLocationUpdate(centroid.lat, centroid.lng, centroidAddress);
-    } catch (e) {
-      console.log(e);
-
-      /* ignore */
-    }
+    onLocationLockChange?.(true);
+    onShapeDrawn?.(shapeData);
+    onLocationUpdate(centroid.lat, centroid.lng, centroidAddress);
+    
     // pan map to centroid programmatically
-    try {
-      if (mapRef.current) {
-        programmaticPanRef.current = true;
-        mapRef.current.easeTo({ center: [centroid.lng, centroid.lat], duration: 500 });
-      }
-    } catch (e) {
-      console.log(e);
+    if (mapRef.current) {
+      programmaticPanRef.current = true;
+      mapRef.current.easeTo({ 
+        center: [centroid.lng, centroid.lat], 
+        duration: PAN_DURATION 
+      });
     }
+    
     setCurrentPath([]);
     setActiveTool(null);
     setIsDrawing(false);
@@ -416,7 +461,7 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
   useEffect(() => {
     if (externalFinishRef) {
       externalFinishRef.current = {
-        finish: () => finishShape(),
+        finish: () => { void finishShape(); },
         start: () => {
           setActiveTool('polygon');
           setIsDrawing(true);
@@ -426,8 +471,8 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
           setCurrentPath([]);
           setPolygonCentroid(null);
           setLocationLocked(false);
-          if (onLocationLockChange) onLocationLockChange(false);
-          if (onClearAll) onClearAll();
+          onLocationLockChange?.(false);
+          onClearAll?.();
         },
       };
     }
@@ -439,7 +484,7 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
 
   // start drawing if requested
   useEffect(() => {
-    if (typeof startDrawing !== 'undefined' && startDrawing) {
+    if (startDrawing) {
       setActiveTool('polygon');
       setIsDrawing(true);
     }
@@ -451,7 +496,8 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
     if (!map) return;
 
     const ensureReadOnlyMarker = () => {
-      const coords = { lat: center[0], lng: center[1] };
+      const coordinates = { lat: center[0], lng: center[1] };
+      
       if (!readOnly) {
         if (readOnlyMarkerRef.current) {
           readOnlyMarkerRef.current.remove();
@@ -459,15 +505,17 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
         }
         return;
       }
-      const el = createMarkerElement(locatePropertyIcon, 36);
+      
+      const element = createMarkerElement(locatePropertyIcon, 36);
+      
       if (readOnlyMarkerRef.current) {
-        readOnlyMarkerRef.current.setLngLat([coords.lng, coords.lat]);
+        readOnlyMarkerRef.current.setLngLat([coordinates.lng, coordinates.lat]);
       } else {
         readOnlyMarkerRef.current = new maplibregl.Marker({
-          element: el,
+          element,
           anchor: 'bottom',
         })
-          .setLngLat([coords.lng, coords.lat])
+          .setLngLat([coordinates.lng, coordinates.lat])
           .addTo(map);
       }
     };
@@ -480,16 +528,18 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
         }
         return;
       }
-      const coords = { lat: polygonCentroid[0], lng: polygonCentroid[1] };
-      const el = createMarkerElement(locatePropertyIcon, 36);
+      
+      const coordinates = { lat: polygonCentroid[0], lng: polygonCentroid[1] };
+      const element = createMarkerElement(locatePropertyIcon, 36);
+      
       if (centroidMarkerRef.current) {
-        centroidMarkerRef.current.setLngLat([coords.lng, coords.lat]);
+        centroidMarkerRef.current.setLngLat([coordinates.lng, coordinates.lat]);
       } else {
         centroidMarkerRef.current = new maplibregl.Marker({
-          element: el,
+          element,
           anchor: 'bottom',
         })
-          .setLngLat([coords.lng, coords.lat])
+          .setLngLat([coordinates.lng, coordinates.lat])
           .addTo(map);
       }
     };
@@ -508,17 +558,14 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
 
     ensureReadOnlyMarker();
     ensureCentroidMarker();
-
-    // cleanup on unmount or when dependencies change
-    return () => {
-      // keep markers if they should persist until explicitly removed by their own effects
-    };
   }, [mapRef.current, readOnly, center, polygonCentroid]);
 
   // cleanup debounce on unmount
   useEffect(() => {
     return () => {
-      if (debounceTimeoutRef.current) window.clearTimeout(debounceTimeoutRef.current);
+      if (debounceTimeoutRef.current) {
+        globalThis.clearTimeout(debounceTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -530,7 +577,6 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
         style={{ width: '100%', height: '100%' }}
         data-testid="maplibre-map"
       />
-      {/* Marker elements are rendered as maplibre-gl Markers bound to coordinates (see effect above) */}
     </div>
   );
 };
