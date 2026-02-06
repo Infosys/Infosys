@@ -4,7 +4,7 @@
 import React from "react";
 import { Box, TextField, InputAdornment, Typography } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import FilterListIcon from "@mui/icons-material/FilterList";
+import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined';
 import {
   searchBarStyle,
   inputPropsStyle,
@@ -61,34 +61,11 @@ export const SearchBarWithFilter: React.FC<SearchBarWithFilterProps> = ({
 
       {/* Filter Row: displays a filter icon and label */}
       <Box sx={filterRowStyle}>
-        <FilterListIcon sx={{ fontSize: 28, color: "#807b78", mr: 1 }} />
+        <FilterAltOutlinedIcon sx={{ fontSize: 24, color: "#807b78", mr: 0.5 }} />
         <Typography sx={filterLabelStyle}>
           {filterLabel}
         </Typography>
       </Box>
-
-      {/* Filter Chip: (currently commented out) would show active filter and allow removal */}
-      {/* {filterValue && (
-        <Chip
-          label={
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <Typography sx={chipLabelStyle}>
-                {filterValue}
-              </Typography>
-              <IconButton
-                size="small"
-                sx={{ p: 0, ml: 0.5 }}
-                onClick={onFilterRemove}
-                aria-label="remove filter"
-              >
-                <CloseIcon sx={{ fontSize: 20, color: "#807b78" }} />
-              </IconButton>
-            </Box>
-          }
-          sx={chipStyle}
-          onDelete={onFilterRemove}
-        />
-      )} */}
     </Box>
   );
 };

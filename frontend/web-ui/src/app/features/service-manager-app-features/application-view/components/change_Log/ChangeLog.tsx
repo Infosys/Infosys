@@ -1,8 +1,9 @@
 // This component displays a change log/history for a property, including application previews and a timeline of key events.
 // It uses static mock data for demonstration and renders cards for preview and application history.
-import _React from "react";
 import { Box, Typography, Button } from "@mui/material";
-import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import {
 applicatonHistoryStyle,
   previewBoxCardStyle,
@@ -58,14 +59,14 @@ export default function SearchPropertyChangeLog() {
       <Box className="preview-box card" sx={previewBoxCardStyle}>
         <Box className="preview-centered" sx={previewCenteredStyle}>
           <Box className="preview-icon" sx={previewIconStyle}>
-            <VisibilityIcon fontSize="inherit" />
-          </Box>
-          <Typography variant="h6" sx={{ mb: 0.5 }}>
+           <VisibilityOutlinedIcon fontSize="inherit" />
+          <Typography variant="h6">
             Preview Application
           </Typography>
           <Typography className="preview-sub" sx={previewSubStyle}>
             view application selected from Logs
           </Typography>
+          </Box>
         </Box>
       </Box>
 
@@ -82,9 +83,9 @@ export default function SearchPropertyChangeLog() {
 
         <Box className="history-card-list">
           {/* Render each history event as a timeline card */}
-          {history.map((h, idx) => (
+          {history.map((h) => (
             <Box
-              key={idx}
+              key={h.id || h.mutation || `${h.year}-${h.event || h.action}`}
               className="history-item"
               sx={historyItemStyle}
             >
@@ -132,7 +133,8 @@ export default function SearchPropertyChangeLog() {
                     )}
                     {/* Button to view location for this event */}
                     <Button className="btn view-Location" sx={viewLocationButtonStyle}>
-                      View Location
+                      <OpenInNewIcon sx={{ fontSize: 13, mr: 1 }} /> 
+                      <span >View Location</span>
                     </Button>
                   </Box>
                 </Box>
@@ -147,6 +149,7 @@ export default function SearchPropertyChangeLog() {
                   )}
                   {/* Button to download documents for this event */}
                   <Button className="btn download" sx={downloadButtonStyle}>
+                    <FileDownloadOutlinedIcon sx={{ fontSize: 15, mr: 1}} />
                     Download
                   </Button>
                 </Box>

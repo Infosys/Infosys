@@ -99,13 +99,13 @@ export const CommissionerSidebar: React.FC<CommissionerSidebarProps> = ({
               sx={style.primaryListItem(open)}
             >
               <Tooltip
-                title={!open ? item.label : ''}
+                title={open ? '' : item.label}
                 placement="right"
                 arrow
               >
                 <ListItemButton
                   onClick={() => onSelectNav(item.key)}
-                  sx={style.navListItemButton(selectedNav === item.key, open, undefined)}
+                  sx={style.navListItemButton(selectedNav === item.key, open)}
                 >
                   <ListItemIcon sx={style.listItemIcon(open)}>
                     {item.icon}
@@ -142,7 +142,7 @@ export const CommissionerSidebar: React.FC<CommissionerSidebarProps> = ({
               disablePadding
               sx={style.secondaryListItem(open)}
             >
-              <Tooltip title={!open ? item.label : ''} placement="right" arrow>
+              <Tooltip title={open ? '' : item.label} placement="right" arrow>
                 <ListItemButton
                   ref={isProfile ? profileButtonRef : undefined}
                   onClick={() => {
@@ -152,7 +152,7 @@ export const CommissionerSidebar: React.FC<CommissionerSidebarProps> = ({
                       onProfileClick(profileButtonRef.current);
                     }
                   }}
-                  sx={style.navListItemButtonSecondary(isSelected, open, undefined)}
+                  sx={style.navListItemButtonSecondary(isSelected, open)}
                 >
                   <ListItemIcon sx={style.listItemIconSecondary(open)}>
                     {item.icon}

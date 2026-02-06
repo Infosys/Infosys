@@ -74,7 +74,7 @@ export const ApplicationInboxAssignmentModal = ({
   };
 
   // RTK Query mutation hook for assigning an application
-  const [assignApplication, {isLoading: isAssigning}] = useAssignApplicationMutation();
+  const [assignApplication, { isLoading: isAssigning }] = useAssignApplicationMutation();
 
   // Handler for assigning the application to an agent
   const handleAssign = async () => {
@@ -163,7 +163,7 @@ export const ApplicationInboxAssignmentModal = ({
             <Typography sx={fieldLabelSx}>Notify Agent via SMS</Typography>
             <ApplicationInboxToggleButton
               checked={notifySMS}
-              onChange={(val: boolean) => setNotifySMS(val)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNotifySMS(e.target.checked)}
             />
           </Box>
 

@@ -20,7 +20,7 @@ import type {
   EditAddressResponse,
   EditAddressRequest,
 } from "../../model/editAplicaiton-models/editApplicaitonModles";
-import type { Property } from "../../model/applicationByIdModel";
+
 
 
 /**
@@ -33,25 +33,25 @@ export const editApplicationApi = apiSlice.injectEndpoints({
     /**
      * Edits the main property application details.
      */
-    editApplication: builder.mutation<
-      EditOwnerResponse,
-      { property: Property }
-    >({
-      query: ({ property }) => ({
-        url: `/v1/properties/${property.ID}`,
-        method: "PUT",
-        headers: {
-          "X-Tenant-ID": "pb.amritsar",
-        },
-        body: {
-          ...property,
-        },
-      }),
-      // Invalidate the cache for the edited application
-      invalidatesTags: (_result, _error, { property }) => [
-        { type: TAG_TYPES.APPLICATIONS, id: property.ID },
-      ],
-    }),
+    // editApplication: builder.mutation<
+    //   EditOwnerResponse,
+    //   { property: Property; applicationId: string }
+    // >({
+    //   query: ({ property, applicationId }) => ({
+    //     url: `/v1/propertiesEDIT/${property.ID}/${applicationId}?isVerifying=true`,
+    //     method: "PUT",
+    //     headers: {
+    //       "X-Tenant-ID": "pb.amritsar",
+    //     },
+    //     body: {
+    //       ...property,
+    //     },
+    //   }),
+    //   // Invalidate the cache for the edited application
+    //   invalidatesTags: (_result, _error, { property }) => [
+    //     { type: TAG_TYPES.APPLICATIONS, id: property.ID },
+    //   ],
+    // }),
 
     // --- Edit Owner Details ---
     /**
@@ -59,19 +59,19 @@ export const editApplicationApi = apiSlice.injectEndpoints({
      */
     editOwner: builder.mutation<
       EditOwnerResponse,
-      { id: string; owner: Omit<EditOwnerRequest, "ID"> }
+      { id: string; owner: Omit<EditOwnerRequest, "ID">, applicationId: string }
     >({
-      query: ({ id, owner }) => ({
-        url: `/v1/property-owners/${id}`,
+      query: ({ id, owner, applicationId }) => ({
+        url: `/v1/property-owners/${id}/${applicationId}?isVerifying=true`,
         method: "PUT",
         headers: {
           "X-Tenant-ID": "pb.amritsar",
         },
         body: owner,
       }),
-      // Invalidate the cache for the edited owner's application
-      invalidatesTags: (_result, _error, { owner }) => [
-        { type: TAG_TYPES.APPLICATIONS, id: owner.propertyId },
+      // Invalidate the cache for the edited application
+      invalidatesTags: (_result, _error) => [
+        { type: TAG_TYPES.APPLICATION },
       ],
     }),
 
@@ -85,19 +85,20 @@ export const editApplicationApi = apiSlice.injectEndpoints({
         id: string;
         propertyId: string;
         additionalDetails: EditAdditionalDetailsRequest;
+        applicationId: string;
       }
     >({
-      query: ({ id, additionalDetails }) => ({
-        url: `/v1/additional-property-details/${id}`,
+      query: ({ id, additionalDetails, applicationId }) => ({
+        url: `/v1/additional-property-details/${id}/${applicationId}?isVerifying=true`,
         method: "PUT",
         headers: {
           "X-Tenant-ID": "pb.amritsar",
         },
         body: additionalDetails,
       }),
-      // Invalidate the cache for the edited property's application
-      invalidatesTags: (_result, _error, { propertyId }) => [
-        { type: TAG_TYPES.APPLICATIONS, id: propertyId },
+      // Invalidate the cache for the edited application
+      invalidatesTags: (_result, _error, { applicationId }) => [
+        { type: TAG_TYPES.APPLICATION, id: applicationId },
       ],
     }),
 
@@ -107,10 +108,10 @@ export const editApplicationApi = apiSlice.injectEndpoints({
      */
     editAmenities: builder.mutation<
       EditAmenitiesResponse,
-      { id: string; propertyId: string; amenities: EditAmenitiesRequest }
+      { id: string; propertyId: string; amenities: EditAmenitiesRequest; applicationId: string }
     >({
-      query: ({ id, amenities }) => ({
-        url: `/v1/amenities/${id}`,
+      query: ({ id, amenities, applicationId }) => ({
+        url: `/v1/amenities/${id}/${applicationId}?isVerifying=true`,
         method: "PUT",
         headers: {
           "X-Tenant-ID": "pb.amritsar",
@@ -120,9 +121,9 @@ export const editApplicationApi = apiSlice.injectEndpoints({
           type: amenities.type,
         },
       }),
-      // Invalidate the cache for the edited property's application
-      invalidatesTags: (_result, _error, { propertyId }) => [
-        { type: TAG_TYPES.APPLICATIONS, id: propertyId },
+      // Invalidate the cache for the edited application
+      invalidatesTags: (_result, _error, { applicationId }) => [
+        { type: TAG_TYPES.APPLICATION, id: applicationId },
       ],
     }),
 
@@ -132,19 +133,19 @@ export const editApplicationApi = apiSlice.injectEndpoints({
      */
     editAssessment: builder.mutation<
       EditAssessmentResponse,
-      { id: string; body: EditAssessmentRequest }
+      { id: string; body: EditAssessmentRequest; applicationId: string }
     >({
-      query: ({ id, body }) => ({
-        url: `/v1/assessment-details/${id}`,
+      query: ({ id, body, applicationId }) => ({
+        url: `/v1/assessment-details/${id}/${applicationId}?isVerifying=true`,
         method: "PUT",
         headers: {
           "X-Tenant-ID": "pb.amritsar",
         },
         body,
       }),
-      // Invalidate the cache for the edited property's application
-      invalidatesTags: (_result, _error, { body }) => [
-        { type: TAG_TYPES.APPLICATIONS, id: body.PropertyID },
+      // Invalidate the cache for the edited application
+      invalidatesTags: (_result, _error, { applicationId }) => [
+        { type: TAG_TYPES.APPLICATION, id: applicationId },
       ],
     }),
 
@@ -154,19 +155,19 @@ export const editApplicationApi = apiSlice.injectEndpoints({
      */
     editIGRS: builder.mutation<
       EditIGRSResponse,
-      { id: string; body: EditIGRSRequest }
+      { id: string; body: EditIGRSRequest; applicationId: string }
     >({
-      query: ({ id, body }) => ({
-        url: `/v1/igrs/${id}`,
+      query: ({ id, body ,applicationId}) => ({
+        url: `/v1/igrs/${id}/${applicationId}?isVerifying=true`,
         method: "PUT",
         headers: {
           "X-Tenant-ID": "pb.amritsar",
         },
         body,
       }),
-      // Invalidate the cache for the edited property's application
-      invalidatesTags: (_result, _error, { body }) => [
-        { type: TAG_TYPES.APPLICATIONS, id: body.propertyId },
+      // Invalidate the cache for the edited application
+      invalidatesTags: (_result, _error, { applicationId }) => [
+        { type: TAG_TYPES.APPLICATION, id: applicationId },
       ],
     }),
 
@@ -176,19 +177,19 @@ export const editApplicationApi = apiSlice.injectEndpoints({
      */
     editConstruction: builder.mutation<
       EditConstructionResponse,
-      { id: string; body: EditConstructionRequest }
+      { id: string; body: EditConstructionRequest; applicationId: string }
     >({
-      query: ({ id, body }) => ({
-        url: `/v1/construction-details/${id}`,
+      query: ({ id, body, applicationId }) => ({
+        url: `/v1/construction-details/${id}/${applicationId}?isVerifying=true`,
         method: "PUT",
         headers: {
           "X-Tenant-ID": "pb.amritsar",
         },
         body,
       }),
-      // Invalidate the cache for the edited property's application
-      invalidatesTags: (_result, _error, { body }) => [
-        { type: TAG_TYPES.APPLICATIONS, id: body.propertyId },
+      // Invalidate the cache for the edited application
+      invalidatesTags: (_result, _error, { applicationId }) => [
+        { type: TAG_TYPES.APPLICATION, id: applicationId },
       ],
     }),
 
@@ -197,19 +198,19 @@ export const editApplicationApi = apiSlice.injectEndpoints({
      * Edits the address details for a property.
      */
     editAddress: builder.mutation< EditAddressResponse, 
-      { id: string; body: EditAddressRequest }
+      { id: string; body: EditAddressRequest; applicationId: string }
     >({
-      query: ({ id, body }) => ({
-        url: `/v1/property-addresses/${id}`,
+      query: ({ id, body, applicationId }) => ({
+        url: `/v1/property-addresses/${id}/${applicationId}?isVerifying=true`,
         method: "PUT",
         headers: {
           "X-Tenant-ID": "pb.amritsar",
         },
         body,
       }),
-      // Invalidate the cache for the edited property's application
-      invalidatesTags: (_result, _error, { body }) => [
-        { type: TAG_TYPES.APPLICATIONS, id: body.propertyId },
+      // Invalidate the cache for the edited application
+      invalidatesTags: (_result, _error, { applicationId }) => [
+        { type: TAG_TYPES.APPLICATION, id: applicationId },
       ],
     }),
 
@@ -219,19 +220,19 @@ export const editApplicationApi = apiSlice.injectEndpoints({
      */
     editFloor: builder.mutation<
       EditFloorResponse,
-      { id: string; body: EditFloorRequest }
+      { id: string; body: EditFloorRequest; applicationId: string }
     >({
-      query: ({ id, body }) => ({
-        url: `/v1/floor-details/${id}`,
+      query: ({ id, body, applicationId }) => ({
+        url: `/v1/floor-details/${id}/${applicationId}?isVerifying=true`,
         method: "PUT",
         headers: {
           "X-Tenant-ID": "pb.amritsar",
         },
         body,
       }),
-      // Invalidate the cache for the edited property's application
-      invalidatesTags: (_result, _error, { body }) => [
-        { type: TAG_TYPES.APPLICATIONS, id: body.propertyId },
+      // Invalidate the cache for the edited application
+      invalidatesTags: (_result, _error, { applicationId }) => [
+        { type: TAG_TYPES.APPLICATION, id: applicationId },
       ],
     }),
   }),
@@ -241,7 +242,7 @@ export const editApplicationApi = apiSlice.injectEndpoints({
 
 // Export hooks for each mutation endpoint for use in React components
 export const {
-  useEditApplicationMutation,
+  // useEditApplicationMutation,
   useEditAdditionalDetailsMutation,
   useEditAddressMutation,
   useEditAmenitiesMutation,

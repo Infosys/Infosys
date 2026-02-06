@@ -72,47 +72,41 @@ const EditIGSRPopover: React.FC<EditIGSRPopoverProps> = ({
       ...localFields,
       [key]: value
     });
-    if (!result.success) {
-      const fieldErrors = result.error.flatten().fieldErrors;
-      setErrors(
-        Object.fromEntries(
-          Object.entries(fieldErrors).map(([k, v]) => [k, v?.[0] || ""])
-        )
-      );
-    } else {
+    if (result.success) {
       setErrors({});
+    } else {
+      const fieldErrors: Record<string, string> = {};
+      result.error.issues.forEach(issue => {
+        const key = issue.path.at(-1)?.toString() || 'unknown';
+        if (!fieldErrors[key]) fieldErrors[key] = issue.message;
+      });
+      setErrors(fieldErrors);
     }
   };
 
   const handleSave = () => {
     const result = schema.safeParse(localFields);
-    if (!result.success) {
-      const fieldErrors = result.error.flatten().fieldErrors;
-      setErrors(
-        Object.fromEntries(
-          Object.entries(fieldErrors).map(([k, v]) => [k, v?.[0] || ""])
-        )
-      );
+    if (result.success) {
+      setErrors({});
+      onSave(localFields);
+      onClose();
       return;
     }
-    setErrors({});
-    onSave(localFields);
-    onClose();
+    
+    const fieldErrors: Record<string, string> = {};
+    result.error.issues.forEach(issue => {
+      const key = issue.path.at(-1)?.toString() || 'unknown';
+      if (!fieldErrors[key]) fieldErrors[key] = issue.message;
+    });
+    setErrors(fieldErrors);
   };
 
   return (
     <Dialog
       open={open}
       onClose={onClose}
-      PaperProps={{ sx: { p: 4, minWidth: 400, borderRadius: 3, boxShadow: 6 } }}
-      // transformOrigin={{
-      //   vertical: 'center',
-      //   horizontal: 'center',
-      // }}
-      // anchorOrigin={{
-      //   vertical: 'bottom',
-      //   horizontal: 'center',
-      // }}
+      slotProps={{ paper: { sx: { p: 4, minWidth: 400, borderRadius: 3, boxShadow: 6 } } }}
+
     >
       <Typography variant="h6" sx={{ mb: 2, fontStyle: 'italic' }}>
         Edit IGSR Details

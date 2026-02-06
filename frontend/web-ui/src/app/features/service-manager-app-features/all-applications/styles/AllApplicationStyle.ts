@@ -56,18 +56,10 @@ export const searchField = {
   bgcolor: '#fff',
   borderRadius: '24px',
   height: '40px', // Explicit height for search field
+  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.28)',
   '& .MuiOutlinedInput-root': {
-    borderRadius: '24px',
-    height: '40px', // Match the container height
-    fontFamily: 'Roboto, sans-serif',
     '& fieldset': {
-      border: '1px solid #e0e0e0',
-    },
-    '&:hover fieldset': {
-      border: '1px solid #999',
-    },
-    '&.Mui-focused fieldset': {
-      border: '1px solid #C84C0E',
+      border: 'none', // Remove default border
     },
   },
   '& .MuiOutlinedInput-input': {

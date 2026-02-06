@@ -1,7 +1,7 @@
 // This component displays a timeline of application logs (comments, actions, attachments) for a property application.
 // It allows users to add new comments (with optional file attachments) and download attached documents.
 // The component uses dialogs for adding comments and confirming submissions, and integrates with API mutations for posting logs and uploading files.
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { Box, Typography, Button, useMediaQuery, Container } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
 import DescriptionIcon from "@mui/icons-material/Description";
@@ -21,6 +21,7 @@ import ConfirmationDialog from "../property details/addRequestPopUp/confirmation
 import { usePostApplicationLogMutation } from "../../api/applicationApi";
 import { useUploadFileToFilestoreMutation } from "../../api/fileStoreApi";
 import { useAuth } from "../../../../login-signup/provider/AuthProvider";
+import env from '../../../../../../config/env';
 
 
 
@@ -48,16 +49,16 @@ interface ApplicationLog {
 
 // Props for the ApplicationTrack component
 interface ApplicationTrackProps {
-  logs: ApplicationLog[]; // List of log entries to display
-  timelineBackgroundColor?: string; // Optional color for the timeline bar
-  applicationId?: string; // Application ID for posting new logs
+  logs: ApplicationLog[];
+  timelineBackgroundColor?: string;
+  applicationId?: string; 
 }
 
 
 const ApplicationTrack: React.FC<ApplicationTrackProps> = ({ logs, applicationId, timelineBackgroundColor = "#d0d0d0" }) => {
   const { user } = useAuth();
   const isMobile = useMediaQuery("(max-width:375px)");
-  // console.log("user object:", user);
+  const logContainerRef = useRef<HTMLDivElement>(null);
 
   // Sort logs oldest to newest for timeline display
   const logItems: ApplicationLog[] = (logs ?? []).slice().sort(
@@ -97,9 +98,7 @@ const ApplicationTrack: React.FC<ApplicationTrackProps> = ({ logs, applicationId
     try {
       const Id = applicationId || "";
       const performedBy = user?.username || "";
-      // console.log("user name :", user?.username);
-      // console.log("performedBy:", performedBy);
-
+      
       let fileStoreId: string | undefined = undefined;
 
       // If a file is attached, upload it to the filestore first
@@ -108,7 +107,6 @@ const ApplicationTrack: React.FC<ApplicationTrackProps> = ({ logs, applicationId
         fileStoreId = uploadResult?.files?.[0]?.fileStoreId;
         console.log("file store id is: ", fileStoreId);
       }
-      // console.log("Performed by : ", user?.username);
       
       // 2. Post application log 
       await postApplicationLog({
@@ -126,7 +124,7 @@ const ApplicationTrack: React.FC<ApplicationTrackProps> = ({ logs, applicationId
     } catch (err) {
       console.error("Error posting comment", err);
     }
-    // console.log("comment submitted: ", pendingComment);
+    
 
     setShowSuccess(false);
     setPendingComment(null);
@@ -154,6 +152,12 @@ const ApplicationTrack: React.FC<ApplicationTrackProps> = ({ logs, applicationId
     return null;
   }
 
+  useEffect(() => {
+    if (logContainerRef.current) {
+      logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
+    }
+  }, [logs]);
+
   return (
     <Container>
       <Box sx={containerStyle(isMobile)}>
@@ -161,92 +165,120 @@ const ApplicationTrack: React.FC<ApplicationTrackProps> = ({ logs, applicationId
         <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
           {loc.applicationLogTitle}
         </Typography>
-      <Box sx={{ maxHeight: '80vh', overflowY: "auto",scrollbarWidth: "none",  overflowX: "hidden", width: "100%", mb: 2 }}>
-        {/* Show custom message if no logs */}
-        {logItems.length === 0 ? (
-          <Typography sx={{ fontSize: 16, color: "#888", mb: 2 }}>
-            No Log Found
-          </Typography>
-        ) : (
-          logItems.map((item, idx) => {
-            // console.log('FileStoreID:', item.FileStoreID);
-            let fileName = "";
-            try {
-              const meta = item.Metadata ? JSON.parse(item.Metadata) : {};
-              fileName = meta.file?.name || "";
-            } catch {}
-            return (
-              <Box key={item.ID} sx={{ display: "flex", mb: 2 }}>
-                {/* Timeline marker and vertical bar */}
-                <Box
-                  sx={{
-                    width: "32px",
-                    display: "flex",
-                    minHeight: "100%",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    position: "relative",
-                  }}
-                >
-                  <Box sx={timelineCircleStyle}>
-                    {idx + 1}
-                  </Box>
-                  {idx !== logItems.length - 1 && (
-                    <Box sx={{ ...timelineVerticalBarStyle, background: timelineBackgroundColor }} className="vertical-bar" />
-                  )}
-                </Box>
-                {/* Log details: performer, comment, attachment, date */}
-                <Box sx={{ flex: 1, pl: "16px", pt: "2px", minWidth: 0, width: "100%"}}>
-                  <Typography sx={commentTitleStyle}>
-                    {item.Actor}
-                  </Typography>
-                  <Typography sx={commentTextStyle}>
-                    <strong> {item.PerformedBy}</strong>
-                  </Typography>
-                  <Typography sx={commentTextStyle}>
-                    {item.Comments}
-                  </Typography>
-                  {/* Show file name if present */}
-                  {fileName && (
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-                      <DescriptionIcon  style={{ fontSize: 24, color: "#888" }} />
-                      <Typography sx={{ fontSize: 16, color: "#444", fontWeight: 500 }}>
-                        {fileName}
-                      </Typography>
+        <Box
+          ref={logContainerRef}
+          sx={{
+            maxHeight: '80vh',
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            width: '100%',
+            mb: 2,
+            '&::-webkit-scrollbar': {
+              width: '8px',
+              height: '8px',
+              background: 'transparent',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: 'transparent',
+              borderRadius: '4px',
+              transition: 'background 0.15s',
+            },
+            '&:hover::-webkit-scrollbar-thumb': {
+              background: 'rgba(0,0,0,0.18)',
+            },
+            // Firefox — hide by default, try to show a thin thumb on hover
+            scrollbarWidth: 'none',
+            scrollbarColor: 'transparent transparent',
+            '&:hover': {
+              scrollbarWidth: 'thin',
+              scrollbarColor: 'rgba(0,0,0,0.18) transparent',
+            },
+          }}
+        >
+          {/* Show custom message if no logs */}
+          {logItems.length === 0 ? (
+            <Typography sx={{ fontSize: 16, color: "#888", mb: 2 }}>
+              No Log Found
+            </Typography>
+          ) : (
+            logItems.map((item, idx) => {
+              let fileName = "";
+              try {
+                const meta = item.Metadata ? JSON.parse(item.Metadata) : {};
+                fileName = meta.file?.name || "";
+              } catch {}
+              return (
+                <Box key={item.ID} sx={{ display: "flex", mb: 2 }}>
+                  {/* Timeline marker and vertical bar */}
+                  <Box
+                    sx={{
+                      width: "32px",
+                      display: "flex",
+                      minHeight: "100%",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      position: "relative",
+                    }}
+                  >
+                    <Box sx={timelineCircleStyle}>
+                      {idx + 1}
                     </Box>
-                  )}
-                  {/* Always show download button if FileStoreID exists */}
-                  {item.FileStoreID && (
-                    <Button
-                      variant="outlined"
-                      size="medium"
-                      startIcon={<DownloadIcon style={{ fontSize: 16 }}/>
-                      }
-                      sx={downloadButtonStyle}
-                      onClick={() => {
-                        const url = `${import.meta.env.VITE_FILESTORE_HOST}/filestore/v1/files/${item.FileStoreID}?tenantId=pg`;
-                        const link = document.createElement("a");
-                        link.href = url;
-                        link.download = fileName || "Attachment";
-                        link.target = "_blank";
-                        link.rel = "noopener noreferrer";
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                      }}
-                    >
-                      Download Doc
-                    </Button>
-                  )}
-                  {/* Show the date of the log entry */}
-                  <Typography component="span" sx={dateTextStyle}>
-                    {item.PerformedDate.split("T")[0]}
-                  </Typography>
+                    {idx !== logItems.length - 1 && (
+                      <Box sx={{ ...timelineVerticalBarStyle, background: timelineBackgroundColor }} className="vertical-bar" />
+                    )}
+                  </Box>
+                  {/* Log details: performer, comment, attachment, date */}
+                  <Box sx={{ flex: 1, pl: "8px", pt: "2px", minWidth: 0, width: "100%"}}>
+                    <Typography sx={commentTitleStyle}>
+                      {item.Actor}
+                    </Typography>
+                    <Typography sx={commentTextStyle}>
+                      <strong> {item.PerformedBy}</strong>
+                    </Typography>
+                    <Typography sx={commentTextStyle}>
+                      {item.Comments}
+                    </Typography>
+                    {/* Show file name if present */}
+                    {fileName && (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                        <DescriptionIcon  style={{ fontSize: 24, color: "#888" }} />
+                        <Typography sx={{ fontSize: 16, color: "#444", fontWeight: 500 }}>
+                          {fileName}
+                        </Typography>
+                      </Box>
+                    )}
+                    {/* Always show download button if FileStoreID exists */}
+                    {item.FileStoreID && (
+                      <Button
+                        variant="outlined"
+                        size="medium"
+                        startIcon={<DownloadIcon style={{ fontSize: 16 }}/>
+                        }
+                        sx={downloadButtonStyle}
+                        onClick={() => {
+                          const url = `${env.FILESTORE_HOST}/filestore/v1/files/${item.FileStoreID}?tenantId=pg`;
+                          const link = document.createElement("a");
+                          link.href = url;
+                          link.download = fileName || "Attachment";
+                          link.target = "_blank";
+                          link.rel = "noopener noreferrer";
+                          document.body.appendChild(link);
+                          link.click();
+                          link.remove();
+                        }}
+                      >
+                        Download Doc
+                      </Button>
+                    )}
+                    {/* Show the date of the log entry */}
+                    <Typography component="span" sx={dateTextStyle}>
+                      {item.PerformedDate.split("T")[0]}
+                    </Typography>
+                  </Box>
                 </Box>
-              </Box>
-            );
-          })
-        )}
+              );
+            })
+          )}
         </Box>
         {/* Add comment button and dialogs */}
         <Box sx={addButtonBoxStyle(isMobile)}>

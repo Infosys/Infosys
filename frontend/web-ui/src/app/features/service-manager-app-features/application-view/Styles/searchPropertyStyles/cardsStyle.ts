@@ -6,10 +6,10 @@ import { type SxProps, type Theme } from "@mui/material";
 // Styles for the grid layout containing property detail cards
 export const propertyDetailsGridStyle = {
   display: 'grid',
-  gridTemplateColumns: { xs: '1fr', md: '2.4fr 2.4fr 270px' },
+  gridTemplateColumns: { xs: '1fr', md: '2.25fr 2.25fr 280px' }, // kept fr + explicit px column (270px)
   gridAutoRows: 'auto',
-  gap: '0.9rem',
-  marginTop: '1rem',
+  gap: '16px',
+  marginTop: '16px', 
 };
 
 // Styles for the main property detail card
@@ -62,9 +62,6 @@ export const cardHeaderLabelStyle: SxProps<Theme> = {
   fontStyle: 'italic',
   mb: '10px',
 };
-// Styles for the last row in a card (currently empty, can be extended)
-export const lastCardRowStyle: SxProps<Theme> = {};
-
 // Styles for the note card component
 export const noteCardStyle: SxProps<Theme> = {
   bgcolor: '#fff',
@@ -106,20 +103,19 @@ export const noteContentTextStyle: SxProps<Theme> = {
   fontSize: 14,
 };
 
-// --- Added for inline style replacement below ---
 
 // Styles for the card that tracks application progress or status
 export const trackCardStyle: SxProps<Theme> = {
   alignSelf: 'start',
   position: 'relative',
-  gridColumn: { xs: '1 / -1', md: '3 / 4' },
-  gridRow: { md: '1 / span 4' },
+  gridColumn: { xs: '1 / -1', md: '3 /3' },
+  gridRow: { md: '1 / span 1000' },
   marginTop: { xs: '1rem', md: 0 },
   minWidth: 250,
   boxShadow: { xs: "none", sm: "0 1px 12px rgba(0,0,0,0.1)" },
   minHeight: { xs: 'auto', md: "100vh" },
   background: { xs: "#ffffff", sm: "#f0f0f0" },
-  borderRadius: { xs: 0, sm: "18px" },
+  borderRadius: { xs: 0, sm: "10px" },
   display: "flex",
   flexDirection: "column",
   alignItems: "center",

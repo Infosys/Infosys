@@ -3,11 +3,8 @@
 
 import React from "react";
 import { Box, Typography } from "@mui/material";
-// import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
-// import AddPhotoAlternateOutlinedIcon from "@mui/icons-material/AddPhotoAlternateOutlined";
 import ArticleOutlinedIcon from '@mui/icons-material/ArticleOutlined';
 import AgentButton from "../SearchPropertyButtons/AgentButton";
-// import ViewLocationButton from "../SearchPropertyButtons/ViewLocationButton";
 import {
   cardBoxSx,
   detailsBoxSx,

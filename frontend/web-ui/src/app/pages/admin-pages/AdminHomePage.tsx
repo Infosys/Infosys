@@ -5,7 +5,7 @@ import { adminPrimaryItems } from '../../components/Sidebar/sidebarConfig';
 import { useAdminSidebar } from '../../components/Sidebar/provider/AdminSidebarProvider';
 import ProfileModal from '../../components/profile-modal/components/ProfileModal';
 import { mainContainerStyle, renderingContent } from '../../styles/HomePageStyle/HomePageStyle';
-import { AdminDashboard } from '../../features/it-admin-app-features/admin-dashboard/AdminDashboard';
+import { AdminDashboard } from '../../features/it-admin-app-features/admin-dashboard/components/AdminDashboard';
 import { UserManagement } from '../../features/it-admin-app-features/user-management/UserManagement';
 import { DemandGeneration } from '../../features/it-admin-app-features/demand-generation/DemandGeneration';
 import MapConfiguration from '../../features/it-admin-app-features/map-configuration/Components/MapConfiguration';

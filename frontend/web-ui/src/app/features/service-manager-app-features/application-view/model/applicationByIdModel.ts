@@ -170,6 +170,13 @@ export type Property = {
   IGRS: IGRSDetails;
   CreatedAt: string;
   UpdatedAt: string;
+  typeOfLand: string;
+  noOfFloors: number;
+  noOfBasements?: number;
+  hasMezzanineFloor?: boolean;
+  noOfBuildings: number;
+  buildingName?: string;
+
 };
 
 // Application log for history/tracking: records actions taken on the application

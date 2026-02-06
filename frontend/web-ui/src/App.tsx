@@ -16,14 +16,10 @@ import { CommissionerSidebarProvider } from './app/components/Sidebar/provider/C
 import { AdminSidebarProvider } from './app/components/Sidebar/provider/AdminSidebarProvider';
 import LoginScreen from './app/pages/Login-SignUp/Login-SignUp';
 
-
-
-
 // Root App component
-function App() {
+function App() {;
   // Get authentication state updater from context
   const { updateAuthState } = useAuth();
-
   return (
     // Set up React Router for navigation
     <BrowserRouter>

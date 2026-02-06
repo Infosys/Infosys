@@ -27,7 +27,7 @@ export const onboardingApiSlice = createApi({
 
             // Use AuthService to get a valid token (handles refresh automatically)
             const token = await authService.getValidToken();
-            console.log("token added");
+            // console.log("token added");
             if (token) {
                 headers.set('authorization', `Bearer ${token}`)
             }

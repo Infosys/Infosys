@@ -93,7 +93,7 @@ export const coloredTagChip = (color:string) => ({
   height: '22px',
   borderRadius: '20px',
   fontFamily: 'Roboto, sans-serif',
-  color: '#222',
+  color: '#ffffffff',
   fontWeight: 500,
   // px: 1,
   // mr: 0.5,

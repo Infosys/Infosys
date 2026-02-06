@@ -21,6 +21,7 @@ dist-ssr
 deploy.sh
 jfrog.txt
 json-server
+storybook-static
 temp
 .DS_Store
 *.suo

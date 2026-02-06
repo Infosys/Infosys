@@ -24,9 +24,9 @@ interface MdmsResponse {
 export const mdmsApi = mdmsApiSlice.injectEndpoints({
   endpoints: (builder) => ({
     // Generic MDMS enumeration fetcher (fetches all dropdown data for PropertyTax.Enumeration)
-    getMdmsEnumeration: builder.query<{ [key: string]: any[] }, void>({
-      query: () => ({
-        url: '?schemaCode=PropertyTax.Enumeration',
+    getMdmsEnumeration: builder.query<{ [key: string]: any[] }, string>({
+      query: (schemaCode) => ({
+        url: `?schemaCode=${schemaCode}`,
         method: 'GET',
       }),
       transformResponse: (response: MdmsResponse) => 

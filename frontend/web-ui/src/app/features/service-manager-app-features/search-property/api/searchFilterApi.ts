@@ -9,15 +9,17 @@ export const allApplicationApi = apiSlice.injectEndpoints({
         // Endpoint to search property applications by text, value, zone, wards, with pagination
         getApplicationsBySearch: builder.query<
           GetAllPropertiesResponse,
-          { searchText: string; searchValue: string; zoneNo: string; wardNos: string[]; page?: number; size?: number }
+          { searchText: string; searchValue: string; zoneNo: string; wardNos: string[]; page?: number; size?: number, sortBy?: string; sortField?: string }
         >({
-          query: ({ searchText, searchValue, zoneNo, wardNos, page = 0, size = 15 }) => {
+          query: ({ searchText, searchValue, zoneNo, wardNos, page = 0, size = 15, sortBy = 'DESC', sortField = 'created_at'}) => {
             const zoneParam = zoneNo ? `zoneNo=${encodeURIComponent(zoneNo)}` : '';
             const wardParams = wardNos.length > 0 
               ? wardNos.map(w => `wardNo=${encodeURIComponent(w)}`).join('&') 
               : '';
             const pageParam = `page=${page}`;
             const sizeParam = `size=${size}`;
+            const sortByParam = `sortBy=${sortBy}`;
+            const sortFieldParam = `sortField=${sortField}`;
             
             // Build query params
             const params = [
@@ -25,14 +27,14 @@ export const allApplicationApi = apiSlice.injectEndpoints({
               wardParams, 
               `${searchText}=${encodeURIComponent(searchValue)}`,
               pageParam,
-              sizeParam
+              sizeParam,
+              sortByParam,
+              sortFieldParam
             ]
               .filter(Boolean)
               .join('&');
             
             const url = `/v1/applications/search?${params}`;
-            // console.log('Search API URL:', url);
-            // console.log('Zone:', zoneNo, 'Wards:', wardNos, 'Page:', page, 'Size:', size);
             
             return {
               url,

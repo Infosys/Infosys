@@ -5,7 +5,6 @@ import { Box } from '@mui/material';
 import SearchPropertyHeader from './SearchPropertyHeader/SearchPropertyHeader';
 import PropertyCardList from './SearchPropertyCards/PropertyCardList';
 import { searchPropertyContainerSx, searchPropertySpacerSx } from '../styles/SearchPropertyStyle';
-// import SearchPropertyMap from './SearchPropertyMap/SearchPropertyMap';
 import { JurisdictionDropdown } from '../../../../components/JurisdictionDropdown/JurisdictionDropdown';
 import { jurisdictionDropdownStyles } from '../../../../styles/HomePageStyle/HomePageStyle';
 import { useState } from 'react';

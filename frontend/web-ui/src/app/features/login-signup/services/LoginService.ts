@@ -1,6 +1,7 @@
 
 // LoginService provides a static method to perform user login via API
 import type { LoginFormValues, LoginResponse } from "../models/LoginFormModel";
+import env from '../../../../config/env';
 
 
 export class LoginService {
@@ -12,7 +13,7 @@ export class LoginService {
   static async login(form: LoginFormValues): Promise<LoginResponse> {
     try {
       // Send a POST request to the login API endpoint
-      const response = await fetch(`${import.meta.env.VITE_ONBOARDING_HOST}/api/login`, {
+      const response = await fetch(`${env.ONBOARDING_HOST}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),

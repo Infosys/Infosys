@@ -36,6 +36,10 @@ export const TAG_TYPES = {
     SEARCH: 'Search',
     GIS_DATA: 'GisData',
     OWNERSHIP: 'Ownership',
+    USER_STATS: 'UserStats',
+    USER_LIST: 'UserList',
+    CALCULATION: 'Calculation',
+    PROPERTIES: 'Properties',
 } as const;
 
 // Export as array for use in createApi tagTypes

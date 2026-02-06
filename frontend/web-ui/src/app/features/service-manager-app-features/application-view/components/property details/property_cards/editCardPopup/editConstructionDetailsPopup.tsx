@@ -56,39 +56,43 @@ const EditConstructionPopover: React.FC<EditConstructionPopoverProps> = ({
       ...localFields,
       [key]: value
     });
-    if (!result.success) {
-      const fieldErrors = result.error.flatten().fieldErrors;
-      setErrors(Object.fromEntries(Object.entries(fieldErrors).map(([k, v]) => [k, v?.[0] || ""])));
-    } else {
+    if (result.success) {
       setErrors({});
+    } else {
+      const newErrors: { [key: string]: string } = {};
+      result.error.issues.forEach(issue => {
+        const path = issue.path.join('.');
+        if (path && !newErrors[path]) {
+          newErrors[path] = issue.message;
+        }
+      });
+      setErrors(newErrors);
     }
   };
 
   const handleSave = () => {
     const result = schema.safeParse(localFields);
-    if (!result.success) {
-      const fieldErrors = result.error.flatten().fieldErrors;
-      setErrors(Object.fromEntries(Object.entries(fieldErrors).map(([k, v]) => [k, v?.[0] || ""])));
-      return;
+    if (result.success) {
+      setErrors({});
+      onSave(localFields);
+      onClose();
+    } else {
+      const newErrors: { [key: string]: string } = {};
+      result.error.issues.forEach(issue => {
+        const path = issue.path.join('.');
+        if (path && !newErrors[path]) {
+          newErrors[path] = issue.message;
+        }
+      });
+      setErrors(newErrors);
     }
-    setErrors({});
-    onSave(localFields);
-    onClose();
   };
 
   return (
     <Dialog
       open={open}
       onClose={onClose}
-      PaperProps={{ sx: { p: 4, minWidth: 400, borderRadius: 3, boxShadow: 6 } }}
-      // transformOrigin={{
-      //   vertical: 'center',
-      //   horizontal: 'center',
-      // }}
-      // anchorOrigin={{
-      //   vertical: 'bottom',
-      //   horizontal: 'center',
-      // }}
+      slotProps={{ paper: { sx: { p: 4, minWidth: 400, borderRadius: 3, boxShadow: 6 } } }}
     >
       <Typography variant="h6" sx={{ mb: 2, fontStyle: 'italic' }}>
         Edit Construction Details

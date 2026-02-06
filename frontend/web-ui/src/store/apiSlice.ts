@@ -27,9 +27,8 @@ export const apiSlice = createApi({
             // Use AuthService to get a valid token (handles refresh automatically)
             headers.set('content-type', 'application/json')
             headers.set('X-Tenant-ID', 'pb.amritsar')
-            headers.set('X-User-Role', 'SERVICE_MANAGER')
             const token = await authService.getValidToken();
-            // console.log("token added");
+            
             if (token) {
                 headers.set('authorization', `Bearer ${token}`)
             }

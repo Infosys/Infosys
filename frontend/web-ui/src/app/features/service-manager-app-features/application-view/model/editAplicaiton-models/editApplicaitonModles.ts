@@ -223,7 +223,7 @@ export interface EditAddressRequest {
   propertyId: string;
   correspondenceAddress1: string;
   correspondenceAddress2: string;
-  correspondenceAddress3: string;
+  correspondencePincode: number;
 }
 
 // Response payload for editing address details
