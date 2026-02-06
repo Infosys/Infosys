@@ -1,10 +1,13 @@
 package handlers
 
 import (
+	"enumeration/internal/constants"
 	"enumeration/internal/dto"
 	"enumeration/internal/services"
 	"net/http"
 	"strconv"
+	
+
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -69,13 +72,13 @@ func (h *ApplicationLogHandler) CreateApplicationLog(ctx *gin.Context) {
 func (h *ApplicationLogHandler) GetApplicationLogByID(ctx *gin.Context) {
 	id, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid log ID"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": constants.ErrInvalidIdFormat})
 		return
 	}
 
 	log, err := h.service.GetByID(ctx, id)
 	if err != nil {
-		if err.Error() == "record not found" {
+		if err.Error() == constants.ErrRecordNotFound {
 			ctx.JSON(http.StatusNotFound, gin.H{
 				"success": false,
 				"message": "Application log not found",
@@ -108,10 +111,10 @@ func (h *ApplicationLogHandler) UpdateApplicationLog(ctx *gin.Context) {
 
 	log, err := h.service.Update(ctx, id, &req)
 	if err != nil {
-		if err.Error() == "record not found" {
+		if err.Error() == constants.ErrRecordNotFound {
 			ctx.JSON(http.StatusNotFound, gin.H{
 				"success": false,
-				"message": "Application log not found",
+				"message": constants.ErrApplicationLogNotFound,
 			})
 			return
 		}
@@ -140,10 +143,10 @@ func (h *ApplicationLogHandler) DeleteApplicationLog(ctx *gin.Context) {
 
 	err = h.service.Delete(ctx, id)
 	if err != nil {
-		if err.Error() == "record not found" {
+		if err.Error() == constants.ErrRecordNotFound {
 			ctx.JSON(http.StatusNotFound, gin.H{
 				"success": false,
-				"message": "Application log not found",
+				"message": constants.ErrApplicationLogNotFound,
 			})
 			return
 		}

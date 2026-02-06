@@ -1,12 +1,12 @@
 package models
 
 import (
+	"encoding/json"
 	"enumeration/pkg/utils"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
-	"gorm.io/datatypes"
 )
 
 // Application represents a property tax application.
@@ -27,7 +27,7 @@ type Application struct {
 	IsDraft            bool             `gorm:"default:true;not null;index"`
 	CreatedAt          time.Time        `gorm:"autoCreateTime"`
 	UpdatedAt          time.Time        `gorm:"autoUpdateTime"`
-	ImportantNote		string	  		 `gorm:"size:500" json:"importantNote,omitempty"`
+	ImportantNote      string           `gorm:"size:500" json:"importantNote,omitempty"`
 }
 
 func (Application) TableName() string {
@@ -65,11 +65,13 @@ type Property struct {
 	UpdatedAt           time.Time                  `gorm:"autoUpdateTime"`
 	Documents           []Document                 `gorm:"foreignKey:PropertyID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	IGRS                *IGRS                      `gorm:"foreignKey:PropertyID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	TypeOfLand          string                     `gorm:"size:50;" json:"typeOfLand,omitempty"`
-	NoOfFloors          string                     `gorm:"size:10" json:"noOfFloors,omitempty"`
-	NoOfBasements       string                     `gorm:"size:10" json:"noOfBasements,omitempty"`
-	NoOfBuildings       string                     `gorm:"size:10" json:"noOfBuildings,omitempty"`
-	BuildingNumber      string                     `gorm:"size:50" json:"buildingNumber,omitempty"`
+	TypeOfLand          string                     `gorm:"size:100" json:"typeOfLand,omitempty"`
+	NoOfFloors          int                        `gorm:"default:0" json:"noOfFloors,omitempty"`
+	NoOfBasements       int                        `gorm:"default:0" json:"noOfBasements,omitempty"`
+	NoOfBuildings       int                        `gorm:"default:0" json:"noOfBuildings,omitempty"`
+	BuildingName        string                     `gorm:"default:''" json:"buildingName,omitempty"`
+	HasMezzanineFloor   bool                       `gorm:"default:false;not null" json:"hasMezzanineFloor"`
+	TenantID            string                     `gorm:"size:100;not null;index" json:"-"`
 }
 
 func (Property) TableName() string {
@@ -115,7 +117,7 @@ type PropertyAddress struct {
 	UpdatedAt                      time.Time `gorm:"autoUpdateTime"`
 	CorrespondenceAddress1         string    `gorm:"column:correspondence_address_1;size:500"`
 	CorrespondenceAddress2         string    `gorm:"column:correspondence_address_2;size:500"`
-	CorrespondenceAddress3         string    `gorm:"column:correspondence_address_3;size:500"`
+	CorrespondencePincode          int       `gorm:"column:correspondence_pincode;size:500"`
 }
 
 func (PropertyAddress) TableName() string {
@@ -184,12 +186,54 @@ type FloorDetails struct {
 
 // AdditionalPropertyDetails represents extra metadata for a property.
 type AdditionalPropertyDetails struct {
-	ID         uuid.UUID      `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
-	FieldName  string         `gorm:"size:100;not null"`
-	FieldValue datatypes.JSON `gorm:"type:json" json:"fieldValue"`
-	PropertyID uuid.UUID      `gorm:"type:uuid;not null;index"`
-	CreatedAt  time.Time      `gorm:"autoCreateTime"`
-	UpdatedAt  time.Time      `gorm:"autoUpdateTime"`
+	ID         uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	FieldName  string    `gorm:"size:100;not null"`
+	FieldValue []byte    `gorm:"type:jsonb" json:"fieldValue"`
+	PropertyID uuid.UUID `gorm:"type:uuid;not null;index"`
+	CreatedAt  time.Time `gorm:"autoCreateTime"`
+	UpdatedAt  time.Time `gorm:"autoUpdateTime"`
+}
+
+// MarshalJSON customizes JSON marshaling for AdditionalPropertyDetails
+// to properly serialize FieldValue as JSON instead of base64
+func (a AdditionalPropertyDetails) MarshalJSON() ([]byte, error) {
+	type Alias AdditionalPropertyDetails
+	var fieldValue interface{}
+	if len(a.FieldValue) > 0 {
+		if err := json.Unmarshal(a.FieldValue, &fieldValue); err != nil {
+			return nil, err
+		}
+	}
+	return json.Marshal(&struct {
+		*Alias
+		FieldValue interface{} `json:"fieldValue"`
+	}{
+		Alias:      (*Alias)(&a),
+		FieldValue: fieldValue,
+	})
+}
+
+// UnmarshalJSON customizes JSON unmarshaling for AdditionalPropertyDetails
+// to properly deserialize FieldValue from JSON
+func (a *AdditionalPropertyDetails) UnmarshalJSON(data []byte) error {
+	type Alias AdditionalPropertyDetails
+	aux := &struct {
+		*Alias
+		FieldValue interface{} `json:"fieldValue"`
+	}{
+		Alias: (*Alias)(a),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	if aux.FieldValue != nil {
+		fieldValueBytes, err := json.Marshal(aux.FieldValue)
+		if err != nil {
+			return err
+		}
+		a.FieldValue = fieldValueBytes
+	}
+	return nil
 }
 
 // GISData represents GIS information for a property.

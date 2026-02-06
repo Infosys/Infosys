@@ -11,7 +11,10 @@ import (
 
 // Unit tests for CoordinatesValidator covering validation of coordinates, geographic range, batch operations, and error formatting
 
-func TestCoordinatesValidator_ValidateCoordinates(t *testing.T) {
+const expectedValidationError = "expected ValidationError"
+const nilCoordinatesTestName = "nil coordinates"
+
+func TestCoordinatesValidatorValidateCoordinates(t *testing.T) {
 	// Test various cases for validating a single coordinates object
 	validator := NewCoordinatesValidator()
 	gisDataID := uuid.New()
@@ -33,7 +36,7 @@ func TestCoordinatesValidator_ValidateCoordinates(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:        "nil coordinates",
+			name:        nilCoordinatesTestName,
 			coordinates: nil,
 			wantErr:     true,
 			errField:    "coordinates",
@@ -144,7 +147,7 @@ func TestCoordinatesValidator_ValidateCoordinates(t *testing.T) {
 				assert.Error(t, err)
 				if tt.errField != "" {
 					valErr, ok := err.(*ValidationError)
-					assert.True(t, ok, "expected ValidationError")
+					assert.True(t, ok, expectedValidationError)
 					if ok {
 						assert.Equal(t, tt.errField, valErr.Field)
 					}
@@ -157,7 +160,7 @@ func TestCoordinatesValidator_ValidateCoordinates(t *testing.T) {
 }
 
 // Test validation of coordinates within Karnataka's geographic range
-func TestCoordinatesValidator_ValidateGeographicRange(t *testing.T) {
+func TestCoordinatesValidatorValidateGeographicRange(t *testing.T) {
 	validator := NewCoordinatesValidator()
 	gisDataID := uuid.New()
 
@@ -187,7 +190,7 @@ func TestCoordinatesValidator_ValidateGeographicRange(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:        "nil coordinates",
+			name:        nilCoordinatesTestName,
 			coordinates: nil,
 			wantErr:     true,
 			errField:    "coordinates",
@@ -260,7 +263,7 @@ func TestCoordinatesValidator_ValidateGeographicRange(t *testing.T) {
 				assert.Error(t, err)
 				if tt.errField != "" {
 					valErr, ok := err.(*ValidationError)
-					assert.True(t, ok, "expected ValidationError")
+					assert.True(t, ok, expectedValidationError)
 					if ok {
 						assert.Equal(t, tt.errField, valErr.Field)
 					}
@@ -273,7 +276,7 @@ func TestCoordinatesValidator_ValidateGeographicRange(t *testing.T) {
 }
 
 // Test batch validation of coordinates
-func TestCoordinatesValidator_ValidateBatch(t *testing.T) {
+func TestCoordinatesValidatorValidateBatch(t *testing.T) {
 	validator := NewCoordinatesValidator()
 	gisDataID := uuid.New()
 
@@ -365,7 +368,7 @@ func TestCoordinatesValidator_ValidateBatch(t *testing.T) {
 }
 
 // Test batch validation of coordinates with geographic range
-func TestCoordinatesValidator_ValidateBatchWithGeographicRange(t *testing.T) {
+func TestCoordinatesValidatorValidateBatchWithGeographicRange(t *testing.T) {
 	validator := NewCoordinatesValidator()
 	gisDataID := uuid.New()
 
@@ -417,7 +420,7 @@ func TestCoordinatesValidator_ValidateBatchWithGeographicRange(t *testing.T) {
 }
 
 // Test validation of update requests for coordinates
-func TestCoordinatesValidator_ValidateUpdateRequest(t *testing.T) {
+func TestCoordinatesValidatorValidateUpdateRequest(t *testing.T) {
 	validator := NewCoordinatesValidator()
 	gisDataID := uuid.New()
 	coordID := uuid.New()
@@ -511,7 +514,7 @@ func TestCoordinatesValidator_ValidateUpdateRequest(t *testing.T) {
 }
 
 // Test validation of create requests for coordinates
-func TestCoordinatesValidator_ValidateRequest(t *testing.T) {
+func TestCoordinatesValidatorValidateRequest(t *testing.T) {
 	validator := NewCoordinatesValidator()
 	gisDataID := uuid.New()
 
@@ -560,7 +563,7 @@ func TestCoordinatesValidator_ValidateRequest(t *testing.T) {
 }
 
 // Test error formatting for ValidationError
-func TestValidationError_Error(t *testing.T) {
+func TestValidationErrorError(t *testing.T) {
 	// Each test case checks error message formatting
 	tests := []struct {
 		name     string
@@ -596,7 +599,7 @@ func TestValidationError_Error(t *testing.T) {
 }
 
 // Test error formatting for BatchValidationError
-func TestBatchValidationError_Error(t *testing.T) {
+func TestBatchValidationErrorError(t *testing.T) {
 	err1 := NewValidationError("latitude", "invalid", 91.0)
 	err2 := NewValidationError("longitude", "invalid", 181.0)
 

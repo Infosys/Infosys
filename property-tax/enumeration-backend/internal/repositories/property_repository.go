@@ -2,85 +2,62 @@ package repositories
 
 import (
 	"context"
+	"enumeration/internal/constants"
 	"enumeration/internal/models"
 	"fmt"
-	"strings"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
-// Ensure propertyRepository implements PropertyRepository interface at compile time.
-var _ PropertyRepository = (*propertyRepository)(nil)
+const (
+	preloadConstructionDetailsFloorDetails = "ConstructionDetails.FloorDetails"
+)
 
-// propertyRepository provides implementation for PropertyRepository using GORM for database operations.
 type propertyRepository struct {
 	db *gorm.DB
 }
 
-// NewPropertyRepository creates a new instance of propertyRepository.
-// db: GORM database connection.
-// Returns: PropertyRepository implementation.
 func NewPropertyRepository(db *gorm.DB) PropertyRepository {
 	return &propertyRepository{db: db}
 }
 
-// Create inserts a new Property record and its address (if provided) into the database using a transaction.
-// ctx: context for the operation.
-// property: pointer to Property model to be created.
-// Returns: error if creation fails.
+// Create - STEP 10: Save to database with tenant_id
 func (r *propertyRepository) Create(ctx context.Context, property *models.Property) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
-		// Create property first
-		if err := tx.Create(property).Error; err != nil {
-			return fmt.Errorf("failed to create property: %w", err)
-		}
-
-		// If address is provided, ensure PropertyID is set and create it
-		if property.Address != nil {
-			property.Address.PropertyID = property.ID
-			if err := tx.Create(property.Address).Error; err != nil {
-				return fmt.Errorf("failed to create property address: %w", err)
-			}
-		}
-
-		return nil
-	})
+	// tenant_id is already set in the property model by service layer
+	if err := r.db.WithContext(ctx).Create(property).Error; err != nil {
+		return fmt.Errorf("failed to create property: %w", err)
+	}
+	return nil
 }
 
-// GetByID retrieves a Property by its unique ID, preloading related entities.
-// ctx: context for the operation.
-// id: UUID of the property.
-// Returns: pointer to Property and error if not found or on failure.
+// GetByID - STEP 11: Fetch property (tenant check happens in service layer)
 func (r *propertyRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.Property, error) {
 	var property models.Property
-	err := r.db.
+	if err := r.db.WithContext(ctx).
 		Preload("Address").
 		Preload("AssessmentDetails").
 		Preload("Amenities").
 		Preload("ConstructionDetails").
-		Preload("ConstructionDetails.FloorDetails").
+		Preload(preloadConstructionDetailsFloorDetails).
 		Preload("AdditionalDetails").
 		Preload("GISData").
-		Preload("GISData.Coordinates").
-		Preload("IGRS").
 		Preload("Documents").
-		Where("id = ?", id).First(&property).Error
-	if err != nil {
+		Preload("IGRS").
+		First(&property, QueryByID, id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, fmt.Errorf("property with id %s not found", id)
+			return nil, fmt.Errorf(constants.ErrPropertyNotFound)
 		}
-		return nil, fmt.Errorf("failed to get property by id %s: %w", id, err)
+		return nil, fmt.Errorf("failed to get property: %w", err)
 	}
 	return &property, nil
 }
 
-// Update modifies an existing Property record in the database.
-// ctx: context for the operation.
-// property: pointer to Property model with updated data.
-// Returns: error if update fails or record not found.
+// Update - STEP 12: Update property (tenant_id already validated in service)
 func (r *propertyRepository) Update(ctx context.Context, property *models.Property) error {
-	result := r.db.Model(property).Updates(property)
+    // ✅ FIX: Use Save() which updates all fields including zero values
+    result := r.db.WithContext(ctx).Save(property)
+    
     if result.Error != nil {
         return fmt.Errorf("failed to update property with id %s: %w", property.ID, result.Error)
     }
@@ -90,186 +67,175 @@ func (r *propertyRepository) Update(ctx context.Context, property *models.Proper
     return nil
 }
 
-// Delete removes a Property record by its unique ID.
-// ctx: context for the operation.
-// id: UUID of the property to delete.
-// Returns: error if deletion fails or record not found.
+// Delete - STEP 13: Delete property (tenant ownership already validated)
 func (r *propertyRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	result := r.db.Delete(&models.Property{}, "id = ?", id)
+	result := r.db.WithContext(ctx).Delete(&models.Property{}, QueryByID, id)
 	if result.Error != nil {
-		return fmt.Errorf("failed to delete property with id %s: %w", id, result.Error)
+		return fmt.Errorf("failed to delete property: %w", result.Error)
 	}
 	if result.RowsAffected == 0 {
-		return fmt.Errorf("property with id %s not found for deletion", id)
+		return fmt.Errorf(constants.ErrPropertyNotFound)
 	}
 	return nil
 }
 
-// GetAll retrieves all Property records, optionally filtered by propertyType, with pagination and preloaded relations.
-// ctx: context for the operation.
-// page: page number (zero-based), size: number of records per page, propertyType: optional filter.
-// Returns: slice of Property pointers, total count, and error if any.
-func (r *propertyRepository) GetAll(ctx context.Context, page, size int, propertyType *string) ([]*models.Property, int64, error) {
+func (r *propertyRepository) GetAll(ctx context.Context, tenantID string, page, size int, propertyType *string, status *string) ([]*models.Property, int64, error) {
 	var properties []*models.Property
 	var total int64
 
-	query := r.db.Model(&models.Property{}).
-		Preload("Address").
-		Preload("AssessmentDetails").
-		Preload("Amenities").
-		Preload("ConstructionDetails").
-		Preload("ConstructionDetails.FloorDetails").
-		Preload("AdditionalDetails").
-		Preload("GISData").
-		Preload("GISData.Coordinates").
-		Preload("IGRS").
-		Preload("Documents")
+	query := r.db.WithContext(ctx).Model(&models.Property{})
 
+	if tenantID != "" {
+		query = query.Where(`"tenant_id" = ?`, tenantID)
+	}
 	if propertyType != nil && *propertyType != "" {
 		query = query.Where("property_type = ?", *propertyType)
 	}
-
-	// Count total records
+	if status != nil && *status != "" {
+		query = query.Joins(`JOIN "DIGIT3"."applications" ON "DIGIT3"."properties"."id" = "DIGIT3"."applications"."property_id"`).
+			Where(`"DIGIT3"."applications"."status" = ?`, *status)
+	}
+	// Get total count
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to count properties: %w", err)
 	}
 
 	// Apply pagination
 	offset := page * size
-	if err := query.Offset(offset).Limit(size).Find(&properties).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, 0, fmt.Errorf("no properties found")
-		}
+	if err := query.
+		Preload("Address").
+		Preload("AssessmentDetails").
+		Preload("Amenities").
+		Preload("ConstructionDetails").
+		Preload(preloadConstructionDetailsFloorDetails).
+		Preload("AdditionalDetails").
+		Preload("GISData").
+		Preload("Documents").
+		Preload("IGRS").
+		Offset(offset).
+		Limit(size).
+		Order("created_at DESC").
+		Find(&properties).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to get properties: %w", err)
 	}
 
 	return properties, total, nil
 }
 
-// GetByPropertyNo retrieves a Property by its property number, preloading related entities.
-// ctx: context for the operation.
-// propertyNo: property number string.
-// Returns: pointer to Property and error if not found or on failure.
+// GetByPropertyNo - STEP 15: Fetch by property number (tenant check in service)
 func (r *propertyRepository) GetByPropertyNo(ctx context.Context, propertyNo string) (*models.Property, error) {
 	var property models.Property
-	err := r.db.
+	if err := r.db.WithContext(ctx).
 		Preload("Address").
 		Preload("AssessmentDetails").
 		Preload("Amenities").
 		Preload("ConstructionDetails").
-		Preload("ConstructionDetails.FloorDetails").
+		Preload(preloadConstructionDetailsFloorDetails).
 		Preload("AdditionalDetails").
 		Preload("GISData").
-		Preload("GISData.Coordinates").
 		Preload("Documents").
 		Preload("IGRS").
-		Where("property_no = ?", propertyNo).First(&property).Error
-	if err != nil {
+		First(&property, "property_no = ?", propertyNo).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, fmt.Errorf("property with property_no %s not found", propertyNo)
+			return nil, fmt.Errorf(constants.ErrPropertyNotFound)
 		}
-		return nil, fmt.Errorf("failed to get property by property_no %s: %w", propertyNo, err)
+		return nil, fmt.Errorf("failed to get property: %w", err)
 	}
 	return &property, nil
 }
 
-// Search finds Property records matching the given search parameters, with filtering, sorting, pagination, and preloaded relations.
-// ctx: context for the operation.
-// params: SearchPropertyParams struct with filter and pagination options.
-// Returns: slice of Property pointers, total count, and error if any.
+// Search - STEP 16: ALWAYS filter by tenant ID with other criteria
 func (r *propertyRepository) Search(ctx context.Context, params SearchPropertyParams) ([]*models.Property, int64, error) {
 	var properties []*models.Property
 	var total int64
 
-	// Use the exact quoted table names as they appear in PostgreSQL
-	propertiesTable := `"DIGIT3"."properties"`
-	addressesTable := `"DIGIT3"."property_addresses"`
+	query := r.db.WithContext(ctx).Model(&models.Property{})
 
-	query := r.db.Model(&models.Property{}).
-		Preload("Address").
-		Preload("AssessmentDetails").
-		Preload("ConstructionDetails").
-		Preload("AdditionalDetails").
-		Joins(fmt.Sprintf("LEFT JOIN %s pa ON %s.id = pa.property_id", addressesTable, propertiesTable))
+	// STEP 16A: ALWAYS filter by tenant ID (CRITICAL - HIGHEST PRIORITY)
+	if params.TenantID == "" {
+		return nil, 0, fmt.Errorf("tenant ID is required for search")
+	}
+	query = query.Where("tenant_id = ?", params.TenantID)
 
 	// Apply filters
-	var conditions []string
-	var args []interface{}
+	query = r.applyPropertyFilters(query, params)
+	query = r.applyAddressFilters(query, params)
 
-	if params.PropertyType != nil && *params.PropertyType != "" {
-		conditions = append(conditions, fmt.Sprintf("%s.property_type = ?", propertiesTable))
-		args = append(args, *params.PropertyType)
-	}
-
-	if params.OwnershipType != nil && *params.OwnershipType != "" {
-		conditions = append(conditions, fmt.Sprintf("%s.ownership_type = ?", propertiesTable))
-		args = append(args, *params.OwnershipType)
-	}
-
-	if params.ComplexName != nil && *params.ComplexName != "" {
-		conditions = append(conditions, fmt.Sprintf("%s.complex_name ILIKE ?", propertiesTable))
-		args = append(args, "%"+*params.ComplexName+"%")
-	}
-
-	if params.Locality != nil && *params.Locality != "" {
-		conditions = append(conditions, "pa.locality ILIKE ?")
-		args = append(args, "%"+*params.Locality+"%")
-	}
-
-	if params.WardNo != nil && *params.WardNo != "" {
-		conditions = append(conditions, "pa.ward_no = ?")
-		args = append(args, *params.WardNo)
-	}
-
-	if params.ZoneNo != nil && *params.ZoneNo != "" {
-		conditions = append(conditions, "pa.zone_no = ?")
-		args = append(args, *params.ZoneNo)
-	}
-
-	if params.Street != nil && *params.Street != "" {
-		conditions = append(conditions, "pa.street ILIKE ?")
-		args = append(args, "%"+*params.Street+"%")
-	}
-
-	if len(conditions) > 0 {
-		query = query.Where(strings.Join(conditions, " AND "), args...)
-	}
-
-	// Count total records
+	// Count total matching records
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to count properties: %w", err)
 	}
 
-	// Apply sorting with proper table names
-	orderBy := fmt.Sprintf("%s.created_at DESC", propertiesTable)
-	if params.SortBy != "" {
-		direction := "ASC"
-		if strings.ToUpper(params.SortOrder) == "DESC" {
-			direction = "DESC"
-		}
+	// Apply sorting and pagination
+	query = r.applySortingAndPagination(query, params)
 
-		switch params.SortBy {
-		case "createdAt":
-			orderBy = fmt.Sprintf("%s.created_at %s", propertiesTable, direction)
-		case "updatedAt":
-			orderBy = fmt.Sprintf("%s.updated_at %s", propertiesTable, direction)
-		case "propertyNo":
-			orderBy = fmt.Sprintf("%s.property_no %s", propertiesTable, direction)
-		case "propertyType":
-			orderBy = fmt.Sprintf("%s.property_type %s", propertiesTable, direction)
-		default:
-			orderBy = fmt.Sprintf("%s.created_at DESC", propertiesTable)
-		}
-	}
-
-	// Apply pagination and ordering
-	offset := params.Page * params.Size
-	if err := query.Order(orderBy).Offset(offset).Limit(params.Size).Find(&properties).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, 0, fmt.Errorf("no properties found for search params")
-		}
+	// Fetch results with preloads
+	if err := r.fetchPropertiesWithPreloads(query).Find(&properties).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to search properties: %w", err)
 	}
 
 	return properties, total, nil
+}
+
+func (r *propertyRepository) applyPropertyFilters(query *gorm.DB, params SearchPropertyParams) *gorm.DB {
+	if params.PropertyType != nil && *params.PropertyType != "" {
+		query = query.Where("property_type = ?", *params.PropertyType)
+	}
+	if params.OwnershipType != nil && *params.OwnershipType != "" {
+		query = query.Where("ownership_type = ?", *params.OwnershipType)
+	}
+	if params.ComplexName != nil && *params.ComplexName != "" {
+		query = query.Where("complex_name ILIKE ?", "%"+*params.ComplexName+"%")
+	}
+	return query
+}
+
+func (r *propertyRepository) applyAddressFilters(query *gorm.DB, params SearchPropertyParams) *gorm.DB {
+	if params.Locality == nil && params.WardNo == nil && params.ZoneNo == nil && params.Street == nil {
+		return query
+	}
+
+	query = query.Joins(`LEFT JOIN "DIGIT3"."property_addresses" ON "DIGIT3"."properties".id = "DIGIT3"."property_addresses".property_id`)
+
+	if params.Locality != nil && *params.Locality != "" {
+		query = query.Where(`"DIGIT3"."property_addresses".locality ILIKE ?`, "%"+*params.Locality+"%")
+	}
+	if params.WardNo != nil && *params.WardNo != "" {
+		query = query.Where(`"DIGIT3"."property_addresses".ward_no = ?`, *params.WardNo)
+	}
+	if params.ZoneNo != nil && *params.ZoneNo != "" {
+		query = query.Where(`"DIGIT3"."property_addresses".zone_no = ?`, *params.ZoneNo)
+	}
+	if params.Street != nil && *params.Street != "" {
+		query = query.Where(`"DIGIT3"."property_addresses".street ILIKE ?`, "%"+*params.Street+"%")
+	}
+	return query
+}
+
+func (r *propertyRepository) applySortingAndPagination(query *gorm.DB, params SearchPropertyParams) *gorm.DB {
+	sortBy := params.SortBy
+	if sortBy == "" {
+		sortBy = "created_at"
+	}
+	sortOrder := params.SortOrder
+	if sortOrder == "" {
+		sortOrder = "desc"
+	}
+	query = query.Order(fmt.Sprintf("%s %s", sortBy, sortOrder))
+
+	offset := params.Page * params.Size
+	return query.Offset(offset).Limit(params.Size)
+}
+
+func (r *propertyRepository) fetchPropertiesWithPreloads(query *gorm.DB) *gorm.DB {
+	return query.
+		Preload("Address").
+		Preload("AssessmentDetails").
+		Preload("Amenities").
+		Preload("ConstructionDetails").
+		Preload(preloadConstructionDetailsFloorDetails).
+		Preload("AdditionalDetails").
+		Preload("GISData").
+		Preload("Documents").
+		Preload("IGRS")
 }

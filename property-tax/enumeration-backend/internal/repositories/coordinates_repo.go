@@ -5,9 +5,13 @@ import (
 	"enumeration/internal/models"
 	"errors"
 	"fmt"
-
+    workflow "enumeration/internal/clients"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+)
+
+const (
+	queryByGISDataID = "gis_data_id = ?"
 )
 
 // coordinatesRepository implements the CoordinatesRepository interface using GORM.
@@ -34,7 +38,7 @@ func (r *coordinatesRepository) Create(ctx context.Context, coordinates *models.
 // GetByID retrieves a Coordinates record by its ID.
 func (r *coordinatesRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.Coordinates, error) {
 	var coordinates models.Coordinates
-	err := r.db.First(&coordinates, "id = ?", id).Error
+	err := r.db.First(&coordinates, QueryByID, id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("coordinates with id %s not found", id)
@@ -55,7 +59,7 @@ func (r *coordinatesRepository) Update(ctx context.Context, coordinates *models.
 // Delete removes a Coordinates record by its ID.
 // Returns an error if the record does not exist or deletion fails.
 func (r *coordinatesRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	result := r.db.Delete(&models.Coordinates{}, "id = ?", id)
+	result := r.db.Delete(&models.Coordinates{}, QueryByID, id)
 	if result.Error != nil {
 		return fmt.Errorf("failed to delete coordinates with id %s: %w", id, result.Error)
 	}
@@ -75,7 +79,7 @@ func (r *coordinatesRepository) FindAll(ctx context.Context, page, size int, gis
 
 	// Filter by GIS Data ID if provided
 	if gisDataID != nil {
-		query = query.Where("gis_data_id = ?", *gisDataID)
+		query = query.Where(queryByGISDataID, *gisDataID)
 	}
 
 	// Count total records
@@ -95,7 +99,7 @@ func (r *coordinatesRepository) FindAll(ctx context.Context, page, size int, gis
 // FindByGISDataID retrieves all Coordinates records for a specific GIS data record.
 func (r *coordinatesRepository) FindByGISDataID(ctx context.Context, gisDataID uuid.UUID) ([]models.Coordinates, error) {
 	var coordinates []models.Coordinates
-	if err := r.db.Where("gis_data_id = ?", gisDataID).Find(&coordinates).Error; err != nil {
+	if err := r.db.Where(queryByGISDataID, gisDataID).Find(&coordinates).Error; err != nil {
 		return nil, fmt.Errorf("failed to get coordinates by gis data id %s: %w", gisDataID, err)
 	}
 	return coordinates, nil
@@ -103,7 +107,7 @@ func (r *coordinatesRepository) FindByGISDataID(ctx context.Context, gisDataID u
 
 // DeleteByGISDataID deletes all Coordinates records for a specific GIS data record.
 func (r *coordinatesRepository) DeleteByGISDataID(ctx context.Context, gisDataID uuid.UUID) error {
-	if err := r.db.Where("gis_data_id = ?", gisDataID).Delete(&models.Coordinates{}).Error; err != nil {
+	if err := r.db.Where(queryByGISDataID, gisDataID).Delete(&models.Coordinates{}).Error; err != nil {
 		return fmt.Errorf("failed to delete coordinates by gis data id %s: %w", gisDataID, err)
 	}
 	return nil
@@ -112,6 +116,17 @@ func (r *coordinatesRepository) DeleteByGISDataID(ctx context.Context, gisDataID
 // CreateBatch inserts multiple Coordinates records in a single transaction for efficiency and rollback on failure.
 func (r *coordinatesRepository) CreateBatch(ctx context.Context, coords []*models.Coordinates) error {
 	// Use the DB context, transaction and CreateInBatches for efficiency and rollback on failure
+	gisid := coords[0].GISDataID
+	fmt.Println("Inserting batch for GISDataID:", gisid)
+
+	// Fetch propertyid from GISData using gisid
+	var gisData models.GISData
+	if err := r.db.First(&gisData, "id = ?", gisid).Error; err != nil {
+		return fmt.Errorf("failed to fetch GISData for GISDataID %s: %w", gisid, err)
+	}
+	propertyid := gisData.PropertyID
+	fmt.Println("PropertyID from GISData:", propertyid)
+    go addtolocationservice(propertyid.String(), coords)
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.CreateInBatches(coords, 100).Error; err != nil {
 			return fmt.Errorf("failed to create coordinates in batch: %w", err)
@@ -119,14 +134,44 @@ func (r *coordinatesRepository) CreateBatch(ctx context.Context, coords []*model
 		return nil
 	})
 }
+func addtolocationservice(propertyid string, coords []*models.Coordinates) {
+	// Placeholder function to simulate addition to Location service
+	// In a real implementation, this would interact with the Location service or repository
+	cordinates := make([][]float64, 0)
+	for _, c := range coords {
+		point := []float64{c.Longitude, c.Latitude}
+		cordinates = append(cordinates, point)
+	}
+	req := map[string]interface{}{
+		"propertyid": propertyid,
+		"geojson": map[string]interface{}{
+			"type":        "Polygon",
+			"coordinates": [][][]float64{cordinates},
+		},
+	}
+
+	workflow.InserttoProperty(req)
+}
 
 // ReplaceByGISDataID replaces all Coordinates records for a specific GIS data record with a new batch.
 // Deletes existing records and inserts the new batch in a single transaction.
 func (r *coordinatesRepository) ReplaceByGISDataID(ctx context.Context, gisDataID uuid.UUID, coords []*models.Coordinates) error {
 	// Transaction: delete existing -> create new batch
+	
+
+	// Fetch propertyid from GISData using gisid
+	var gisData models.GISData
+	if err := r.db.First(&gisData, "id = ?", gisDataID).Error; err != nil {
+		return fmt.Errorf("failed to fetch GISData for GISDataID %s: %w", gisDataID, err)
+	}
+	propertyid := gisData.PropertyID
+
+	fmt.Println("PropertyID from GISData:", propertyid)
+	workflow.DeletefromProperty(propertyid.String())
+	addtolocationservice(propertyid.String(), coords)
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// Delete existing coordinates for the GIS data
-		if err := tx.Where("gis_data_id = ?", gisDataID).Delete(&models.Coordinates{}).Error; err != nil {
+		if err := tx.Where(queryByGISDataID, gisDataID).Delete(&models.Coordinates{}).Error; err != nil {
 			return fmt.Errorf("failed to delete existing coordinates for gis data id %s: %w", gisDataID, err)
 		}
 

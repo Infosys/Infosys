@@ -63,7 +63,7 @@ func (s *propertyAddressService) UpdatePropertyAddress(ctx context.Context, addr
 // DeletePropertyAddress removes a property address by its ID
 func (s *propertyAddressService) DeletePropertyAddress(ctx context.Context, id uuid.UUID) error {
 	if id == uuid.Nil {
-		return fmt.Errorf("invalid property address ID: cannot be nil")
+		return fmt.Errorf(constants.ErrInvalidPropertyAddressID)
 	}
 
 	// Repository layer error - propagate as is

@@ -125,17 +125,16 @@ func (s *propertyOwnerService) Update(ctx context.Context, id uuid.UUID, req *dt
 	if req.Gender != "" {
 		existing.Gender = req.Gender
 	}
-	if req.Guardian != "" {
-		existing.Guardian = req.Guardian
-	}
-	if req.GuardianType != "" {
-		existing.GuardianType = req.GuardianType
-	}
+	existing.Guardian = req.Guardian
+	existing.GuardianType = req.GuardianType
 	if req.RelationshipToProperty != "" {
 		existing.RelationshipToProperty = req.RelationshipToProperty
 	}
 	if req.OwnershipShare > 0 {
 		existing.OwnershipShare = req.OwnershipShare
+	}
+	if req.AdhaarNo != 0 {
+		existing.AdhaarNo = req.AdhaarNo
 	}
 	existing.IsPrimaryOwner = req.IsPrimaryOwner
 
@@ -168,4 +167,17 @@ func (s *propertyOwnerService) GetByPropertyID(ctx context.Context, propertyID u
 		owners = []*models.PropertyOwner{}
 	}
 	return owners, total, nil
+}
+
+// GetByID fetches a property owner by their ID
+func (s *propertyOwnerService) GetByID(ctx context.Context, id uuid.UUID) (*models.PropertyOwner, error) {
+	owner, err := s.repo.GetByID(ctx, id)
+
+	if err != nil {
+		return nil, err
+	}
+	if owner == nil {
+		owner = &models.PropertyOwner{}
+	}
+	return owner, nil
 }

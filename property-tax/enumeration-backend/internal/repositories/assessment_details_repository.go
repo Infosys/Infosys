@@ -33,7 +33,7 @@ func (r *assessmentDetailsRepository) Create(ctx context.Context, assessmentDeta
 // GetByID retrieves an AssessmentDetails record by its ID.
 func (r *assessmentDetailsRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.AssessmentDetails, error) {
 	var assessmentDetails models.AssessmentDetails
-	err := r.db.Where("id = ?", id).First(&assessmentDetails).Error
+	err := r.db.Where(QueryByID, id).First(&assessmentDetails).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("assessment details with id %s not found", id)
@@ -59,7 +59,7 @@ func (r *assessmentDetailsRepository) Update(ctx context.Context, assessmentDeta
 // Delete removes an AssessmentDetails record by its ID.
 // Returns an error if the record does not exist or deletion fails.
 func (r *assessmentDetailsRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	result := r.db.Delete(&models.AssessmentDetails{}, "id = ?", id)
+	result := r.db.Delete(&models.AssessmentDetails{}, QueryByID, id)
 	if result.Error != nil {
 		return fmt.Errorf("failed to delete assessment details with id %s: %w", id, result.Error)
 	}
@@ -78,7 +78,7 @@ func (r *assessmentDetailsRepository) GetAll(ctx context.Context, page, size int
 	query := r.db.Model(&models.AssessmentDetails{})
 
 	if propertyID != nil {
-		query = query.Where("property_id = ?", *propertyID)
+		query = query.Where(QueryByPropertyID, *propertyID)
 	}
 
 	// Count total records
@@ -102,7 +102,7 @@ func (r *assessmentDetailsRepository) GetAll(ctx context.Context, page, size int
 // GetByPropertyID retrieves an AssessmentDetails record by the associated property ID.
 func (r *assessmentDetailsRepository) GetByPropertyID(ctx context.Context, propertyID uuid.UUID) (*models.AssessmentDetails, error) {
 	var assessmentDetails models.AssessmentDetails
-	err := r.db.Where("property_id = ?", propertyID).First(&assessmentDetails).Error
+	err := r.db.Where(QueryByPropertyID, propertyID).First(&assessmentDetails).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("assessment details with property id %s not found", propertyID)

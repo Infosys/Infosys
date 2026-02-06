@@ -30,7 +30,7 @@ func (h *ApplicationHandler) Create(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
-			"message": "Invalid request body",
+			"message": constants.ErrInvalidRequestBody,
 			"errors":  []string{err.Error()},
 		})
 		return
@@ -60,7 +60,7 @@ func (h *ApplicationHandler) GetByID(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
-			"message": "Invalid application ID",
+			"message": constants.ErrInvalidApplicationID,
 			"errors":  []string{err.Error()},
 		})
 		return
@@ -118,7 +118,7 @@ func (h *ApplicationHandler) Update(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
-			"message": "Invalid application ID",
+			"message": constants.ErrInvalidApplicationID,
 			"errors":  []string{err.Error()},
 		})
 		return
@@ -128,7 +128,7 @@ func (h *ApplicationHandler) Update(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
-			"message": "Invalid request body",
+			"message": constants.ErrInvalidRequestBody,
 			"errors":  []string{err.Error()},
 		})
 		return
@@ -157,7 +157,7 @@ func (h *ApplicationHandler) UpdateStatus(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
-			"message": "Invalid application ID",
+			"message": constants.ErrInvalidApplicationID,
 			"errors":  []string{err.Error()},
 		})
 		return
@@ -167,7 +167,7 @@ func (h *ApplicationHandler) UpdateStatus(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
-			"message": "Invalid request body",
+			"message": constants.ErrInvalidRequestBody,
 			"errors":  []string{err.Error()},
 		})
 		return
@@ -176,7 +176,7 @@ func (h *ApplicationHandler) UpdateStatus(c *gin.Context) {
 	if err := h.service.UpdateStatus(c.Request.Context(), id, &req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
-			"message": "Failed to update status",
+			"message": constants.ErrApplicationUpdateFailed,
 			"errors":  []string{err.Error()},
 		})
 		return
@@ -194,7 +194,7 @@ func (h *ApplicationHandler) Action(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
-			"message": "Invalid application ID",
+			"message": constants.ErrInvalidApplicationID,
 			"errors":  []string{err.Error()},
 		})
 		return
@@ -206,7 +206,7 @@ func (h *ApplicationHandler) Action(c *gin.Context) {
 	if !exists {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
-			"message": "Invalid request body",
+			"message": constants.ErrInvalidRequestBody,
 			"errors":  []string{},
 		})
 		return
@@ -297,7 +297,7 @@ func (h *ApplicationHandler) Delete(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
-			"message": "Invalid application ID",
+			"message": constants.ErrInvalidApplicationID,
 			"errors":  []string{err.Error()},
 		})
 		return
@@ -403,23 +403,19 @@ func (h *ApplicationHandler) Search(c *gin.Context) {
 	c.Header(constants.HeaderCurrentPage, strconv.Itoa(page))
 	c.Header(constants.HeaderPerPage, strconv.Itoa(size))
 	c.Header(constants.HeaderTotalPages, strconv.Itoa(totalPages))
-    if criteria.IsCountOnly {
+	if criteria.IsCountOnly {
+		c.JSON(http.StatusOK, gin.H{"totalItems": total})
+	} else {
 		c.JSON(http.StatusOK, gin.H{
-			"totalItems": total,
-			
-		},
-	)
-	}else{
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "Applications retrieved successfully",
-		"data":    applications,
-		"pagination": gin.H{
-			"page":       page,
-			"size":       size,
-			"totalItems": total,
-			"totalPages": totalPages,
-		},
-	})
-}
+			"success": true,
+			"message": "Applications retrieved successfully",
+			"data":    applications,
+			"pagination": gin.H{
+				"page":       page,
+				"size":       size,
+				"totalItems": total,
+				"totalPages": totalPages,
+			},
+		})
+	}
 }

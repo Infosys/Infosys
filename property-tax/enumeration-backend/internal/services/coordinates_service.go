@@ -50,10 +50,16 @@ func (s *coordinatesService) Create(ctx context.Context, coordinates *models.Coo
 	if err := s.repo.Create(ctx, coordinates); err != nil {
 		return fmt.Errorf("failed to create coordinates for GISDataID %s: %w", coordinates.GISDataID, err)
 	}
+	go InserttoProperty(coordinates)
 
 	return nil
 }
-
+func InserttoProperty(coordinates *models.Coordinates) {
+	// Placeholder function to simulate insertion to Property
+	// In a real implementation, this would interact with the Property service or repository
+	fmt.Printf("Inserting coordinates ID %s to Property service\n", coordinates.ID)
+	
+}
 // GetByID fetches a coordinates record by its ID
 func (s *coordinatesService) GetByID(ctx context.Context, id uuid.UUID) (*models.Coordinates, error) {
 	if id == uuid.Nil {

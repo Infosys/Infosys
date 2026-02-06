@@ -2,11 +2,15 @@
 package handlers
 
 import (
+	"enumeration/internal/constants"
+	"enumeration/internal/dto"
 	"enumeration/internal/models"
 	"enumeration/internal/services"
 	"enumeration/pkg/response"
+	"enumeration/pkg/utils"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -15,12 +19,14 @@ import (
 // ConstructionDetailsHandler handles HTTP requests for construction details resources.
 type ConstructionDetailsHandler struct {
 	constructionDetailsService services.ConstructionDetailsService // Service layer for construction details operations
+	applicationLogService      services.ApplicationLogService
 }
 
 // NewConstructionDetailsHandler creates a new ConstructionDetailsHandler with the provided service.
-func NewConstructionDetailsHandler(constructionDetailsService services.ConstructionDetailsService) *ConstructionDetailsHandler {
+func NewConstructionDetailsHandler(constructionDetailsService services.ConstructionDetailsService, applicationLogService services.ApplicationLogService) *ConstructionDetailsHandler {
 	return &ConstructionDetailsHandler{
 		constructionDetailsService: constructionDetailsService,
+		applicationLogService:      applicationLogService,
 	}
 }
 
@@ -47,17 +53,17 @@ func (h *ConstructionDetailsHandler) GetConstructionDetailsByID(c *gin.Context) 
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, response.ErrorResponseBody("Invalid construction details ID", err.Error()))
+		c.JSON(http.StatusBadRequest, response.ErrorResponseBody(constants.ErrInvalidConstructionDetailsIDFormat, err.Error()))
 		return
 	}
 
 	constructionDetails, err := h.constructionDetailsService.GetConstructionDetailsByID(c.Request.Context(), id)
 	if err != nil {
-		if err.Error() == "construction details not found" {
-			c.JSON(http.StatusNotFound, response.ErrorResponseBody("Construction details not found", err.Error()))
+		if err.Error() == constants.ErrConstructionDetailsNotFound {
+			c.JSON(http.StatusNotFound, response.ErrorResponseBody(constants.ErrConstructionDetailsNotFoundMsg, err.Error()))
 			return
 		}
-		c.JSON(http.StatusInternalServerError, response.ErrorResponseBody("Failed to get construction details", err.Error()))
+		c.JSON(http.StatusInternalServerError, response.ErrorResponseBody(constants.ErrFailedToGetConstructionDetails, err.Error()))
 		return
 	}
 
@@ -70,7 +76,7 @@ func (h *ConstructionDetailsHandler) UpdateConstructionDetails(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, response.ErrorResponseBody("Invalid construction details ID", err.Error()))
+		c.JSON(http.StatusBadRequest, response.ErrorResponseBody(constants.ErrInvalidConstructionDetailsIDFormat, err.Error()))
 		return
 	}
 
@@ -80,15 +86,37 @@ func (h *ConstructionDetailsHandler) UpdateConstructionDetails(c *gin.Context) {
 		return
 	}
 
+	applicationId, err := uuid.Parse(c.Param("applicationId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.ErrorResponseBody(constants.ErrInvalidApplicationID, err.Error()))
+		return
+	}
+
+	isVerifying := c.DefaultQuery("isVerifying", "false") == "true"
+
 	constructionDetails.ID = id
 
+	existingDetails, err := h.constructionDetailsService.GetConstructionDetailsByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.ErrorResponseBody("Failed to retrieve existing construction details", err.Error()))
+		return
+	}
+
 	if err := h.constructionDetailsService.UpdateConstructionDetails(c.Request.Context(), &constructionDetails); err != nil {
-		if err.Error() == "construction details not found" {
-			c.JSON(http.StatusNotFound, response.ErrorResponseBody("Construction details not found", err.Error()))
+		if err.Error() == constants.ErrConstructionDetailsNotFound {
+			c.JSON(http.StatusNotFound, response.ErrorResponseBody(constants.ErrConstructionDetailsNotFoundMsg, err.Error()))
 			return
 		}
 		c.JSON(http.StatusBadRequest, response.ErrorResponseBody("Failed to update construction details", err.Error()))
 		return
+	}
+
+	if isVerifying && existingDetails != nil {
+		comments := h.buildConstructionChangeComments(existingDetails, &constructionDetails)
+		if err := h.logConstructionChange(c, applicationId, comments); err != nil {
+			c.JSON(http.StatusInternalServerError, response.ErrorResponseBody("Failed to log construction details verification", err.Error()))
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, response.SuccessResponseBody("Construction details updated successfully", constructionDetails))
@@ -99,13 +127,13 @@ func (h *ConstructionDetailsHandler) DeleteConstructionDetails(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, response.ErrorResponseBody("Invalid construction details ID", err.Error()))
+		c.JSON(http.StatusBadRequest, response.ErrorResponseBody(constants.ErrInvalidConstructionDetailsIDFormat, err.Error()))
 		return
 	}
 
 	if err := h.constructionDetailsService.DeleteConstructionDetails(c.Request.Context(), id); err != nil {
-		if err.Error() == "construction details not found" {
-			c.JSON(http.StatusNotFound, response.ErrorResponseBody("Construction details not found", err.Error()))
+		if err.Error() == constants.ErrConstructionDetailsNotFound {
+			c.JSON(http.StatusNotFound, response.ErrorResponseBody(constants.ErrConstructionDetailsNotFoundMsg, err.Error()))
 			return
 		}
 		c.JSON(http.StatusInternalServerError, response.ErrorResponseBody("Failed to delete construction details", err.Error()))
@@ -158,4 +186,69 @@ func (h *ConstructionDetailsHandler) GetConstructionDetailsByPropertyID(c *gin.C
 	}
 
 	c.JSON(http.StatusOK, response.SuccessResponseBody("Construction details retrieved successfully", constructionDetails))
+}
+
+// compareConstructionField compares a construction field and returns change message if different
+func compareConstructionField(fieldName, existing, updated string) string {
+	switch {
+	case updated == "" || existing == updated:
+		return ""
+	case existing == "":
+		return fieldName + " is added as " + updated
+	default:
+		return fieldName + " is changed from " + existing + " to " + updated
+	}
+}
+
+// buildConstructionFieldChanges builds change comments for construction detail fields
+func (h *ConstructionDetailsHandler) buildConstructionFieldChanges(existing, updated *models.ConstructionDetails) []string {
+	changes := []string{}
+
+	if change := compareConstructionField("Floor Type", existing.FloorType, updated.FloorType); change != "" {
+		changes = append(changes, change)
+	}
+	if change := compareConstructionField("Roof Type", existing.RoofType, updated.RoofType); change != "" {
+		changes = append(changes, change)
+	}
+	if change := compareConstructionField("Wall Type", existing.WallType, updated.WallType); change != "" {
+		changes = append(changes, change)
+	}
+	if change := compareConstructionField("Wood Type", existing.WoodType, updated.WoodType); change != "" {
+		changes = append(changes, change)
+	}
+
+	return changes
+}
+
+// buildConstructionChangeComments constructs change comments from existing and updated construction details
+func (h *ConstructionDetailsHandler) buildConstructionChangeComments(existing, updated *models.ConstructionDetails) string {
+	if existing == nil {
+		return ""
+	}
+
+	changes := h.buildConstructionFieldChanges(existing, updated)
+	if len(changes) == 0 {
+		return ""
+	}
+
+	return strings.Join(changes, ";\n") + ";\n"
+}
+
+func (h *ConstructionDetailsHandler) logConstructionChange(c *gin.Context, applicationID uuid.UUID, comments string) error {
+	if comments == "" || h.applicationLogService == nil {
+		return nil
+	}
+
+	userName, userRole := utils.GetUserInfoFromContext(c)
+	appLogReq := &dto.CreateApplicationLogRequest{
+		ApplicationID: applicationID,
+		Action:        "EDIT_CONSTRUCTION_DETAILS",
+		Actor:         userRole,
+		PerformedBy:   userName,
+		Comments:      comments,
+		Metadata:      map[string]interface{}{},
+	}
+
+	_, err := h.applicationLogService.Create(c.Request.Context(), appLogReq)
+	return err
 }

@@ -64,6 +64,7 @@ type PropertyOwnerService interface {
 	GetByPropertyID(ctx context.Context, propertyID uuid.UUID, page, size int) ([]*models.PropertyOwner, int64, error)
 	Update(ctx context.Context, id uuid.UUID, req *dto.UpdatePropertyOwnerRequest) (*models.PropertyOwner, error)
 	Delete(ctx context.Context, id uuid.UUID) error
+	GetByID(ctx context.Context, id uuid.UUID) (*models.PropertyOwner, error)
 }
 
 // ConstructionDetailsService handles business logic for construction details
@@ -99,14 +100,13 @@ type AssessmentDetailsService interface {
 
 // PropertyService handles business logic for properties
 type PropertyService interface {
-	CreateProperty(ctx context.Context, property *models.Property) error
-	GetPropertyByID(ctx context.Context, id uuid.UUID) (*models.Property, error)
-	UpdateProperty(ctx context.Context, property *models.Property) error
-	DeleteProperty(ctx context.Context, id uuid.UUID) error
-	GetAllProperties(ctx context.Context, page, size int, propertyType *string) ([]*models.Property, int64, error)
-	GetPropertyByPropertyNo(ctx context.Context, propertyNo string) (*models.Property, error)
+	CreateProperty(ctx context.Context, req *dto.CreatePropertyRequest, tenantID string) (*models.Property, error)
+	GetPropertyByID(ctx context.Context, id uuid.UUID, tenantID string) (*models.Property, error)
+	UpdateProperty(ctx context.Context, id uuid.UUID, req *dto.UpdatePropertyRequest, tenantID string) (*models.Property, error)
+	DeleteProperty(ctx context.Context, id uuid.UUID, tenantID string) error
+	GetAllProperties(ctx context.Context, tenantID string, page, size int, propertyType *string, status *string) ([]*models.Property, int64, error)
+	GetPropertyByPropertyNo(ctx context.Context, propertyNo, tenantID string) (*models.Property, error)
 	SearchProperties(ctx context.Context, params SearchPropertyParams) ([]*models.Property, int64, error)
-	GeneratePropertyNo(ctx context.Context) (string, error)
 }
 
 // SearchPropertyParams holds search and filter options for properties
@@ -122,6 +122,7 @@ type SearchPropertyParams struct {
 	Street        *string
 	SortBy        string
 	SortOrder     string
+	TenantID      string
 }
 
 // PropertyAddressService handles business logic for property addresses

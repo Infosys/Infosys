@@ -42,11 +42,12 @@ func NewApplicationService(appRepo repositories.ApplicationRepository, ownerRepo
 		applicationlog: applicationlog,
 	}
 }
+
 // Create creates a new application with property owners
 func (s *applicationService) Create(ctx context.Context, tenantID string, citizenID string, req *dto.CreateApplicationRequest) (*models.Application, error) {
-	
+
 	if req == nil {
-		return nil, fmt.Errorf("%w: request is nil", ErrValidation)
+		return nil, fmt.Errorf(constants.ErrInvalidRequestBody+": %w", ErrValidation)
 	}
 	// Generate unique application number
 	applicationNo := s.generateApplicationNumber()
@@ -142,7 +143,7 @@ func (s *applicationService) GetByApplicationNo(ctx context.Context, application
 func (s *applicationService) Update(ctx context.Context, id uuid.UUID, req *dto.UpdateApplicationRequest) (*models.Application, error) {
 	// Check if application exists
 	if req == nil {
-		return nil, fmt.Errorf("%w: request is nil", ErrValidation)
+		return nil, fmt.Errorf(constants.ErrInvalidRequestBody+": %w", ErrValidation)
 	}
 	existing, err := s.appRepo.GetByID(ctx, id)
 	if err != nil {
@@ -168,15 +169,15 @@ func (s *applicationService) Update(ctx context.Context, id uuid.UUID, req *dto.
 	if req.IsDraft != nil {
 		existing.IsDraft = *req.IsDraft
 	}
-	 if req.ImportantNote != nil {
-        existing.ImportantNote = *req.ImportantNote
-    }
+	if req.ImportantNote != nil {
+		existing.ImportantNote = *req.ImportantNote
+	}
 
 	// Update application
 	if err := s.appRepo.Update(ctx, existing); err != nil {
 		return nil, fmt.Errorf("failed to update application: %w", err)
 	}
-	logger.Info("Updated application with ID: ", existing.ID)
+	logger.Info(constants.MsgApplicationUpdatedSuccessfully, existing.ID)
 
 	return existing, nil
 }
@@ -185,7 +186,7 @@ func (s *applicationService) Update(ctx context.Context, id uuid.UUID, req *dto.
 func (s *applicationService) UpdateStatus(ctx context.Context, id uuid.UUID, req *dto.UpdateStatusRequest) error {
 	// Check if application exists
 	if req == nil {
-		return fmt.Errorf("%w: request is nil", ErrValidation)
+		return fmt.Errorf(constants.ErrInvalidRequestBody+": %w", ErrValidation)
 	}
 
 	existing, err := s.appRepo.GetByID(ctx, id)
@@ -210,7 +211,7 @@ func (s *applicationService) UpdateStatus(ctx context.Context, id uuid.UUID, req
 func (s *applicationService) AssignAgent(ctx context.Context, id uuid.UUID, req *dto.ActionRequest, tenantID string) error {
 	// Check if application exists
 	if req == nil {
-		return fmt.Errorf("%w: request is nil", ErrValidation)
+		return fmt.Errorf(constants.ErrInvalidRequestBody+": %w", ErrValidation)
 	}
 	existing, err := s.appRepo.GetByID(ctx, id)
 	if err != nil {
@@ -234,7 +235,7 @@ func (s *applicationService) AssignAgent(ctx context.Context, id uuid.UUID, req 
 		return fmt.Errorf("agent ID is required for assignment")
 	}
 	existing.AssignedAgent = &req.AgentID
-
+    prevstate:=existing.Status
 	existing.Status = constants.StatusAssigned
 	if err := s.appRepo.Update(ctx, existing); err != nil {
 		return fmt.Errorf("failed to assign agent: %w", err)
@@ -246,12 +247,31 @@ func (s *applicationService) AssignAgent(ctx context.Context, id uuid.UUID, req 
 		appLog := dto.CreateApplicationLogRequest{
 			ApplicationID: existing.ID,
 			Action:        "Application Re-assigned to Agent",
-			Actor: ctx.Value("role").(string),
+			Actor:         ctx.Value("role").(string),
 			PerformedBy:   ctx.Value("user").(string),
 			Metadata:      map[string]interface{}{},
 			Comments:      "application Re-assigned to agent : " + username,
 		}
 		s.applicationlog.Create(ctx, &appLog)
+		// Create workflow transition
+		if prevstate == constants.StatusAssigned {
+			return nil
+		}
+		transitionReq := &workflow.TransitionRequest{
+			ProcessID: existing.WorkflowInstanceID,
+			EntityID:  existing.ApplicationNo,
+			Action:    "Reassign Application",
+			Attributes: map[string]interface{}{
+				"roles":         []string{constants.RoleServiceManager},
+				"jurisdiction":  []string{constants.DefaultJurisdiction},
+				"assignedAgent": []string{req.AgentID.String()},
+				"comments":      []string{req.Comments},
+			},
+		}
+		_, err = s.workflowClient.CreateTransition(ctx, constants.DefaultJurisdiction, transitionReq)
+		if err != nil {
+			return fmt.Errorf(constants.ErrWorkflowTransitionCreationFailed+": %w", err)
+		}
 		return nil
 	}
 	// Create workflow transition
@@ -261,14 +281,14 @@ func (s *applicationService) AssignAgent(ctx context.Context, id uuid.UUID, req 
 		Action:    "Assign to Agent",
 		Attributes: map[string]interface{}{
 			"roles":         []string{constants.RoleServiceManager},
-			"jurisdiction":  []string{"Punjab.Amritsar"},
+			"jurisdiction":  []string{constants.DefaultJurisdiction},
 			"assignedAgent": []string{req.AgentID.String()},
 			"comments":      []string{req.Comments},
 		},
 	}
-	_, err = s.workflowClient.CreateTransition(ctx, "pb.amritsar", transitionReq)
+	_, err = s.workflowClient.CreateTransition(ctx, constants.DefaultJurisdiction, transitionReq)
 	if err != nil {
-		return fmt.Errorf("failed to create workflow transition: %w", err)
+		return fmt.Errorf(constants.ErrWorkflowTransitionCreationFailed+": %w", err)
 	}
 	username, _ := workflow.GetUsername(req.AgentID.String())
 	appLog := dto.CreateApplicationLogRequest{
@@ -277,7 +297,7 @@ func (s *applicationService) AssignAgent(ctx context.Context, id uuid.UUID, req 
 		PerformedBy:   ctx.Value("user").(string),
 		Actor:         ctx.Value("role").(string),
 		Metadata:      map[string]interface{}{},
-		Comments:      "application assigned to agent : " + username,
+		Comments:      "Application assigned to agent : " + username,
 	}
 	s.applicationlog.Create(ctx, &appLog)
 
@@ -387,15 +407,15 @@ func (s *applicationService) CalculateProgress(ctx context.Context, currentTime 
 func (s *applicationService) ApproveApplication(ctx context.Context, tenantID, commissionerID, applicationID string, req *dto.ActionRequest) error {
 
 	if req == nil {
-		return fmt.Errorf("%w: request is nil", ErrValidation)
+		return fmt.Errorf(constants.ErrInvalidRequestBody+": %w", ErrValidation)
 	}
 	appID, err := uuid.Parse(applicationID)
 	if err != nil {
-		return fmt.Errorf("invalid application ID format: %w", err)
+		return fmt.Errorf(constants.ErrInvalidIdFormat+": %w", err)
 	}
 	app, err := s.appRepo.GetByID(ctx, appID)
 	if err != nil {
-		return fmt.Errorf("application not found: %w", err)
+		return fmt.Errorf(constants.ErrApplicationNotFound+": %w", err)
 	}
 
 	transitionReq := &workflow.TransitionRequest{
@@ -404,15 +424,15 @@ func (s *applicationService) ApproveApplication(ctx context.Context, tenantID, c
 		Action:    "Approve Application",
 		Attributes: map[string]interface{}{
 			"roles":            []string{constants.RoleCommissioner},
-			"jurisdiction":     []string{"Punjab.Amritsar"},
+			"jurisdiction":     []string{constants.DefaultJurisdiction},
 			"approvalComments": []string{req.Comments},
 		},
 	}
 
-	_, err = s.workflowClient.CreateTransition(ctx, "pb.amritsar", transitionReq)
+	_, err = s.workflowClient.CreateTransition(ctx, constants.DefaultJurisdiction, transitionReq)
 
 	if err != nil {
-		return fmt.Errorf("failed to create workflow transition: %w", err)
+		return fmt.Errorf(constants.ErrWorkflowTransitionCreationFailed+": %w", err)
 	}
 
 	newState := constants.StatusApproved
@@ -423,15 +443,15 @@ func (s *applicationService) ApproveApplication(ctx context.Context, tenantID, c
 	app.Status = newState
 
 	if err := s.appRepo.Update(ctx, app); err != nil {
-		return fmt.Errorf("failed to update application: %w", err)
+		return fmt.Errorf(constants.ErrApplicationUpdateFailed+": %w", err)
 	}
-	logger.Info("Updated application with ID: ", app.ID, " to status: ", newState)
+	logger.Info(constants.MsgApplicationUpdatedSuccessfully, app.ID, " to status: ", newState)
 	username, _ := workflow.GetUsername(commissionerID)
 	appLog := dto.CreateApplicationLogRequest{
 		ApplicationID: app.ID,
 		Action:        "Application Approved",
 		PerformedBy:   ctx.Value("user").(string),
-		Actor: ctx.Value("role").(string),
+		Actor:         ctx.Value("role").(string),
 		Metadata:      map[string]interface{}{},
 		Comments:      "application " + newState + " by commissioner : " + username,
 	}
@@ -441,15 +461,15 @@ func (s *applicationService) ApproveApplication(ctx context.Context, tenantID, c
 
 func (s *applicationService) VerifyApplication(ctx context.Context, tenantID, serviceManagerID, applicationID string, req *dto.ActionRequest) error {
 	if req == nil {
-		return fmt.Errorf("%w: request is nil", ErrValidation)
+		return fmt.Errorf(constants.ErrInvalidRequestBody+": %w", ErrValidation)
 	}
 	appID, err := uuid.Parse(applicationID)
 	if err != nil {
-		return fmt.Errorf("invalid application ID format: %w", err)
+		return fmt.Errorf(constants.ErrInvalidIdFormat+": %w", err)
 	}
 	app, err := s.appRepo.GetByID(ctx, appID)
 	if err != nil {
-		return fmt.Errorf("application not found: %w", err)
+		return fmt.Errorf(constants.ErrApplicationNotFound+": %w", err)
 	}
 
 	// Check if workflow process exists
@@ -465,29 +485,29 @@ func (s *applicationService) VerifyApplication(ctx context.Context, tenantID, se
 		Action:    "Audit Verification",
 		Attributes: map[string]interface{}{
 			"roles":         []string{constants.RoleServiceManager},
-			"jurisdiction":  []string{"Punjab.Amritsar"},
+			"jurisdiction":  []string{constants.DefaultJurisdiction},
 			"auditComments": []string{req.Comments},
 		},
 	}
 
-	_, err = s.workflowClient.CreateTransition(ctx, "pb.amritsar", transitionReq)
+	_, err = s.workflowClient.CreateTransition(ctx, constants.DefaultJurisdiction, transitionReq)
 	if err != nil {
-		return fmt.Errorf("failed to create workflow transition: %w", err)
+		return fmt.Errorf(constants.ErrWorkflowTransitionCreationFailed+": %w", err)
 	}
 	app.Status = newState
 
 	if err := s.appRepo.Update(ctx, app); err != nil {
-		return fmt.Errorf("failed to update application: %w", err)
+		return fmt.Errorf(constants.ErrApplicationUpdateFailed+": %w", err)
 	}
-	logger.Info("Updated application with ID: ", app.ID, " to status: ", newState)
+	logger.Info(constants.MsgApplicationUpdatedSuccessfully, app.ID, constants.MsgApplicationStatusUpdated, newState)
 	username, _ := workflow.GetUsername(serviceManagerID)
 	appLog := dto.CreateApplicationLogRequest{
 		ApplicationID: app.ID,
 		Action:        "Application Audit Verified",
 		PerformedBy:   ctx.Value("user").(string),
 		Metadata:      map[string]interface{}{},
-		Actor: ctx.Value("role").(string),
-		Comments:      "application " + newState + " by service manager : " + username,
+		Actor:         ctx.Value("role").(string),
+		Comments:      constants.MsgApplication + newState + " by service manager : " + username,
 	}
 	s.applicationlog.Create(ctx, &appLog)
 	return nil
@@ -495,17 +515,17 @@ func (s *applicationService) VerifyApplication(ctx context.Context, tenantID, se
 
 func (s *applicationService) VerifyApplicationByAgent(ctx context.Context, tenantID, agentID, applicationID string, req *dto.ActionRequest) error {
 	if req == nil {
-		return fmt.Errorf("%w: request is nil", ErrValidation)
+		return fmt.Errorf(constants.ErrInvalidRequestBody+": %w", ErrValidation)
 	}
 
 	appID, err := uuid.Parse(applicationID)
 	if err != nil {
-		return fmt.Errorf("invalid application ID format: %w", err)
+		return fmt.Errorf(constants.ErrInvalidIdFormat+": %w", err)
 	}
 
 	app, err := s.appRepo.GetByID(ctx, appID)
 	if err != nil {
-		return fmt.Errorf("application not found: %w", err)
+		return fmt.Errorf(constants.ErrApplicationNotFound+": %w", err)
 	}
 
 	transitionReq := &workflow.TransitionRequest{
@@ -514,29 +534,29 @@ func (s *applicationService) VerifyApplicationByAgent(ctx context.Context, tenan
 		Action:    "Submit for Verification",
 		Attributes: map[string]interface{}{
 			"roles":              []string{constants.RoleAgent},
-			"jurisdiction":       []string{"Punjab.Amritsar"},
+			"jurisdiction":       []string{constants.DefaultJurisdiction},
 			"verificationReport": []string{req.Comments},
 		},
 	}
 
-	_, err = s.workflowClient.CreateTransition(ctx, "pb.amritsar", transitionReq)
+	_, err = s.workflowClient.CreateTransition(ctx, constants.DefaultJurisdiction, transitionReq)
 	if err != nil {
-		return fmt.Errorf("failed to create workflow transition: %w", err)
+		return fmt.Errorf(constants.ErrWorkflowTransitionCreationFailed+": %w", err)
 	}
 
 	app.Status = constants.StatusVerified
 
 	if err := s.appRepo.Update(ctx, app); err != nil {
-		return fmt.Errorf("failed to update application: %w", err)
+		return fmt.Errorf(constants.ErrApplicationUpdateFailed+": %w", err)
 	}
-	logger.Info("Updated application with ID: ", app.ID, " to status: ", constants.StatusVerified)
+	logger.Info(constants.MsgApplicationUpdatedSuccessfully, app.ID, " to status: ", constants.StatusVerified)
 	username, _ := workflow.GetUsername(agentID)
 	appLog := dto.CreateApplicationLogRequest{
 		ApplicationID: app.ID,
 		Action:        "Application Verified",
 		PerformedBy:   ctx.Value("user").(string),
 		Metadata:      map[string]interface{}{},
-		Actor: ctx.Value("role").(string),
+		Actor:         ctx.Value("role").(string),
 		Comments:      "application " + constants.StatusVerified + " by agent : " + username,
 	}
 	s.applicationlog.Create(ctx, &appLog)
@@ -583,10 +603,10 @@ func (s *applicationService) generateApplicationNumber() string {
 	}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Sprintf("PROP-%d-%s", time.Now().Unix(), uuid.New().String()[:8])
+		return fmt.Sprintf(constants.Prop, time.Now().Unix(), uuid.New().String()[:8])
 	}
 	if err := json.Unmarshal(body, &result); err != nil || result.ID == "" {
-		return fmt.Sprintf("PROP-%d-%s", time.Now().Unix(), uuid.New().String()[:8])
+		return fmt.Sprintf(constants.Prop, time.Now().Unix(), uuid.New().String()[:8])
 	}
 	return result.ID
 }

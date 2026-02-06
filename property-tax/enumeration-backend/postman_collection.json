@@ -1,0 +1,4920 @@
+{
+	"info": {
+		"_postman_id": "b7811b33-7cb0-4ef2-a163-52255d56a2d5",
+		"name": "DIGIT3 BACKEND",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "49865635",
+		"_collection_link": "https://amogh-mangalvedi-6587575.postman.co/workspace/Amogh-R-M's-Workspace~82f6feff-930d-45a9-8df2-e67ef34122cc/collection/49865635-b7811b33-7cb0-4ef2-a163-52255d56a2d5?action=share&source=collection_link&creator=49865635"
+	},
+	"item": [
+		{
+			"name": "Application",
+			"item": [
+				{
+					"name": "Delete Application by ID",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "comm@1234",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "Raghav.Saraf2",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31808/realms/agent-realm/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/applications/{{application_id}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"applications",
+								"{{application_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List application by ID",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31807/realms/digit3/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "Puttraj.K",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": " digit3",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/applications/{{application_id}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"applications",
+								"{{application_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List all applications",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "Sharad.Katkol",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31807/realms/digit3/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-User-ID",
+								"value": "6b338a84-af0f-47bf-9345-86c82b3120fc",
+								"type": "text"
+							},
+							{
+								"key": "X-User-Role",
+								"value": "SERVICE_MANAGER",
+								"type": "text"
+							},
+							{
+								"key": "X-Status",
+								"value": "ASSIGNE",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "X-Tenant-ID",
+								"value": "pb.amritsar",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/v1/applications?page=0&size=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"applications"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Application with Property Owners",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "Sharad.Katkol",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31807/realms/digit3/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"priority\": \"MEDIUM\",\n  \"appliedBy\": \"Rajesh Kumar - Modified\",\n  \"dueDate\": \"2025-12-30T23:59:59Z\",\n  \"propertyOwners\": [\n    {\n      \"adhaarNo\": 123456789012,\n      \"name\": \"Rajesh Kumar Updated\",\n      \"contactNo\": \"9876543210\",\n      \"email\": \"rajesh.updated@example.com\",\n      \"gender\": \"MALE\",\n      \"guardian\": \"Ram Kumar\",\n      \"guardianType\": \"FATHER\",\n      \"relationshipToProperty\": \"OWNER\",\n      \"ownershipShare\": 70.0,\n      \"isPrimaryOwner\": true\n    },\n    {\n      \"adhaarNo\": 987654321098,\n      \"name\": \"Priya Kumar Updated\",\n      \"contactNo\": \"9876543211\",\n      \"email\": \"priya.updated@example.com\",\n      \"gender\": \"FEMALE\",\n      \"guardian\": \"Rajesh Kumar\",\n      \"guardianType\": \"SPOUSE\",\n      \"relationshipToProperty\": \"CO_OWNER\",\n      \"ownershipShare\": 30.0,\n      \"isPrimaryOwner\": false\n    }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/v1/applications/d7dbd44c-8912-4e0a-8049-952ec1eedb36",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"applications",
+								"d7dbd44c-8912-4e0a-8049-952ec1eedb36"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ASSIGNMENT TO AGENT",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "priya.service.manager",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31808/realms/agent-realm/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Tenant-ID",
+								"value": "pb.amritsar",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"action\": \"assign\",\n  \"agentId\": \"79666b1c-8d46-49f6-b637-09d8570a4b9f\",\n  \"comments\": \"Assigned to field agent for verification\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/v1/applications/{{application_id}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"applications",
+								"{{application_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Re-ASSIGNMENT TO AGENT",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "priya.service.manager",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31808/realms/agent-realm/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Tenant-ID",
+								"value": "pb.amritsar",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"action\": \"re-assign\",\n  \"agentId\": \"79666b1c-8d46-49f6-b637-09d8570a4b9f\",\n  \"comments\": \"Assigned to field agent for verification\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/v1/applications/{{application_id}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"applications",
+								"{{application_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "VERIFICATION  BY AGENT",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31807/realms/digit3/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "Amogh.Mangalvadi",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Tenant-ID",
+								"value": "pb.amritsar",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"action\": \"verify\",\n  \"verified\": true,\n  \"comments\": \"Application verifed by agent\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/v1/applications/{{application_id}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"applications",
+								"{{application_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "AUDIT VERIFICATION BY SERVICE MANAGER",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "username",
+									"value": "priya.service.mana",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31808/realms/agent-realm/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Tenant-ID",
+								"value": "pb.amritsar",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"approved\": true,\n  \"comments\": \"audit verified application\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/v1/applications/{{application_id}}/audit-verify",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"applications",
+								"{{application_id}}",
+								"audit-verify"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "APPROVAL BY COMMISSIONER",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "username",
+									"value": "Raghav.Saraf2",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "comm@1234",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31808/realms/agent-realm/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Tenant-ID",
+								"value": "pb.amritsar",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"approved\": true,\n  \"comments\": \"approved successfully application\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/v1/applications/{{application_id}}/approve",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"applications",
+								"{{application_id}}",
+								"approve"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "UPDATE APPLICATION",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "Puttraj.K",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31807/realms/digit3/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"priority\": \"HIGH\",\n  \"appliedBy\": \"Suresh Patel - Updated\",\n  \"dueDate\": \"2025-12-25T23:59:59Z\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/v1/applications/{{application_id}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"applications",
+								"{{application_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Application",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "leo.messi",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31808/realms/agent-realm/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Tenant-ID",
+								"value": "pb.amritsar",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"propertyId\": \"dd55bb2e-fd5f-48a8-b45f-e8e0f10f41a9\",\n  \"priority\": \"HIGH\",\n  \"dueDate\": \"2025-12-31T23:59:59Z\",\n  \"appliedBy\": \"Virat Sharma\",\n  \"isDraft\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/v1/applications",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"applications"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get Appn by propID",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "priya.service.manager",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31808/realms/agent-realm/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer YOUR_JWT_TOKEN"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "propertyId",
+									"value": "11111111-1111-1111-1111-111111111111",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/applications/search?propertyId=c4d3926c-1e9a-4b3d-951e-2e919637dcfa",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"applications",
+								"search"
+							],
+							"query": [
+								{
+									"key": "propertyId",
+									"value": "c4d3926c-1e9a-4b3d-951e-2e919637dcfa"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get appn by ward/zone no",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Property_owner",
+			"item": [
+				{
+					"name": "Create Prop_owner",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "leo.messi",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31808/realms/agent-realm/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"propertyId\": \"c4d3926c-1e9a-4b3d-951e-2e919637dcfa\",\n  \"adhaarNo\": 123456789012,\n  \"name\": \"Rajesh Kumar\",\n  \"contactNo\": \"9876543210\",\n  \"email\": \"rajesh.kumar@example.com\",\n  \"gender\": \"MALE\",\n  \"guardian\": \"Suresh Kumar\",\n  \"guardianType\": \"FATHER\",\n  \"relationshipToProperty\": \"OWNER\",\n  \"ownershipShare\": 100.00,\n  \"isPrimaryOwner\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/v1/property-owners",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"property-owners"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get by Prop_id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/property-owners/property/c4d3926c-1e9a-4b3d-951e-2e919637dcfa",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"property-owners",
+								"property",
+								"c4d3926c-1e9a-4b3d-951e-2e919637dcfa"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all owners by Prop_id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update using OwnerID",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Priya Sharma Updated\",\n  \"contactNo\": \"9123456780\",\n  \"email\": \"priya.sharma.updated@example.com\",\n  \"gender\": \"FEMALE\",\n  \"guardian\": \"Ramesh Sharma\",\n  \"guardianType\": \"FATHER\",\n  \"relationshipToProperty\": \"OWNER\",\n  \"ownershipShare\": 100.00,\n  \"isPrimaryOwner\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/v1/property-owners/7e60b353-18de-49a0-a77b-5773ca48474f",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"property-owners",
+								"7e60b353-18de-49a0-a77b-5773ca48474f"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Using OWnerID",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/property-owners/7e60b353-18de-49a0-a77b-5773ca48474f",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"property-owners",
+								"7e60b353-18de-49a0-a77b-5773ca48474f"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Property Address",
+			"item": [
+				{
+					"name": "Create Property Address - Residential",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.data && responseJson.data.id) {",
+									"        pm.collectionVariables.set('property_address_id', responseJson.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"locality\": \"Koramangala\",\n  \"zoneNo\": \"Zone-1\",\n  \"wardNo\": \"Ward-15\",\n  \"blockNo\": \"Block-A\",\n  \"street\": \"5th Cross Street\",\n  \"electionWard\": \"Ward-150\",\n  \"secretariatWard\": \"SW-15\",\n  \"pinCode\": 560034,\n  \"differentCorrespondenceAddress\": false,\n  \"propertyId\": \"550e8400-e29b-41d4-a716-446655440000\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/property-addresses",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"property-addresses"
+							]
+						},
+						"description": "Creates a new property address for residential area"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Property Address - Commercial",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "Amogh.Mangalvadi",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31807/realms/digit3/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"locality\": \"Electronic City\",\n  \"zoneNo\": \"Zone-14\",\n  \"wardNo\": \"Ward-3\",\n  \"blockNo\": \"Block-31\",\n  \"street\": \"Marathalli\",\n  \"electionWard\": \"Ward-250\",\n  \"secretariatWard\": \"SW-25\",\n  \"pinCode\": 560023,\n  \"differentCorrespondenceAddress\": false,\n  \"propertyId\": \"eb431ae2-c54a-4e73-a4f4-818719b46a65\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/property-addresses",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"property-addresses"
+							]
+						},
+						"description": "Creates a property address for commercial area"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Property Address - Rural Area",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"locality\": \"Electronic City\",\n  \"zoneNo\": \"Zone-7\",\n  \"wardNo\": \"Ward-75\",\n  \"blockNo\": \"Block-E\",\n  \"street\": \"Hosur Road\",\n  \"electionWard\": \"Ward-750\",\n  \"secretariatWard\": \"SW-75\",\n  \"pinCode\": 560100,\n  \"differentCorrespondenceAddress\": true,\n  \"propertyId\": \"550e8400-e29b-41d4-a716-446655440002\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/property-addresses",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"property-addresses"
+							]
+						},
+						"description": "Creates a property address for rural/outskirts area with different correspondence address"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Property Addresses",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Response time is less than 2000ms', function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+									"});",
+									"",
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Pagination headers are present', function () {",
+									"    pm.response.to.have.header('X-Total-Count');",
+									"    pm.response.to.have.header('X-Current-Page');",
+									"    pm.response.to.have.header('X-Per-Page');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/property-addresses?page=0&size=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"property-addresses"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0",
+									"description": "Page number (0-based)"
+								},
+								{
+									"key": "size",
+									"value": "20",
+									"description": "Number of items per page"
+								},
+								{
+									"key": "propertyId",
+									"value": "550e8400-e29b-41d4-a716-446655440000",
+									"description": "Filter by property ID",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Retrieves all property addresses with pagination and optional filtering"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Property Address by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has property address data', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('success', true);",
+									"    pm.expect(responseJson).to.have.property('data');",
+									"    pm.expect(responseJson.data).to.have.property('id');",
+									"    pm.expect(responseJson.data).to.have.property('locality');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/property-addresses/{{property_address_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"property-addresses",
+								"{{property_address_id}}"
+							]
+						},
+						"description": "Retrieves a specific property address by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Property Address by Property ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/property-addresses/property/{{property_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"property-addresses",
+								"property",
+								"{{property_id}}"
+							]
+						},
+						"description": "Retrieves property address for a specific property ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Property Address",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"locality\": \"Koramangala Extended\",\n  \"zoneNo\": \"Zone-1\",\n  \"wardNo\": \"Ward-15\",\n  \"blockNo\": \"Block-A\",\n  \"street\": \"5th Cross Street Extended\",\n  \"electionWard\": \"Ward-150\",\n  \"secretariatWard\": \"SW-15\",\n  \"pinCode\": 560034,\n  \"differentCorrespondenceAddress\": false,\n  \"propertyId\": \"550e8400-e29b-41d4-a716-446655440000\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/property-addresses/{{property_address_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"property-addresses",
+								"{{property_address_id}}"
+							]
+						},
+						"description": "Updates an existing property address"
+					},
+					"response": []
+				},
+				{
+					"name": "Search Property Addresses - Advanced",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/property-addresses/search?locality=Koramangala&zoneNo=Zone-1&wardNo=Ward-15&page=0&size=10&sortBy=locality&sortOrder=asc",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"property-addresses",
+								"search"
+							],
+							"query": [
+								{
+									"key": "locality",
+									"value": "Koramangala",
+									"description": "Filter by locality"
+								},
+								{
+									"key": "zoneNo",
+									"value": "Zone-1",
+									"description": "Filter by zone number"
+								},
+								{
+									"key": "wardNo",
+									"value": "Ward-15",
+									"description": "Filter by ward number"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								},
+								{
+									"key": "sortBy",
+									"value": "locality"
+								},
+								{
+									"key": "sortOrder",
+									"value": "asc"
+								},
+								{
+									"key": "blockNo",
+									"value": "Block-A",
+									"disabled": true
+								},
+								{
+									"key": "street",
+									"value": "Cross",
+									"disabled": true
+								},
+								{
+									"key": "pinCode",
+									"value": "560034",
+									"disabled": true
+								},
+								{
+									"key": "electionWard",
+									"value": "Ward-150",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Searches property addresses with advanced filters and sorting"
+					},
+					"response": []
+				},
+				{
+					"name": "Filter Property Addresses by Zone",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/property-addresses/search?zoneNo=Zone-2&page=0&size=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"property-addresses",
+								"search"
+							],
+							"query": [
+								{
+									"key": "zoneNo",
+									"value": "Zone-2"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Gets property addresses filtered by zone number"
+					},
+					"response": []
+				},
+				{
+					"name": "Filter Property Addresses by PIN Code",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/property-addresses/search?pinCode=560034&page=0&size=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"property-addresses",
+								"search"
+							],
+							"query": [
+								{
+									"key": "pinCode",
+									"value": "560034"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Gets property addresses filtered by PIN code"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Property Address",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response indicates successful deletion', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('success', true);",
+									"    pm.expect(responseJson.message).to.include('deleted successfully');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/property-addresses/{{property_address_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"property-addresses",
+								"{{property_address_id}}"
+							]
+						},
+						"description": "Deletes a property address by ID"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "AdditionalPropertyDetails",
+			"item": [
+				{
+					"name": "Create Additional Property Details - Parking Copy",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fieldName\": \"parking_details\",\n  \"fieldValue\": {\n    \"spaces\": 2,\n    \"covered\": true,\n    \"type\": \"underground\",\n    \"monthly_fee\": 150.00\n  },\n  \"propertyId\": \"550e8400-e29b-41d4-a716-446655440000\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/additional-property-details",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"additional-property-details"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Additional Property Details - Building Specs Copy",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fieldName\": \"building_specifications\",\n  \"fieldValue\": {\n    \"elevator\": true,\n    \"floors\": 5,\n    \"units_per_floor\": 4,\n    \"amenities\": [\"gym\", \"pool\", \"garden\", \"security\"],\n    \"security\": {\n      \"cctv\": true,\n      \"guard\": \"24x7\",\n      \"access_control\": \"card_based\"\n    },\n    \"construction_year\": 2020,\n    \"certification\": {\n      \"green_building\": true,\n      \"fire_safety\": \"NOC_approved\",\n      \"earthquake_resistant\": true\n    }\n  },\n  \"propertyId\": \"550e8400-e29b-41d4-a716-446655440000\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/additional-property-details",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"additional-property-details"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Additional Property Details - Utilities Copy",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fieldName\": \"utilities\",\n  \"fieldValue\": {\n    \"electricity\": {\n      \"connection_type\": \"three_phase\",\n      \"sanctioned_load\": \"10KW\",\n      \"meter_number\": \"ELE123456789\"\n    },\n    \"water\": {\n      \"source\": \"municipal\",\n      \"connection_size\": \"1_inch\",\n      \"meter_number\": \"WAT987654321\"\n    },\n    \"gas\": {\n      \"connection\": true,\n      \"type\": \"piped\",\n      \"meter_number\": \"GAS111222333\"\n    },\n    \"internet\": {\n      \"fiber_ready\": true,\n      \"providers\": [\"Provider1\", \"Provider2\"]\n    }\n  },\n  \"propertyId\": \"550e8400-e29b-41d4-a716-446655440000\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/additional-property-details",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"additional-property-details"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Additional Property Details Copy",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/additional-property-details?page=0&size=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"additional-property-details"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								},
+								{
+									"key": "propertyId",
+									"value": "550e8400-e29b-41d4-a716-446655440000",
+									"disabled": true
+								},
+								{
+									"key": "fieldName",
+									"value": "parking",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Additional Property Details by ID Copy",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/additional-property-details/{{additional_property_details_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"additional-property-details",
+								"{{additional_property_details_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Additional Property Details Copy",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fieldName\": \"parking_details\",\n  \"fieldValue\": {\n    \"spaces\": 3,\n    \"covered\": true,\n    \"type\": \"basement\",\n    \"monthly_fee\": 200.00,\n    \"reserved_spaces\": 1\n  },\n  \"propertyId\": \"550e8400-e29b-41d4-a716-446655440000\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/additional-property-details/{{additional_property_details_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"additional-property-details",
+								"{{additional_property_details_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Additional Property Details Copy",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/additional-property-details/{{additional_property_details_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"additional-property-details",
+								"{{additional_property_details_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Additional Property Details by Property ID Copy",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/additional-property-details/property/{{property_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"additional-property-details",
+								"property",
+								"{{property_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Additional Property Details by Field Name Copy",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/additional-property-details/field/parking_details",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"additional-property-details",
+								"field",
+								"parking_details"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "ConstructionDetails",
+			"item": [
+				{
+					"name": "Create Construction Details Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.data && responseJson.data.id) {",
+									"        pm.collectionVariables.set('construction_details_id', responseJson.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"floorType\": \"CONCRETE\",\n  \"wallType\": \"BRICK\",\n  \"roofType\": \"RCC\",\n  \"woodType\": \"TEAK\",\n  \"propertyId\": \"550e8400-e29b-41d4-a716-446655440000\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/construction-details",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"construction-details"
+							]
+						},
+						"description": "Creates a new construction details record"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Construction Details Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Response time is less than 2000ms', function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+									"});",
+									"",
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Pagination headers are present', function () {",
+									"    pm.response.to.have.header('X-Total-Count');",
+									"    pm.response.to.have.header('X-Current-Page');",
+									"    pm.response.to.have.header('X-Per-Page');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/construction-details?page=0&size=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"construction-details"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0",
+									"description": "Page number (0-based)"
+								},
+								{
+									"key": "size",
+									"value": "20",
+									"description": "Number of items per page"
+								},
+								{
+									"key": "propertyId",
+									"value": "550e8400-e29b-41d4-a716-446655440000",
+									"description": "Filter by property ID",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Retrieves all construction details with pagination and optional filtering"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Construction Details by ID Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has construction details data', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('success', true);",
+									"    pm.expect(responseJson).to.have.property('data');",
+									"    pm.expect(responseJson.data).to.have.property('id');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/construction-details/{{construction_details_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"construction-details",
+								"{{construction_details_id}}"
+							]
+						},
+						"description": "Retrieves a specific construction details record by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Construction Details by Property ID Copy",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/construction-details/property/{{property_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"construction-details",
+								"property",
+								"{{property_id}}"
+							]
+						},
+						"description": "Retrieves all construction details for a specific property ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Construction Details Copy",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"floorType\": \"MARBLE\",\n  \"wallType\": \"CONCRETE\",\n  \"roofType\": \"STEEL\",\n  \"woodType\": \"OAK\",\n  \"propertyId\": \"550e8400-e29b-41d4-a716-446655440000\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/construction-details/{{construction_details_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"construction-details",
+								"{{construction_details_id}}"
+							]
+						},
+						"description": "Updates an existing construction details record"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Construction Details Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response indicates successful deletion', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('success', true);",
+									"    pm.expect(responseJson.message).to.include('deleted successfully');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/construction-details/{{construction_details_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"construction-details",
+								"{{construction_details_id}}"
+							]
+						},
+						"description": "Deletes a construction details record by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Construction Details - Commercial Copy",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"floorType\": \"TILES\",\n  \"wallType\": \"CONCRETE_BLOCK\",\n  \"roofType\": \"METAL_SHEET\",\n  \"woodType\": \"PINE\",\n  \"propertyId\": \"550e8400-e29b-41d4-a716-446655440000\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/construction-details",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"construction-details"
+							]
+						},
+						"description": "Creates construction details for commercial property"
+					},
+					"response": []
+				},
+				{
+					"name": "Filter Construction Details by Property Copy",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/construction-details?propertyId={{property_id}}&page=0&size=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"construction-details"
+							],
+							"query": [
+								{
+									"key": "propertyId",
+									"value": "{{property_id}}",
+									"description": "Filter by specific property ID"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Gets construction details filtered by property ID with pagination"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "floordetails",
+			"item": [
+				{
+					"name": "Create Floor Details Copy",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"floorNo\": 1,\n  \"classification\": \"RESIDENTIAL\",\n  \"natureOfUsage\": \"RESIDENTIAL\",\n  \"firmName\": \"ABC Company\",\n  \"occupancyType\": \"OWNER\",\n  \"occupancyName\": \"John Doe\",\n  \"constructionDate\": \"2025-01-15\",\n  \"effectiveFromDate\": \"2025-02-01\",\n  \"unstructuredLand\": \"NO\",\n  \"lengthFt\": 30.5,\n  \"breadthFt\": 20.0,\n  \"plinthAreaSqFt\": 610.0,\n  \"buildingPermissionNo\": \"BP-2025-001\",\n  \"floorDetailsEntered\": true,\n  \"constructionDetailsId\": \"dc9c860b-e9bb-414a-9858-68023bdad663\"\n \n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/floor-details",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"floor-details"
+							]
+						},
+						"description": "Creates a new floor details record"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Floor Details Copy",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/floor-details?page=0&size=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"floor-details"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0",
+									"description": "Page number (0-based)"
+								},
+								{
+									"key": "size",
+									"value": "20",
+									"description": "Number of items per page"
+								},
+								{
+									"key": "constructionDetailsId",
+									"value": "550e8400-e29b-41d4-a716-446655440000",
+									"description": "Filter by construction details ID",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Retrieves all floor details with pagination and optional filtering"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Floor Details by ID Copy",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/floor-details/{{floor_details_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"floor-details",
+								"{{floor_details_id}}"
+							]
+						},
+						"description": "Retrieves a specific floor details record by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Floor Details Copy",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"floorNo\": 1,\n  \"classification\": \"COMMERCIAL\",\n  \"natureOfUsage\": \"OFFICE\",\n  \"firmName\": \"XYZZ Corporation\",\n  \"occupancyType\": \"TENANT\",\n  \"occupancyName\": \"Jane Smith\",\n  \"constructionDate\": \"2025-01-15\",\n  \"effectiveFromDate\": \"2025-03-01\",\n  \"unstructuredLand\": \"NO\",\n  \"lengthFt\": 35.0,\n  \"breadthFt\": 25.0,\n  \"plinthAreaSqFt\": 875.0,\n  \"buildingPermissionNo\": \"BP-2025-002\",\n  \"floorDetailsEntered\": true,\n  \"constructionDetailsId\": \"550e8400-e29b-41d4-a716-446655440000\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/floor-details/{{floor_details_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"floor-details",
+								"{{floor_details_id}}"
+							]
+						},
+						"description": "Updates an existing floor details record"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Floor Details Copy",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/floor-details/{{floor_details_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"floor-details",
+								"{{floor_details_id}}"
+							]
+						},
+						"description": "Deletes a floor details record by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Floor Details - Ground Floor Copy",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"floorNo\": 0,\n  \"classification\": \"MIXED\",\n  \"natureOfUsage\": \"SHOP_RESIDENTIAL\",\n  \"firmName\": \"Ground Floor Shop\",\n  \"occupancyType\": \"OWNER\",\n  \"occupancyName\": \"Store Owner\",\n  \"constructionDate\": \"2024-06-01\",\n  \"effectiveFromDate\": \"2024-07-01\",\n  \"unstructuredLand\": \"NO\",\n  \"lengthFt\": 25.0,\n  \"breadthFt\": 15.0,\n  \"plinthAreadSqFt\": 375.0,\n  \"buildingPermissionNo\": \"BP-2024-003\",\n  \"floorDetailsEntered\": true,\n  \"constructionDetailsId\": \"550e8400-e29b-41d4-a716-446655440000\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/floor-details",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"floor-details"
+							]
+						},
+						"description": "Creates floor details for ground floor (Floor 0)"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Floor Details - First Floor Copy",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"floorNo\": 1,\n  \"classification\": \"RESIDENTIAL\",\n  \"natureOfUsage\": \"FAMILY_RESIDENCE\",\n  \"firmName\": \"Residential Unit\",\n  \"occupancyType\": \"OWNER\",\n  \"occupancyName\": \"Family Name\",\n  \"constructionDate\": \"2024-06-01\",\n  \"effectiveFromDate\": \"2024-08-01\",\n  \"unstructuredLand\": \"NO\",\n  \"lengthFt\": 25.0,\n  \"breadthFt\": 15.0,\n  \"plinthAreadSqFt\": 375.0,\n  \"buildingPermissionNo\": \"BP-2024-003\",\n  \"floorDetailsEntered\": true,\n  \"constructionDetailsId\": \"550e8400-e29b-41d4-a716-446655440000\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/floor-details",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"floor-details"
+							]
+						},
+						"description": "Creates floor details for first floor"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Floor Details by Construction Details ID Copy",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/floor-details?constructionDetailsId={{construction_details_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"floor-details"
+							],
+							"query": [
+								{
+									"key": "constructionDetailsId",
+									"value": "{{construction_details_id}}"
+								}
+							]
+						},
+						"description": "Retrieves all floor details for a specific construction details ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Partial Update Floor Details Copy",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"floorNo\": 1,\n  \"classification\": \"RESIDENTIAL\",\n  \"natureOfUsage\": \"RESIDENTIAL\",\n  \"firmName\": \"Updated Firm Name\",\n  \"occupancyType\": \"OWNER\",\n  \"occupancyName\": \"Updated Owner Name\",\n  \"effectiveFromDate\": \"2025-04-01\",\n  \"lengthFt\": 32.0,\n  \"breadthFt\": 22.0,\n  \"plinthAreadSqFt\": 704.0,\n  \"constructionDetailsId\": \"550e8400-e29b-41d4-a716-446655440000\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/floor-details/{{floor_details_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"floor-details",
+								"{{floor_details_id}}"
+							]
+						},
+						"description": "Updates specific fields of a floor details record"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "property",
+			"item": [
+				{
+					"name": "Create Property - Residential Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.data && responseJson.data.id) {",
+									"        pm.collectionVariables.set('property_id', responseJson.data.id);",
+									"        pm.collectionVariables.set('property_no', responseJson.data.propertyNo);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "leo.messi",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31808/realms/agent-realm/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ownershipType\": \"PRIVATE\",\n  \"propertyType\": \"RESIDENTIAL\",\n  \"complexName\": \"Green Valley Apartments\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/v1/properties",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"properties"
+							]
+						},
+						"description": "Creates a new residential property"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Property - Commercial Copy",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ownershipType\": \"PRIVATE\",\n  \"propertyType\": \"NON_RESIDENTIAL\",\n  \"complexName\": \"Business Plaza\",\n  \"address\": {\n    \"locality\": \"MG Road\",\n    \"zoneNo\": \"Zone-2\",\n    \"wardNo\": \"Ward-25\",\n    \"blockNo\": \"Block-B\",\n    \"street\": \"Commercial Street\",\n    \"electionWard\": \"Ward-250\",\n    \"secretariatWard\": \"SW-25\",\n    \"pinCode\": 560001,\n    \"differentCorrespondenceAddress\": false\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/v1/properties",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"properties"
+							]
+						},
+						"description": "Creates a new commercial property"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Property - Vacant Land Copy",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ownershipType\": \"VACANT_LAND\",\n  \"propertyType\": \"RESIDENTIAL\",\n  \"address\": {\n    \"locality\": \"Whitefield\",\n    \"zoneNo\": \"Zone-3\",\n    \"wardNo\": \"Ward-35\",\n    \"blockNo\": \"Block-C\",\n    \"street\": \"ITPL Road\",\n    \"electionWard\": \"Ward-350\",\n    \"secretariatWard\": \"SW-35\",\n    \"pinCode\": 560066,\n    \"differentCorrespondenceAddress\": false\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/v1/properties",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"properties"
+							]
+						},
+						"description": "Creates a vacant land property"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Properties Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Response time is less than 2000ms', function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+									"});",
+									"",
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Pagination headers are present', function () {",
+									"    pm.response.to.have.header('X-Total-Count');",
+									"    pm.response.to.have.header('X-Current-Page');",
+									"    pm.response.to.have.header('X-Per-Page');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/properties?page=0&size=20",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"properties"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0",
+									"description": "Page number (0-based)"
+								},
+								{
+									"key": "size",
+									"value": "20",
+									"description": "Number of items per page"
+								},
+								{
+									"key": "propertyType",
+									"value": "RESIDENTIAL",
+									"description": "Filter by property type",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Retrieves all properties with pagination and optional filtering"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Property by ID Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has property data', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('success', true);",
+									"    pm.expect(responseJson).to.have.property('data');",
+									"    pm.expect(responseJson.data).to.have.property('id');",
+									"    pm.expect(responseJson.data).to.have.property('propertyNo');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/properties/{{property_id}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"properties",
+								"{{property_id}}"
+							]
+						},
+						"description": "Retrieves a specific property by ID with all related data"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Property by Property Number Copy",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/properties/property-no/{{property_no}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"properties",
+								"property-no",
+								"{{property_no}}"
+							]
+						},
+						"description": "Retrieves a property by its property number"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Property Copy",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ownershipType\": \"PRIVATE\",\n  \"propertyType\": \"MIXED\",\n  \"complexName\": \"Green Valley Premium Apartments\",\n  \"address\": {\n    \"locality\": \"Koramangala\",\n    \"zoneNo\": \"Zone-1\",\n    \"wardNo\": \"Ward-15\",\n    \"blockNo\": \"Block-A\",\n    \"street\": \"5th Cross Street\",\n    \"electionWard\": \"Ward-150\",\n    \"secretariatWard\": \"SW-15\",\n    \"pinCode\": 560034,\n    \"differentCorrespondenceAddress\": false\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/v1/properties/{{property_id}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"properties",
+								"{{property_id}}"
+							]
+						},
+						"description": "Updates an existing property"
+					},
+					"response": []
+				},
+				{
+					"name": "Search Properties - Advanced Copy",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/properties/search?locality=Koramangala&propertyType=RESIDENTIAL&page=0&size=10&sortBy=createdAt&sortOrder=desc",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"properties",
+								"search"
+							],
+							"query": [
+								{
+									"key": "locality",
+									"value": "Koramangala",
+									"description": "Filter by locality"
+								},
+								{
+									"key": "propertyType",
+									"value": "RESIDENTIAL",
+									"description": "Filter by property type"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								},
+								{
+									"key": "sortBy",
+									"value": "createdAt"
+								},
+								{
+									"key": "sortOrder",
+									"value": "desc"
+								},
+								{
+									"key": "wardNo",
+									"value": "Ward-15",
+									"disabled": true
+								},
+								{
+									"key": "zoneNo",
+									"value": "Zone-1",
+									"disabled": true
+								},
+								{
+									"key": "ownershipType",
+									"value": "PRIVATE",
+									"disabled": true
+								},
+								{
+									"key": "complexName",
+									"value": "Green",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Searches properties with advanced filters and sorting"
+					},
+					"response": []
+				},
+				{
+					"name": "Filter Properties by Type Copy",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/properties?propertyType=NON_RESIDENTIAL&page=0&size=20",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"properties"
+							],
+							"query": [
+								{
+									"key": "propertyType",
+									"value": "NON_RESIDENTIAL"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Gets properties filtered by property type"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Property Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response indicates successful deletion', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('success', true);",
+									"    pm.expect(responseJson.message).to.include('deleted successfully');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/properties/{{property_id}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"properties",
+								"{{property_id}}"
+							]
+						},
+						"description": "Deletes a property by ID"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "AssessmentDetails",
+			"item": [
+				{
+					"name": "Create Assessment Details Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.data && responseJson.data.id) {",
+									"        pm.collectionVariables.set('assessment_details_id', responseJson.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "leo.messi",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31808/realms/agent-realm/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reasonOfCreation\": \"NEW_CONSTRUCTION\",\n  \"occupancyCertificateNumber\": \"OC-2025-001\",\n  \"occupancyCertificateDate\": \"2025-01-15\",\n  \"extendOfSite\": \"1200 sq ft\",\n  \"isLandUnderneathBuilding\": true,\n  \"isUnspecifiedShare\": false,\n  \"propertyId\": \"6b626801-26c5-4309-99f2-39f4295ca393\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/v1/assessment-details",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"assessment-details"
+							]
+						},
+						"description": "Creates a new assessment details record"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Assessment Details - Vacant Land Copy",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reasonOfCreation\": \"VACANT_LAND_ASSESSMENT\",\n  \"extendOfSite\": \"2000 sq ft\",\n  \"isLandUnderneathBuilding\": false,\n  \"isUnspecifiedShare\": false,\n  \"propertyId\": \"550e8400-e29b-41d4-a716-446655440001\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/assessment-details",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"assessment-details"
+							]
+						},
+						"description": "Creates assessment details for vacant land"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Assessment Details - Existing Building Copy",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reasonOfCreation\": \"EXISTING_BUILDING_ASSESSMENT\",\n  \"occupancyCertificateNumber\": \"OC-2020-150\",\n  \"occupancyCertificateDate\": \"2020-03-10\",\n  \"extendOfSite\": \"1800 sq ft\",\n  \"isLandUnderneathBuilding\": true,\n  \"isUnspecifiedShare\": true,\n  \"propertyId\": \"550e8400-e29b-41d4-a716-446655440002\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/assessment-details",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"assessment-details"
+							]
+						},
+						"description": "Creates assessment details for existing building"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Assessment Details Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Response time is less than 2000ms', function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+									"});",
+									"",
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Pagination headers are present', function () {",
+									"    pm.response.to.have.header('X-Total-Count');",
+									"    pm.response.to.have.header('X-Current-Page');",
+									"    pm.response.to.have.header('X-Per-Page');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/assessment-details?page=0&size=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"assessment-details"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0",
+									"description": "Page number (0-based)"
+								},
+								{
+									"key": "size",
+									"value": "20",
+									"description": "Number of items per page"
+								},
+								{
+									"key": "propertyId",
+									"value": "550e8400-e29b-41d4-a716-446655440000",
+									"description": "Filter by property ID",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Retrieves all assessment details with pagination and optional filtering"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Assessment Details by ID Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has assessment details data', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('success', true);",
+									"    pm.expect(responseJson).to.have.property('data');",
+									"    pm.expect(responseJson.data).to.have.property('id');",
+									"    pm.expect(responseJson.data).to.have.property('extendOfSite');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/assessment-details/{{assessment_details_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"assessment-details",
+								"{{assessment_details_id}}"
+							]
+						},
+						"description": "Retrieves a specific assessment details record by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Assessment Details by Property ID Copy",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/assessment-details/property/{{property_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"assessment-details",
+								"property",
+								"{{property_id}}"
+							]
+						},
+						"description": "Retrieves assessment details for a specific property ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Assessment Details Copy",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reasonOfCreation\": \"BUILDING_RENOVATION\",\n  \"occupancyCertificateNumber\": \"OC-2025-001-REVISED\",\n  \"occupancyCertificateDate\": \"2025-02-01\",\n  \"extendOfSite\": \"1400 sq ft\",\n  \"isLandUnderneathBuilding\": true,\n  \"isUnspecifiedShare\": false,\n  \"propertyId\": \"550e8400-e29b-41d4-a716-446655440000\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/assessment-details/{{assessment_details_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"assessment-details",
+								"{{assessment_details_id}}"
+							]
+						},
+						"description": "Updates an existing assessment details record"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Assessment Details Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response indicates successful deletion', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('success', true);",
+									"    pm.expect(responseJson.message).to.include('deleted successfully');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/assessment-details/{{assessment_details_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"assessment-details",
+								"{{assessment_details_id}}"
+							]
+						},
+						"description": "Deletes an assessment details record by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Filter Assessment Details by Property Copy",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/assessment-details?propertyId={{property_id}}&page=0&size=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"assessment-details"
+							],
+							"query": [
+								{
+									"key": "propertyId",
+									"value": "{{property_id}}",
+									"description": "Filter by specific property ID"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Gets assessment details filtered by property ID with pagination"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Gis data",
+			"item": [
+				{
+					"name": "Get All",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "Puttraj.K",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31807/realms/digit3/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/gis-data/addba14c-6775-4b46-933f-2c9285407da7",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"gis-data",
+								"addba14c-6775-4b46-933f-2c9285407da7"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get By Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "leo.messi",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31808/realms/agent-realm/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/gis-data/{{gis_id}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"gis-data",
+								"{{gis_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "leo.messi",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31808/realms/agent-realm/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"propertyId\": \"c4d3926c-1e9a-4b3d-951e-2e919637dcfa\",\r\n    \"source\": \"GPS\",\r\n    \"type\": \"LINE\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/v1/gis-data/{{gis_id}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"gis-data",
+								"{{gis_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "leo.messi",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31808/realms/agent-realm/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"propertyId\": \"c4d3926c-1e9a-4b3d-951e-2e919637dcfa\",\r\n    \"latitude\": 30.7333,\r\n    \"longitude\": 76.7794,\r\n    \"source\": \"GPS\",\r\n    \"type\": \"POLYGON\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/v1/gis-data",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"gis-data"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Documents",
+			"item": [
+				{
+					"name": "Get All",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "leo.messi",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31808/realms/agent-realm/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/documents",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"documents"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create batch",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "leo.messi",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31808/realms/agent-realm/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n    {\r\n        \"PropertyId\":\"c4d3926c-1e9a-4b3d-951e-2e919637dcfa\",\r\n        \"DocumentType\":\"ID_PROOF\",\r\n        \"DocumentName\":\"aadhar.pdf\",\r\n        \"FileStoreID\":123\r\n    }\r\n]\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/v1/documents",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"documents"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get By Id",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "leo.messi",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31808/realms/agent-realm/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/documents/{{document_id}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"documents",
+								"{{document_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get By Property Id",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "leo.messi",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31808/realms/agent-realm/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/documents/property/{{property_id}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"documents",
+								"property",
+								"{{property_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete By Id",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "leo.messi",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31808/realms/agent-realm/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/v1/documents/{{document_id}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"v1",
+								"documents",
+								"{{document_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Doc",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "Puttraj.K",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31807/realms/digit3/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Tenant-ID",
+								"value": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \n    \"action\":\"REJECTED\"\n   \n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/documents/{{doc_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"documents",
+								"{{doc_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Co-ordinates api's",
+			"item": [
+				{
+					"name": "create Batch",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "leo.messi",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31808/realms/agent-realm/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n  {\r\n    \"latitude\": 13.014647,\r\n    \"longitude\": 77.576524,\r\n    \"gisDataId\": \"c1d7a870-ce54-4546-b21a-58617cf5f016\"\r\n  },\r\n  {\r\n    \"latitude\": 13.014479,\r\n    \"longitude\": 77.579571,\r\n    \"gisDataId\": \"c1d7a870-ce54-4546-b21a-58617cf5f016\"\r\n  },\r\n  {\r\n    \"latitude\": 13.011299,\r\n    \"longitude\": 77.579592,\r\n    \"gisDataId\": \"c1d7a870-ce54-4546-b21a-58617cf5f016\"\r\n  },\r\n  {\r\n    \"latitude\": 13.011215,\r\n    \"longitude\": 77.576524,\r\n    \"gisDataId\": \"c1d7a870-ce54-4546-b21a-58617cf5f016\"\r\n  }\r\n]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/coordinates/batch",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"coordinates",
+								"batch"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "leo.messi",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31808/realms/agent-realm/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n  {\r\n    \"latitude\": 13.014647,\r\n    \"longitude\": 77.576524,\r\n    \"gisDataId\": \"c1d7a870-ce54-4546-b21a-58617cf5f016\"\r\n  },\r\n  {\r\n    \"latitude\": 13.014479,\r\n    \"longitude\": 77.579571,\r\n    \"gisDataId\": \"c1d7a870-ce54-4546-b21a-58617cf5f016\"\r\n  },\r\n  {\r\n    \"latitude\": 13.011299,\r\n    \"longitude\": 77.579592,\r\n    \"gisDataId\": \"c1d7a870-ce54-4546-b21a-58617cf5f016\"\r\n  },\r\n  {\r\n    \"latitude\": 13.011215,\r\n    \"longitude\": 77.576524,\r\n    \"gisDataId\": \"c1d7a870-ce54-4546-b21a-58617cf5f016\"\r\n  }\r\n]"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/coordinates",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"coordinates"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get By Id",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "leo.messi",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31808/realms/agent-realm/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/coordinates/{{co-ordinate_id}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"coordinates",
+								"{{co-ordinate_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "leo.messi",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31808/realms/agent-realm/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n  {\r\n    \"latitude\": 13.014647,\r\n    \"longitude\": 77.576524,\r\n    \"gisDataId\": \"c1d7a870-ce54-4546-b21a-58617cf5f016\"\r\n  },\r\n  {\r\n    \"latitude\": 13.014479,\r\n    \"longitude\": 77.579571,\r\n    \"gisDataId\": \"c1d7a870-ce54-4546-b21a-58617cf5f016\"\r\n  },\r\n  {\r\n    \"latitude\": 13.011299,\r\n    \"longitude\": 77.579592,\r\n    \"gisDataId\": \"c1d7a870-ce54-4546-b21a-58617cf5f016\"\r\n  },\r\n  {\r\n    \"latitude\": 13.011215,\r\n    \"longitude\": 77.576524,\r\n    \"gisDataId\": \"c1d7a870-ce54-4546-b21a-58617cf5f016\"\r\n  }\r\n]"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/coordinates/{{co-ordinate_id}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"coordinates",
+								"{{co-ordinate_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "leo.messi",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31808/realms/agent-realm/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n  {\r\n    \"latitude\": 13.014647,\r\n    \"longitude\": 77.576524,\r\n    \"gisDataId\": \"c1d7a870-ce54-4546-b21a-58617cf5f016\"\r\n  },\r\n  {\r\n    \"latitude\": 13.014479,\r\n    \"longitude\": 77.579571,\r\n    \"gisDataId\": \"c1d7a870-ce54-4546-b21a-58617cf5f016\"\r\n  },\r\n  {\r\n    \"latitude\": 13.011299,\r\n    \"longitude\": 77.579592,\r\n    \"gisDataId\": \"c1d7a870-ce54-4546-b21a-58617cf5f016\"\r\n  },\r\n  {\r\n    \"latitude\": 13.011215,\r\n    \"longitude\": 77.576524,\r\n    \"gisDataId\": \"c1d7a870-ce54-4546-b21a-58617cf5f016\"\r\n  }\r\n]"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/coordinates/{{co-ordinate_id}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"coordinates",
+								"{{co-ordinate_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "New Request",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "json",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/coordinates/gis/22222222-2222-2222-2222-222222222222/upsert",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"coordinates",
+								"gis",
+								"22222222-2222-2222-2222-222222222222",
+								"upsert"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "IGRS",
+			"item": [
+				{
+					"name": "Create IGRS",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "leo.messi",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31808/realms/agent-realm/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{TOKEN}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"propertyId\": \"c4d3926c-1e9a-4b3d-951e-2e919637dcfa\",\n    \"habitation\": \"House A\",\n    \"igrsWard\": \"Ward 5\",\n    \"igrsLocality\": \"Locality A\",\n    \"igrsBlock\": \"Block 1\",\n    \"doorNoFrom\": \"1A\",\n    \"doorNoTo\": \"1B\",\n    \"igrsClassification\": \"RESIDENTIAL\",\n    \"builtUpAreaPct\": 75.5,\n    \"totalPlinthArea\": 200.0\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/igrs",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"igrs"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update IGRS",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "leo.messi",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31808/realms/agent-realm/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{TOKEN}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"propertyId\": \"c4d3926c-1e9a-4b3d-951e-2e919637dcfa\",\n    \"habitation\": \"Updated habitation name\",\n    \"igrsWard\": \"Ward 7\",\n    \"igrsLocality\": \"Updated locality\",\n    \"builtUpAreaPct\": 82.3,\n    \"totalPlinthArea\": 210.0\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/igrs/{{IGRS_ID}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"igrs",
+								"{{IGRS_ID}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Amenities",
+			"item": [
+				{
+					"name": "Create with prop_id",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "Amogh.Mangalvadi",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{clientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "digit3",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://10.232.161.103:31807/realms/digit3/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer YOUR_JWT_TOKEN"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"property_id\":\"eb431ae2-c54a-4e73-a4f4-818719b46a65\",\"type\":\"LIFT\",\"description\":\"Service Lift and passenger lift is installed\",\"expiry_date\":\"2025-12-17T00:00:00Z\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/amenities",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"amenities"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "oauth2",
+		"oauth2": [
+			{
+				"key": "addTokenTo",
+				"value": "header",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": ""
+		},
+		{
+			"key": "application_id",
+			"value": ""
+		},
+		{
+			"key": "property_id",
+			"value": ""
+		},
+		{
+			"key": "assessment_details_id",
+			"value": ""
+		},
+		{
+			"key": "co-ordinate_id",
+			"value": ""
+		},
+		{
+			"key": "document_id",
+			"value": ""
+		},
+		{
+			"key": "gis_id",
+			"value": ""
+		},
+		{
+			"key": "base_url",
+			"value": "",
+			"type": "default"
+		}
+	]
+}

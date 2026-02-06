@@ -49,7 +49,7 @@ func (s *additionalPropertyDetailsService) CreateAdditionalPropertyDetails(ctx c
 // GetAdditionalPropertyDetailsByID fetches an additional property details record by its unique ID.
 func (s *additionalPropertyDetailsService) GetAdditionalPropertyDetailsByID(ctx context.Context, id uuid.UUID) (*models.AdditionalPropertyDetails, error) {
 	if id == uuid.Nil {
-		return nil, fmt.Errorf("invalid additional property details ID: cannot be nil")
+		return nil, fmt.Errorf(constants.ErrIdCannotBeEmpty)
 	}
 	details, err := s.repo.GetByID(ctx, id)
 	if err != nil {
@@ -65,7 +65,7 @@ func (s *additionalPropertyDetailsService) UpdateAdditionalPropertyDetails(ctx c
 		return fmt.Errorf("%w: request is nil", ErrValidation)
 	}
 	if details.ID == uuid.Nil {
-		return fmt.Errorf("invalid additional property details ID: cannot be nil")
+		return fmt.Errorf(constants.ErrIdCannotBeEmpty)
 	}
 	if err := s.validateAdditionalPropertyDetails(details); err != nil {
 		return fmt.Errorf("validation failed: %w", err)
@@ -81,7 +81,7 @@ func (s *additionalPropertyDetailsService) UpdateAdditionalPropertyDetails(ctx c
 // DeleteAdditionalPropertyDetails removes an additional property details record by its ID.
 func (s *additionalPropertyDetailsService) DeleteAdditionalPropertyDetails(ctx context.Context, id uuid.UUID) error {
 	if id == uuid.Nil {
-		return fmt.Errorf("invalid additional property details ID: cannot be nil")
+		return fmt.Errorf(constants.ErrIdCannotBeEmpty)
 	}
 	err := s.repo.Delete(ctx, id)
 	if err != nil {
@@ -112,7 +112,7 @@ func (s *additionalPropertyDetailsService) GetAllAdditionalPropertyDetails(ctx c
 // GetAdditionalPropertyDetailsByPropertyID fetches all additional property details records for a given property ID.
 func (s *additionalPropertyDetailsService) GetAdditionalPropertyDetailsByPropertyID(ctx context.Context, propertyID uuid.UUID) ([]*models.AdditionalPropertyDetails, error) {
 	if propertyID == uuid.Nil {
-		return nil, fmt.Errorf("invalid property ID: cannot be nil")
+		return nil, fmt.Errorf(constants.ErrInvalidIdFormat + " for property ID")
 	}
 
 	details, err := s.repo.GetByPropertyID(ctx, propertyID)
@@ -141,7 +141,7 @@ func (s *additionalPropertyDetailsService) GetAdditionalPropertyDetailsByFieldNa
 // Returns an error if any required field is missing or invalid, or if FieldValue is not valid JSON.
 func (s *additionalPropertyDetailsService) validateAdditionalPropertyDetails(details *models.AdditionalPropertyDetails) error {
 	if details.PropertyID == uuid.Nil {
-		return fmt.Errorf("property ID is required: cannot be nil")
+		return fmt.Errorf(constants.ErrInvalidIdFormat + " for property ID")
 	}
 	if details.FieldName == "" {
 		return fmt.Errorf("field name is required: cannot be empty")

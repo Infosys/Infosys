@@ -75,7 +75,7 @@ func (r *propertyOwnerRepository) GetAll(ctx context.Context) ([]*models.Propert
 // Returns: pointer to PropertyOwner and error if not found or on failure.
 func (r *propertyOwnerRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.PropertyOwner, error) {
 	var owner models.PropertyOwner
-	err := r.db.WithContext(ctx).First(&owner, "id = ?", id).Error
+	err := r.db.WithContext(ctx).First(&owner, QueryByID, id).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("property owner with id %s not found", id)
@@ -101,7 +101,7 @@ func (r *propertyOwnerRepository) GetByPropertyID(ctx context.Context, propertyI
 	}
 
 	var total int64
-	query := r.db.WithContext(ctx).Model(&models.PropertyOwner{}).Where("property_id = ?", propertyID)
+	query := r.db.WithContext(ctx).Model(&models.PropertyOwner{}).Where(QueryByPropertyID, propertyID)
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to count property owners for property id %s: %w", propertyID, err)
 	}
@@ -144,7 +144,7 @@ func (r *propertyOwnerRepository) Update(ctx context.Context, owner *models.Prop
 // id: UUID of the property owner to delete.
 // Returns: error if deletion fails or record not found.
 func (r *propertyOwnerRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	result := r.db.WithContext(ctx).Delete(&models.PropertyOwner{}, "id = ?", id)
+	result := r.db.WithContext(ctx).Delete(&models.PropertyOwner{}, QueryByID, id)
 	if result.Error != nil {
 		return fmt.Errorf("failed to delete property owner with id %s: %w", id, result.Error)
 	}

@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"enumeration/internal/constants"
 	"enumeration/internal/models"
 	"enumeration/internal/services"
 	"enumeration/pkg/response"
@@ -28,7 +29,7 @@ func NewDocumentHandler(service services.DocumentService) *DocumentHandler {
 func (h *DocumentHandler) Create(c *gin.Context) {
 	var doc models.Document
 	if err := c.ShouldBindJSON(&doc); err != nil {
-		response.BadRequest(c, "Invalid request body: "+err.Error())
+		response.BadRequest(c, constants.ErrInvalidRequestBody+": "+err.Error())
 		return
 	}
 
@@ -51,7 +52,7 @@ func (h *DocumentHandler) CreateBatch(c *gin.Context) {
 	// Read raw body so we can unmarshal conditionally
 	raw, err := c.GetRawData()
 	if err != nil {
-		response.BadRequest(c, "Invalid request body: "+err.Error())
+		response.BadRequest(c, constants.ErrInvalidRequestBody+": "+err.Error())
 		return
 	}
 
@@ -67,13 +68,13 @@ func (h *DocumentHandler) CreateBatch(c *gin.Context) {
 	// If JSON array -> unmarshal into slice
 	if trimmed[0] == '[' {
 		if err := json.Unmarshal(raw, &docs); err != nil {
-			response.BadRequest(c, "Invalid request body: "+err.Error())
+			response.BadRequest(c, constants.ErrInvalidRequestBody+": "+err.Error())
 			return
 		}
 	} else { // JSON object -> unmarshal single doc and wrap into slice
 		var doc models.Document
 		if err := json.Unmarshal(raw, &doc); err != nil {
-			response.BadRequest(c, "Invalid request body: "+err.Error())
+			response.BadRequest(c, constants.ErrInvalidRequestBody+": "+err.Error())
 			return
 		}
 		docs = append(docs, &doc)
@@ -96,7 +97,7 @@ func (h *DocumentHandler) GetByID(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		response.BadRequest(c, "Invalid document ID")
+		response.BadRequest(c, constants.ErrInvalidDocumentIDFormat)
 		return
 	}
 
@@ -171,7 +172,7 @@ func (h *DocumentHandler) Delete(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		response.BadRequest(c, "Invalid document ID")
+		response.BadRequest(c, constants.ErrInvalidDocumentIDFormat)
 		return
 	}
 
@@ -193,13 +194,13 @@ func (h *DocumentHandler) Update(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		response.BadRequest(c, "Invalid document ID")
+		response.BadRequest(c, constants.ErrInvalidDocumentIDFormat)
 		return
 	}
 
 	var doc models.Document
 	if err := c.ShouldBindJSON(&doc); err != nil {
-		response.BadRequest(c, "Invalid request body: "+err.Error())
+		response.BadRequest(c, constants.ErrInvalidRequestBody+": "+err.Error())
 		return
 	}
 

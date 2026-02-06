@@ -67,7 +67,7 @@ func (s *amenityService) GetAllWithFilters(ctx context.Context, page, size int, 
 // GetByID retrieves an amenity by its unique ID.
 func (s *amenityService) GetByID(ctx context.Context, id string) (*models.Amenities, error) {
 	if id == "" {
-		return nil, fmt.Errorf("invalid amenity ID: cannot be empty")
+		return nil, fmt.Errorf(constants.ErrIdCannotBeEmpty)
 	}
 	amenity, err := s.repo.GetByID(ctx, id)
 	if err != nil {
@@ -93,7 +93,7 @@ func (s *amenityService) Create(ctx context.Context, amenity *models.Amenities) 
 // Update modifies an existing amenity record by its ID.
 func (s *amenityService) Update(ctx context.Context, id string, amenity *models.Amenities) error {
 	if id == "" {
-		return fmt.Errorf("invalid amenity ID: cannot be empty")
+		return fmt.Errorf(constants.ErrIdCannotBeEmpty)
 	}
 	if amenity == nil {
 		return fmt.Errorf("amenity cannot be nil")
@@ -109,7 +109,7 @@ func (s *amenityService) Update(ctx context.Context, id string, amenity *models.
 // Delete removes an amenity record by its ID.
 func (s *amenityService) Delete(ctx context.Context, id string) error {
 	if id == "" {
-		return fmt.Errorf("invalid amenity ID: cannot be empty")
+		return fmt.Errorf(constants.ErrIdCannotBeEmpty)
 	}
 	err := s.repo.Delete(ctx, id)
 	if err != nil {
@@ -122,7 +122,7 @@ func (s *amenityService) Delete(ctx context.Context, id string) error {
 // GetByPropertyID retrieves amenities for a given property ID.
 func (s *amenityService) GetByPropertyID(ctx context.Context, propertyID string) (*models.Amenities, error) {
 	if propertyID == "" {
-		return nil, fmt.Errorf("invalid property ID: cannot be empty")
+		return nil, fmt.Errorf(constants.ErrIdCannotBeEmpty)
 	}
 	amenities, err := s.repo.GetByPropertyID(ctx, propertyID)
 	if err != nil {

@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"enumeration/internal/constants"
+	"enumeration/internal/dto"
 	"enumeration/internal/models"
 	"enumeration/internal/repositories"
 	"fmt"
@@ -11,85 +12,152 @@ import (
 	"github.com/google/uuid"
 )
 
-// Compile-time check for interface implementation
 var _ PropertyService = (*propertyService)(nil)
 
-// propertyService handles business logic for properties
 type propertyService struct {
 	propertyRepo repositories.PropertyRepository
 }
 
-// NewPropertyService returns a new propertyService
 func NewPropertyService(propertyRepo repositories.PropertyRepository) PropertyService {
 	return &propertyService{
 		propertyRepo: propertyRepo,
 	}
 }
 
-// CreateProperty validates and adds a new property, generating a property number if needed
-func (s *propertyService) CreateProperty(ctx context.Context, property *models.Property) error {
-	if property == nil {
-		return fmt.Errorf("%w: request is nil", ErrValidation)
+// CreateProperty - Validate tenant ID and create property
+func (s *propertyService) CreateProperty(ctx context.Context, req *dto.CreatePropertyRequest, tenantID string) (*models.Property, error) {
+	if req == nil {
+		return nil, fmt.Errorf("%w: request is nil", ErrValidation)
 	}
-
 	// Generate property number if not provided
-	if property.PropertyNo == "" {
-		propertyNo, err := s.GeneratePropertyNo(ctx)
+	propertyNo := req.PropertyNo
+	if propertyNo == "" {
+		var err error
+		propertyNo, err = s.GeneratePropertyNo(ctx)
 		if err != nil {
-			return fmt.Errorf("failed to generate property number: %v", err)
-		}
-		property.PropertyNo = propertyNo
-	}
-
-	// Set PropertyID for nested address if provided
-	if property.Address != nil {
-		property.Address.PropertyID = property.ID
-		if property.Address.ID == uuid.Nil {
-			property.Address.ID = uuid.New()
+			return nil, fmt.Errorf("failed to generate property number: %w", err)
 		}
 	}
 
-	return s.propertyRepo.Create(ctx, property)
+	// Create property model and SET tenant ID
+	property := &models.Property{
+		ID:                uuid.New(),
+		TenantID:          tenantID,
+		PropertyNo:        propertyNo,
+		OwnershipType:     req.OwnershipType,
+		PropertyType:      req.PropertyType,
+		TypeOfLand:        req.TypeOfLand,
+		ComplexName:       req.ComplexName,
+		NoOfFloors:        req.NoOfFloors,
+		NoOfBasements:     req.NoOfBasements,
+		NoOfBuildings:     req.NoOfBuildings,
+		BuildingName:      req.BuildingName,
+		HasMezzanineFloor: req.HasMezzanineFloor,
+	}
+
+	// Pass to repository
+	if err := s.propertyRepo.Create(ctx, property); err != nil {
+		return nil, fmt.Errorf("failed to create property: %w", err)
+	}
+
+	return property, nil
 }
 
-// GetPropertyByID fetches a property by its ID
-func (s *propertyService) GetPropertyByID(ctx context.Context, id uuid.UUID) (*models.Property, error) {
+// GetPropertyByID - Validate tenant ownership
+func (s *propertyService) GetPropertyByID(ctx context.Context, id uuid.UUID, tenantID string) (*models.Property, error) {
 	if id == uuid.Nil {
 		return nil, fmt.Errorf("invalid property ID: cannot be nil")
 	}
+	// Fetch property
+	property, err := s.propertyRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
 
-	// Repository layer error - propagate as is
+	// Verify tenant ownership
+	if property.TenantID != tenantID {
+		return nil, fmt.Errorf("property does not belong to tenant")
+	}
+
+	return property, nil
+}
+
+// UpdateProperty - Validate tenant and update
+func (s *propertyService) UpdateProperty(ctx context.Context, id uuid.UUID, req *dto.UpdatePropertyRequest, tenantID string) (*models.Property, error) {
+	if req == nil {
+		return nil, fmt.Errorf("%w: request is nil", ErrValidation)
+	}
+	if id == uuid.Nil {
+		return nil, fmt.Errorf(constants.ErrInvalidPropertyIDNil)
+	}
+	// Fetch existing property
+	existing, err := s.propertyRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	// Update only provided fields
+	if req.OwnershipType != nil {
+		existing.OwnershipType = *req.OwnershipType
+	}
+	if req.PropertyType != nil {
+		existing.PropertyType = *req.PropertyType
+	}
+	if req.TypeOfLand != nil {
+		existing.TypeOfLand = *req.TypeOfLand
+	}
+	if req.ComplexName != nil {
+		existing.ComplexName = *req.ComplexName
+	}
+	if req.NoOfFloors != nil {
+		existing.NoOfFloors = *req.NoOfFloors
+	}
+	if req.NoOfBasements != nil {
+		existing.NoOfBasements = *req.NoOfBasements
+	}
+	if req.NoOfBuildings != nil {
+		existing.NoOfBuildings = *req.NoOfBuildings
+	}
+	if req.BuildingName != nil {
+		existing.BuildingName = *req.BuildingName
+	}
+	if req.HasMezzanineFloor != nil {
+		existing.HasMezzanineFloor = *req.HasMezzanineFloor
+	}
+
+	// NEVER allow tenant ID to change
+	existing.TenantID = tenantID
+	// Update in repository
+	if err := s.propertyRepo.Update(ctx, existing); err != nil {
+		return nil, fmt.Errorf("failed to update property: %w", err)
+	}
+
+	// Fetch updated property
 	return s.propertyRepo.GetByID(ctx, id)
 }
 
-// UpdateProperty validates and updates an existing property
-func (s *propertyService) UpdateProperty(ctx context.Context, property *models.Property) error {
-	if property == nil {
-		return fmt.Errorf("%w: request is nil", ErrValidation)
-	}
-	if property.ID == uuid.Nil {
-		return fmt.Errorf("invalid property ID: cannot be nil")
-	}
-
-	if err := s.validateProperty(property); err != nil {
-		return err
-	}
-
-	// Repository layer error - propagate as is
-	return s.propertyRepo.Update(ctx, property)
-}
-
-// DeleteProperty removes a property by its ID
-func (s *propertyService) DeleteProperty(ctx context.Context, id uuid.UUID) error {
+// DeleteProperty - Validate tenant ownership before delete
+func (s *propertyService) DeleteProperty(ctx context.Context, id uuid.UUID, tenantID string) error {
 	if id == uuid.Nil {
 		return fmt.Errorf("invalid property ID: cannot be nil")
 	}
-	// Repository layer error - propagate as is
+	// Fetch property
+	property, err := s.propertyRepo.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	// Verify tenant ownership
+	if property.TenantID != tenantID {
+		return fmt.Errorf(constants.ErrPropertyDoesNotBelongToTenant)
+	}
+
+	// Delete
 	return s.propertyRepo.Delete(ctx, id)
 }
 
-// GetAllProperties returns all properties with pagination, optionally filtered by propertyType
-func (s *propertyService) GetAllProperties(ctx context.Context, page, size int, propertyType *string) ([]*models.Property, int64, error) {
+// GetAllProperties - Filter by tenant ID
+func (s *propertyService) GetAllProperties(ctx context.Context, tenantID string, page, size int, propertyType *string, status *string) ([]*models.Property, int64, error) {
+	// Validate pagination
 	if page < 0 {
 		page = constants.DefaultPage
 	}
@@ -97,21 +165,32 @@ func (s *propertyService) GetAllProperties(ctx context.Context, page, size int, 
 		size = constants.DefaultSize
 	}
 
-	return s.propertyRepo.GetAll(ctx, page, size, propertyType)
+	// Pass tenant ID to repository
+	return s.propertyRepo.GetAll(ctx, tenantID, page, size, propertyType, status)
 }
 
-// GetPropertyByPropertyNo fetches a property by its property number
-func (s *propertyService) GetPropertyByPropertyNo(ctx context.Context, propertyNo string) (*models.Property, error) {
+// GetPropertyByPropertyNo - Validate tenant ownership
+func (s *propertyService) GetPropertyByPropertyNo(ctx context.Context, propertyNo, tenantID string) (*models.Property, error) {
 	if propertyNo == "" {
 		return nil, fmt.Errorf("property number is required")
 	}
+	// Fetch property
+	property, err := s.propertyRepo.GetByPropertyNo(ctx, propertyNo)
+	if err != nil {
+		return nil, err
+	}
 
-	// Repository layer error - propagate as is
-	return s.propertyRepo.GetByPropertyNo(ctx, propertyNo)
+	// Verify tenant ownership
+	if property.TenantID != tenantID {
+		return nil, fmt.Errorf("property does not belong to tenant")
+	}
+
+	return property, nil
 }
 
-// SearchProperties finds properties matching the given search parameters
+// SearchProperties - Validate and filter by tenant
 func (s *propertyService) SearchProperties(ctx context.Context, params SearchPropertyParams) ([]*models.Property, int64, error) {
+	// Validate pagination
 	if params.Page < 0 {
 		params.Page = 0
 	}
@@ -119,7 +198,9 @@ func (s *propertyService) SearchProperties(ctx context.Context, params SearchPro
 		params.Size = 20
 	}
 
+	// Build repository params
 	repoParams := repositories.SearchPropertyParams{
+		TenantID:      params.TenantID,
 		Page:          params.Page,
 		Size:          params.Size,
 		PropertyType:  params.PropertyType,
@@ -136,7 +217,7 @@ func (s *propertyService) SearchProperties(ctx context.Context, params SearchPro
 	return s.propertyRepo.Search(ctx, repoParams)
 }
 
-// GeneratePropertyNo creates a new unique property number
+// generatePropertyNo - Helper to generate unique property number
 func (s *propertyService) GeneratePropertyNo(ctx context.Context) (string, error) {
 	// Generate property number in format: PROP-YYYY-XXXXXX
 	year := time.Now().Year()
@@ -153,19 +234,3 @@ func (s *propertyService) GeneratePropertyNo(ctx context.Context) (string, error
 
 	return propertyNo, nil
 }
-
-// validateProperty checks required fields and allowed values for a property
-func (s *propertyService) validateProperty(property *models.Property) error {
-	// Validate required fields
-	if property.OwnershipType == "" {
-		return fmt.Errorf("ownership type is required")
-	}
-
-	if property.PropertyType == "" {
-		return fmt.Errorf("property type is required")
-	}
-
-	
-	return nil
-}
-

@@ -20,7 +20,7 @@ func NewCoordinatesValidator() *CoordinatesValidator {
 func (v *CoordinatesValidator) ValidateCoordinates(coordinates *models.Coordinates) error {
 	// Nil pointer check
 	if coordinates == nil {
-		return NewValidationError("coordinates", "coordinates object cannot be nil", nil)
+		return NewValidationError("coordinates", constants.ErrCoordinatesObjectNil, nil)
 	}
 
 	// Validate latitude range
@@ -61,7 +61,7 @@ func (v *CoordinatesValidator) ValidateCoordinates(coordinates *models.Coordinat
 // ValidateGeographicRange checks if coordinates are within India's bounds
 func (v *CoordinatesValidator) ValidateGeographicRange(coordinates *models.Coordinates) error {
 	if coordinates == nil {
-		return NewValidationError("coordinates", "coordinates object cannot be nil", nil)
+		return NewValidationError("coordinates", constants.ErrCoordinatesObjectNil, nil)
 	}
 
 	// Check India bounds
@@ -87,7 +87,7 @@ func (v *CoordinatesValidator) ValidateGeographicRange(coordinates *models.Coord
 // ValidateKarnatakaRange checks if coordinates are within Karnataka's bounds
 func (v *CoordinatesValidator) ValidateKarnatakaRange(coordinates *models.Coordinates) error {
 	if coordinates == nil {
-		return NewValidationError("coordinates", "coordinates object cannot be nil", nil)
+		return NewValidationError("coordinates", constants.ErrCoordinatesObjectNil, nil)
 	}
 
 	// Check Karnataka bounds
@@ -118,7 +118,7 @@ func (v *CoordinatesValidator) ValidateRequest(coordinates *models.Coordinates) 
 // ValidateUpdateRequest checks if an update request for coordinates is valid
 func (v *CoordinatesValidator) ValidateUpdateRequest(coordinates *models.Coordinates) error {
 	if coordinates == nil {
-		return NewValidationError("coordinates", "coordinates object cannot be nil", nil)
+		return NewValidationError("coordinates", constants.ErrCoordinatesObjectNil, nil)
 	}
 
 	// Check ID for update
