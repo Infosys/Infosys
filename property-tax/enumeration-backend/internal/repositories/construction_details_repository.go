@@ -32,7 +32,7 @@ func (r *constructionDetailsRepository) Create(ctx context.Context, construction
 // GetByID retrieves a ConstructionDetails record by its ID, including related FloorDetails.
 func (r *constructionDetailsRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.ConstructionDetails, error) {
 	var constructionDetails models.ConstructionDetails
-	err := r.db.Preload("FloorDetails").Where("id = ?", id).First(&constructionDetails).Error
+	err := r.db.Preload("FloorDetails").Where(QueryByID, id).First(&constructionDetails).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("construction details with id %s not found", id)
@@ -58,7 +58,7 @@ func (r *constructionDetailsRepository) Update(ctx context.Context, construction
 // Delete removes a ConstructionDetails record by its ID.
 // Returns an error if the record does not exist or deletion fails.
 func (r *constructionDetailsRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	result := r.db.Delete(&models.ConstructionDetails{}, "id = ?", id)
+	result := r.db.Delete(&models.ConstructionDetails{}, QueryByID, id)
 	if result.Error != nil {
 		return fmt.Errorf("failed to delete construction details with id %s: %w", id, result.Error)
 	}
@@ -77,7 +77,7 @@ func (r *constructionDetailsRepository) GetAll(ctx context.Context, page, size i
 	query := r.db.Model(&models.ConstructionDetails{}).Preload("FloorDetails")
 
 	if propertyID != nil {
-		query = query.Where("property_id = ?", *propertyID)
+		query = query.Where(QueryByPropertyID, *propertyID)
 	}
 
 	// Count total records
@@ -101,7 +101,7 @@ func (r *constructionDetailsRepository) GetAll(ctx context.Context, page, size i
 // GetByPropertyID retrieves all ConstructionDetails records for a given property ID, including related FloorDetails.
 func (r *constructionDetailsRepository) GetByPropertyID(ctx context.Context, propertyID uuid.UUID) ([]*models.ConstructionDetails, error) {
 	var constructionDetails []*models.ConstructionDetails
-	err := r.db.Preload("FloorDetails").Where("property_id = ?", propertyID).Find(&constructionDetails).Error
+	err := r.db.Preload("FloorDetails").Where(QueryByPropertyID, propertyID).Find(&constructionDetails).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("no construction details found for property id %s", propertyID)

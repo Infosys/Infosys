@@ -2,6 +2,7 @@ package workflow
 
 import (
 	"encoding/json"
+	"enumeration/internal/config"
 	"fmt"
 	"net/http"
 	"time"
@@ -22,8 +23,7 @@ type UserResponse struct {
 // It sends a GET request to the user service API, decodes the response, and returns the username.
 func GetUsername(userID string) (string, error) {
 	// Build the user service API URL
-	url := fmt.Sprintf("http://10.232.161.103:30105/api/v1/users/%s", userID)
-
+	url := fmt.Sprintf("%s/api/v1/users/%s", config.GetConfig().OnboardingServiceURL, userID)
 	// Create an HTTP client with a timeout
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Get(url)

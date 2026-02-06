@@ -1,0 +1,95 @@
+[10:00:03.676] [INFO] [36mInitializing Storybook[39m
+[10:00:10.280] [DEBUG] Getting package.json info for C:/Users/shreyanka.p01/Downloads/AgentCitizenStorybook/Property-tax-frontend/package.json...
+[10:00:10.282] [DEBUG] Getting CLI versions from NPM for storybook...
+[10:00:10.282] [DEBUG] Executing command: npm info storybook version
+[10:00:15.634] [INFO] Adding Storybook version 10.1.4 to your project
+[10:00:15.638] [DEBUG] Project type detected: react
+[10:00:48.994] [PROMPT] We found a .storybook config directory in your project.
+We assume that Storybook is already instantiated for your project. Do you still want to continue and force the initialization? {"choice":true}
+[10:00:48.994] [DEBUG] Using cached package.json for C:\Users\shreyanka.p01\Downloads\AgentCitizenStorybook\Property-tax-frontend\package.json...
+[10:00:49.014] [DEBUG] Using cached package.json for C:\Users\shreyanka.p01\Downloads\AgentCitizenStorybook\Property-tax-frontend\package.json...
+[10:00:49.015] [INFO] Framework detected: react-vite
+[10:00:49.016] [DEBUG] Getting installed version for vitest...
+[10:00:49.017] [DEBUG] Executing command: npm ls --json --depth=99 2>NUL
+[10:00:51.327] [DEBUG] Executing command: npm ls --json --depth=0 2>NUL
+[10:00:53.545] [DEBUG] An issue occurred while trying to find dependencies metadata using npm: Error: Command failed with exit code 1: npm.cmd ls --json --depth=0 2>NUL
+npm error code EINVALIDTAGNAME
+npm error Invalid tag name "2>NUL" of package "2>NUL": Tags may not have any characters that encodeURIComponent encodes.
+npm error A complete log of this run can be found in: C:\Users\shreyanka.p01\AppData\Local\npm-cache\_logs\2025-12-05T04_30_52_457Z-debug-0.log
+{
+  "error": {
+    "code": "EINVALIDTAGNAME",
+    "summary": "Invalid tag name \"2>NUL\" of package \"2>NUL\": Tags may not have any characters that encodeURIComponent encodes.",
+    "detail": ""
+  }
+}
+[10:00:53.545] [DEBUG] Getting installed version for msw...
+[10:00:53.545] [DEBUG] Executing command: npm ls --json --depth=99 2>NUL
+[10:00:55.859] [DEBUG] Executing command: npm ls --json --depth=0 2>NUL
+[10:00:58.222] [DEBUG] An issue occurred while trying to find dependencies metadata using npm: Error: Command failed with exit code 1: npm.cmd ls --json --depth=0 2>NUL
+npm error code EINVALIDTAGNAME
+npm error Invalid tag name "2>NUL" of package "2>NUL": Tags may not have any characters that encodeURIComponent encodes.
+npm error A complete log of this run can be found in: C:\Users\shreyanka.p01\AppData\Local\npm-cache\_logs\2025-12-05T04_30_57_152Z-debug-0.log
+{
+  "error": {
+    "code": "EINVALIDTAGNAME",
+    "summary": "Invalid tag name \"2>NUL\" of package \"2>NUL\": Tags may not have any characters that encodeURIComponent encodes.",
+    "detail": ""
+  }
+}
+[10:01:26.664] [PROMPT] What configuration should we install? {"choice":"recommended"}
+[10:01:36.617] [INFO] base-generator-task-start: Generating Storybook configuration
+[10:01:36.620] [DEBUG] Using cached package.json for C:\Users\shreyanka.p01\Downloads\AgentCitizenStorybook\Property-tax-frontend\package.json...
+[10:01:36.621] [DEBUG] Using cached package.json for C:\Users\shreyanka.p01\Downloads\AgentCitizenStorybook\Property-tax-frontend\package.json...
+[10:01:36.621] [DEBUG] Using cached package.json for C:\Users\shreyanka.p01\Downloads\AgentCitizenStorybook\Property-tax-frontend\package.json...
+[10:01:36.626] [INFO] base-generator-task: - Configuring ESLint plugin
+[10:01:36.631] [DEBUG] Detected flat config at C:\Users\shreyanka.p01\Downloads\AgentCitizenStorybook\Property-tax-frontend\eslint.config.js
+[10:01:36.753] [DEBUG] Getting CLI versions from NPM for @chromatic-com/storybook...
+[10:01:36.753] [DEBUG] Executing command: npm info @chromatic-com/storybook version
+[10:01:36.991] [DEBUG] Getting CLI versions from NPM for @storybook/addon-vitest...
+[10:01:36.992] [DEBUG] Executing command: npm info @storybook/addon-vitest version
+[10:01:37.206] [DEBUG] Getting CLI versions from NPM for @storybook/addon-a11y...
+[10:01:37.206] [DEBUG] Executing command: npm info @storybook/addon-a11y version
+[10:01:37.409] [DEBUG] Getting CLI versions from NPM for @storybook/addon-docs...
+[10:01:37.410] [DEBUG] Executing command: npm info @storybook/addon-docs version
+[10:01:37.653] [DEBUG] Getting CLI versions from NPM for eslint-plugin-storybook...
+[10:01:37.653] [DEBUG] Executing command: npm info eslint-plugin-storybook version
+[10:01:47.930] [INFO] base-generator-task: - Configuring main.ts
+[10:01:47.936] [INFO] base-generator-task: - Configuring preview.ts
+[10:01:47.937] [INFO] base-generator-task: - Adding Storybook command to package.json
+[10:01:47.938] [DEBUG] Getting package.json info for C:/Users/shreyanka.p01/Downloads/AgentCitizenStorybook/Property-tax-frontend/package.json...
+[10:01:47.938] [DEBUG] Using cached package.json for C:\Users\shreyanka.p01\Downloads\AgentCitizenStorybook\Property-tax-frontend\package.json...
+[10:01:47.942] [INFO] base-generator-task: - Copying framework templates
+[10:01:48.134] [DEBUG] Executing command: npm config get registry -ws=false -iwr
+[10:01:50.234] [ERROR] [38;2;241;97;97mError: Cannot find @storybook\react-vite\package.json, Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@storybook/react-vite' imported from C:\Users\shreyanka.p01\AppData\Local\npm-cache\_npx\b8dee972deeb6384\node_modules\storybook\dist\_node-chunks\chunk-Q6B5LJGA.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:266:9)
+    at packageResolve (node:internal/modules/esm/resolve:767:81)
+    at moduleResolve (node:internal/modules/esm/resolve:853:18)
+    at defaultResolve (node:internal/modules/esm/resolve:983:11)
+    at nextResolve (node:internal/modules/esm/hooks:748:28)
+    at Hooks.resolve (node:internal/modules/esm/hooks:240:30)
+    at MessagePort.handleMessage (node:internal/modules/esm/worker:199:24)
+    at [nodejs.internal.kHybridDispatch] (node:internal/event_target:827:20)
+    at MessagePort.<anonymous> (node:internal/per_context/messageport:23:28)
+
+Error: Failed to download tarball from https://infyartifactory.jfrog.io/artifactory/api/npm/npm-remote/@storybook/react-vite/-/react-vite-10.1.4.tgz
+    at resolveUsingBranchInstall (file:///C:/Users/shreyanka.p01/AppData/Local/npm-cache/_npx/b8dee972deeb6384/node_modules/storybook/dist/_node-chunks/chunk-6O3OB2PO.js:5385:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async getRendererDir (file:///C:/Users/shreyanka.p01/AppData/Local/npm-cache/_npx/b8dee972deeb6384/node_modules/storybook/dist/_node-chunks/chunk-6O3OB2PO.js:5405:12)
+    at async templatePath (file:///C:/Users/shreyanka.p01/AppData/Local/npm-cache/_npx/b8dee972deeb6384/node_modules/storybook/dist/_node-chunks/chunk-6O3OB2PO.js:5483:19)
+    at async copyTemplateFiles (file:///C:/Users/shreyanka.p01/AppData/Local/npm-cache/_npx/b8dee972deeb6384/node_modules/storybook/dist/_node-chunks/chunk-6O3OB2PO.js:5498:17)
+    at async baseGenerator (file:///C:/Users/shreyanka.p01/AppData/Local/npm-cache/_npx/b8dee972deeb6384/node_modules/create-storybook/dist/_node-chunks/chunk-5TNC6MRJ.js:1284:152)
+    at async GeneratorExecutionCommand.executeProjectGenerator (file:///C:/Users/shreyanka.p01/AppData/Local/npm-cache/_npx/b8dee972deeb6384/node_modules/create-storybook/dist/_node-chunks/chunk-5TNC6MRJ.js:1352:101)
+    at async GeneratorExecutionCommand.execute (file:///C:/Users/shreyanka.p01/AppData/Local/npm-cache/_npx/b8dee972deeb6384/node_modules/create-storybook/dist/_node-chunks/chunk-5TNC6MRJ.js:1374:27)
+    at async doInitiate (file:///C:/Users/shreyanka.p01/AppData/Local/npm-cache/_npx/b8dee972deeb6384/node_modules/create-storybook/dist/_node-chunks/chunk-5TNC6MRJ.js:2286:68)
+    at async file:///C:/Users/shreyanka.p01/AppData/Local/npm-cache/_npx/b8dee972deeb6384/node_modules/create-storybook/dist/_node-chunks/chunk-5TNC6MRJ.js:2329:20[39m
+    at getRendererDir (file:///C:/Users/shreyanka.p01/AppData/Local/npm-cache/_npx/b8dee972deeb6384/node_modules/storybook/dist/_node-chunks/chunk-6O3OB2PO.js:5409:9)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async templatePath (file:///C:/Users/shreyanka.p01/AppData/Local/npm-cache/_npx/b8dee972deeb6384/node_modules/storybook/dist/_node-chunks/chunk-6O3OB2PO.js:5483:19)
+    at async copyTemplateFiles (file:///C:/Users/shreyanka.p01/AppData/Local/npm-cache/_npx/b8dee972deeb6384/node_modules/storybook/dist/_node-chunks/chunk-6O3OB2PO.js:5498:17)
+    at async baseGenerator (file:///C:/Users/shreyanka.p01/AppData/Local/npm-cache/_npx/b8dee972deeb6384/node_modules/create-storybook/dist/_node-chunks/chunk-5TNC6MRJ.js:1284:152)
+    at async GeneratorExecutionCommand.executeProjectGenerator (file:///C:/Users/shreyanka.p01/AppData/Local/npm-cache/_npx/b8dee972deeb6384/node_modules/create-storybook/dist/_node-chunks/chunk-5TNC6MRJ.js:1352:101)
+    at async GeneratorExecutionCommand.execute (file:///C:/Users/shreyanka.p01/AppData/Local/npm-cache/_npx/b8dee972deeb6384/node_modules/create-storybook/dist/_node-chunks/chunk-5TNC6MRJ.js:1374:27)
+    at async doInitiate (file:///C:/Users/shreyanka.p01/AppData/Local/npm-cache/_npx/b8dee972deeb6384/node_modules/create-storybook/dist/_node-chunks/chunk-5TNC6MRJ.js:2286:68)
+    at async file:///C:/Users/shreyanka.p01/AppData/Local/npm-cache/_npx/b8dee972deeb6384/node_modules/create-storybook/dist/_node-chunks/chunk-5TNC6MRJ.js:2329:20
+    at async withTelemetry (file:///C:/Users/shreyanka.p01/AppData/Local/npm-cache/_npx/b8dee972deeb6384/node_modules/storybook/dist/_node-chunks/chunk-6KX7N5UF.js:205:12)

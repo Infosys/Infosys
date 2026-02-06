@@ -64,7 +64,7 @@ func (s *constructionDetailsService) UpdateConstructionDetails(ctx context.Conte
 	}
 
 	if constructionDetails.ID == uuid.Nil {
-		return fmt.Errorf("invalid construction details ID: cannot be nil")
+		return fmt.Errorf(constants.ErrInvalidConstructionDetailsID)
 	}
 
 	if err := s.validateConstructionDetails(constructionDetails); err != nil {

@@ -1,0 +1,4224 @@
+openapi: 3.0.3
+info:
+  title: Property Tax Management API
+  description: Comprehensive API for managing property tax applications, assessments, and related entities
+  version: 1.0.0
+  contact:
+    name: Property Tax Team
+    email: support@propertytax.com
+
+servers:
+  - url: https://api.propertytax.com/v1
+    description: Production server
+  - url: https://staging-api.propertytax.com/v1
+    description: Staging server
+  - url: http://localhost:8080/v1
+    description: Local development server
+
+tags:
+  - name: Application
+    description: Property tax application management
+  - name: ApplicationLog
+    description: Application activity logging
+  - name: Property
+    description: Property information management
+  - name: PropertyOwner
+    description: Property owner management
+  - name: AssessmentDetails
+    description: Property assessment details
+  - name: Amenities
+    description: Property amenities management
+  - name: ConstructionDetails
+    description: Construction details of properties
+  - name: FloorDetails
+    description: Floor-specific property details
+  - name: AdditionalPropertyDetails
+    description: Additional property metadata
+  - name: GISData
+    description: Geographic information system data
+  - name: Coordinates
+    description: Location coordinates
+  - name: User
+    description: User management and authentication
+
+components:
+  schemas:
+    Application:
+      type: object
+      required:
+        - propertyId
+        - priority
+        - dueDate
+        - status
+        - appliedBy
+        - assessee
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the application
+        applicationNo:
+          type: string
+          description: Auto-generated application number
+          readOnly: true
+        propertyId:
+          type: integer
+          format: int64
+          description: Foreign key reference to Property
+        priority:
+          type: string
+          enum: ["LOW", "MEDIUM", "HIGH"]
+          description: Application priority level
+        dueDate:
+          type: string
+          format: date
+          description: Due date for the application
+        assignedAgent:
+          type: integer
+          format: int64
+          description: Foreign key reference to User (with AGENT role)
+        status:
+          type: string
+          description: Current application status (dynamically retrieved from workflow microservice)
+        workflowInstanceId:
+          type: string
+          description: Unique identifier for the workflow instance associated with this application
+        appliedBy:
+          type: string
+          description: Name of the person who applied
+        assessee:
+          $ref: '#/components/schemas/User'
+          description: Person liable for property tax assessment (user with CITIZEN role, may be different from property owners)
+        property:
+          $ref: '#/components/schemas/Property'
+          description: Associated property
+        applicationLogs:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationLog'
+          description: List of application logs
+        # Resubmission tracking fields
+        isResubmission:
+          type: boolean
+          default: false
+          description: Whether this application is a resubmission
+          readOnly: true
+        originalApplicationId:
+          type: integer
+          format: int64
+          description: ID of the original application (for resubmissions)
+          readOnly: true
+        previousApplicationId:
+          type: integer
+          format: int64
+          description: ID of the immediately previous application (for resubmissions)
+          readOnly: true
+        resubmissionNumber:
+          type: integer
+          minimum: 0
+          default: 0
+          description: Sequential resubmission number (0 for original applications)
+          readOnly: true
+        resubmissionReason:
+          type: string
+          description: Reason for resubmission (applicable only for resubmitted applications)
+          readOnly: true
+        resubmissionDate:
+          type: string
+          format: date-time
+          description: Date of resubmission (applicable only for resubmitted applications)
+          readOnly: true
+        resubmittedBy:
+          type: integer
+          format: int64
+          description: User ID who performed the resubmission
+          readOnly: true
+        canBeResubmitted:
+          type: boolean
+          description: Whether this application is eligible for resubmission
+          readOnly: true
+        resubmissionHistory:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResubmissionHistory'
+          description: Complete resubmission history for this application chain
+          readOnly: true
+
+    ApplicationCreateRequest:
+      type: object
+      required:
+        - propertyId
+        - priority
+        - dueDate
+        - appliedBy
+        - assessee
+        - propertyOwners
+      properties:
+        propertyId:
+          type: integer
+          format: int64
+          description: Foreign key reference to Property
+        priority:
+          type: string
+          enum: ["LOW", "MEDIUM", "HIGH"]
+          description: Application priority level
+        dueDate:
+          type: string
+          format: date
+          description: Due date for the application
+        appliedBy:
+          type: string
+          description: Name of the person who applied
+        propertyOwners:
+          type: array
+          items:
+            $ref: '#/components/schemas/PropertyOwnerCreateRequest'
+          description: List of property owners to be created (will be stored as independent PropertyOwner entities)
+          minItems: 1
+        assessee:
+          allOf:
+            - $ref: '#/components/schemas/User'
+            - type: object
+              properties:
+                id:
+                  type: integer
+                  format: int64
+                  description: Existing assessee ID (if updating existing assessee)
+                  readOnly: true
+          description: Person liable for property tax assessment (may be different from property owners)
+
+    ApplicationUpdateRequest:
+      type: object
+      properties:
+        priority:
+          type: string
+          enum: ["LOW", "MEDIUM", "HIGH"]
+          description: Application priority level
+        dueDate:
+          type: string
+          format: date
+          description: Due date for the application
+        assignedAgent:
+          type: integer
+          format: int64
+          description: Foreign key reference to Agent
+        appliedBy:
+          type: string
+          description: Name of the person who applied
+        propertyOwners:
+          type: array
+          items:
+            $ref: '#/components/schemas/PropertyOwnerUpdateRequest'
+          description: List of property owners to be updated (will be stored as independent PropertyOwner entities)
+          minItems: 1
+        assessee:
+          allOf:
+            - $ref: '#/components/schemas/User'
+            - type: object
+              properties:
+                id:
+                  type: integer
+                  format: int64
+                  description: Assessee ID (for updating existing assessee)
+          description: Person liable for property tax assessment (may be different from property owners)
+
+
+    # Resubmission Schemas
+
+
+    ResubmissionHistory:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for resubmission record
+          readOnly: true
+        originalApplicationId:
+          type: integer
+          format: int64
+          description: ID of the first application in the chain
+        previousApplicationId:
+          type: integer
+          format: int64
+          description: ID of the immediately previous application
+        currentApplicationId:
+          type: integer
+          format: int64
+          description: ID of the current resubmitted application
+        resubmissionNumber:
+          type: integer
+          description: Sequential number of this resubmission
+        resubmissionDate:
+          type: string
+          format: date-time
+          description: Date and time of resubmission
+          readOnly: true
+        resubmittedBy:
+          type: integer
+          format: int64
+          description: User ID who performed the resubmission
+        resubmittedByRole:
+          type: string
+          enum: ["COMMISSIONER_APPROVER", "SERVICE_MANAGER", "AGENT", "CITIZEN"]
+          description: Role of user who resubmitted
+        reason:
+          type: string
+          description: Reason for resubmission
+        corrections:
+          type: string
+          description: Description of corrections made
+        previousStatus:
+          type: string
+          description: Status of the previous application before resubmission
+        currentStatus:
+          type: string
+          description: Status of the resubmitted application
+
+    ResubmissionEligibility:
+      type: object
+      properties:
+        isEligible:
+          type: boolean
+          description: Whether the application can be resubmitted
+        reason:
+          type: string
+          description: Reason for eligibility status
+        currentStatus:
+          type: string
+          description: Current application status
+        eligibleStatuses:
+          type: array
+          items:
+            type: string
+          description: List of statuses that allow resubmission
+        lastRejectionDate:
+          type: string
+          format: date-time
+          description: Date of last rejection (if applicable)
+        resubmissionCount:
+          type: integer
+          description: Number of times this application has been resubmitted
+        maxResubmissions:
+          type: integer
+          description: Maximum allowed resubmissions
+        timeLimit:
+          type: object
+          properties:
+            hasTimeLimit:
+              type: boolean
+              description: Whether there's a time limit for resubmission
+            limitDays:
+              type: integer
+              description: Number of days allowed for resubmission
+            deadline:
+              type: string
+              format: date-time
+              description: Deadline for resubmission
+            remainingDays:
+              type: integer
+              description: Days remaining for resubmission
+
+
+    ApplicationLog:
+      type: object
+      required:
+        - action
+        - performedBy
+        - performedDate
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the log entry
+        action:
+          type: string
+          enum: ["CREATE", "UPDATE", "FILE_UPLOAD", "STATUS_CHANGE"]
+          description: Type of action performed
+        performedBy:
+          type: string
+          description: User who performed the action
+        performedDate:
+          type: string
+          format: date
+          description: Date when action was performed
+        comments:
+          type: string
+          description: Additional comments about the action
+        metadata:
+          type: object
+          description: Additional metadata in JSON format
+        fileStoreId:
+          type: integer
+          format: int64
+          description: Foreign key reference to FileStore
+        applicationId:
+          type: integer
+          format: int64
+          description: Foreign key reference to Application
+
+    Property:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the property
+          readOnly: true
+        propertyNo:
+          type: string
+          description: Auto-generated property number
+          readOnly: true
+        ownershipType:
+          type: string
+          enum: ["VACANT_LAND", "PRIVATE", "CENTRAL_GOVERNMENT_50", "CENTRAL_GOVERNMENT_75", "STATE_GOVERNMENT"]
+          description: Type of property ownership
+        propertyType:
+          type: string
+          enum: ["MIXED", "NON_RESIDENTIAL", "RESIDENTIAL"]
+          description: Type of property
+        complexName:
+          type: string
+          description: Name of the complex if applicable
+        address:
+          $ref: '#/components/schemas/PropertyAddress'
+          description: Property address
+        assessmentDetails:
+          $ref: '#/components/schemas/AssessmentDetails'
+          description: Assessment details
+        amenities:
+          type: array
+          items:
+            $ref: '#/components/schemas/Amenities'
+          description: List of amenities
+        constructionDetails:
+          $ref: '#/components/schemas/ConstructionDetails'
+          description: Construction details
+        additionalDetails:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdditionalPropertyDetails'
+          description: Additional property details
+        gisData:
+          $ref: '#/components/schemas/GISData'
+          description: GIS data
+
+    PropertyOwner:
+      type: object
+      required:
+        - applicationId
+        - propertyId
+        - adhaarNo
+        - name
+        - contactNo
+        - gender
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the property owner
+          readOnly: true
+        applicationId:
+          type: string
+          description: Application ID for mapping to application
+        propertyId:
+          type: integer
+          format: int64
+          description: Property ID for mapping to property
+        adhaarNo:
+          type: integer
+          description: Aadhaar number of the owner
+        name:
+          type: string
+          description: Full name of the owner
+        contactNo:
+          type: string
+          description: Contact number of the owner
+        email:
+          type: string
+          format: email
+          description: Email address of the owner
+        gender:
+          type: string
+          enum: ["MALE", "FEMALE", "OTHER"]
+          description: Gender of the owner
+        guardian:
+          type: string
+          description: Guardian's name
+        guardianType:
+          type: string
+          enum: ["FATHER", "MOTHER", "SPOUSE", "OTHER"]
+          description: Type of guardian relationship
+        relationshipToProperty:
+          type: string
+          enum: ["OWNER", "CO_OWNER", "JOINT_OWNER", "LEGAL_HEIR", "POWER_OF_ATTORNEY", "OTHER"]
+          description: Relationship of the person to the property
+        ownershipShare:
+          type: number
+          format: double
+          description: Percentage of ownership (0-100)
+          minimum: 0.01
+          maximum: 100
+        isPrimaryOwner:
+          type: boolean
+          description: Whether this is the primary owner
+          default: false
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          readOnly: true
+
+    PropertyOwnerCreateRequest:
+      type: object
+      required:
+        - applicationId
+        - propertyId
+        - adhaarNo
+        - name
+        - contactNo
+        - gender
+      properties:
+        applicationId:
+          type: string
+          description: Application number for mapping to application
+        propertyId:
+          type: integer
+          format: int64
+          description: Property ID for mapping to property
+        adhaarNo:
+          type: integer
+          description: Aadhaar number of the owner
+        name:
+          type: string
+          description: Full name of the owner
+        contactNo:
+          type: string
+          description: Contact number of the owner
+        email:
+          type: string
+          format: email
+          description: Email address of the owner
+        gender:
+          type: string
+          enum: ["MALE", "FEMALE", "OTHER"]
+          description: Gender of the owner
+        guardian:
+          type: string
+          description: Guardian's name
+        guardianType:
+          type: string
+          enum: ["FATHER", "MOTHER", "SPOUSE", "OTHER"]
+          description: Type of guardian relationship
+        relationshipToProperty:
+          type: string
+          enum: ["OWNER", "CO_OWNER", "JOINT_OWNER", "LEGAL_HEIR", "POWER_OF_ATTORNEY", "OTHER"]
+          description: Relationship of the person to the property
+        ownershipShare:
+          type: number
+          format: double
+          description: Percentage of ownership (0-100)
+          minimum: 0.01
+          maximum: 100
+        isPrimaryOwner:
+          type: boolean
+          description: Whether this is the primary owner
+          default: false
+
+    PropertyOwnerUpdateRequest:
+      type: object
+      properties:
+        adhaarNo:
+          type: integer
+          description: Aadhaar number of the owner
+        name:
+          type: string
+          description: Full name of the owner
+        contactNo:
+          type: string
+          description: Contact number of the owner
+        email:
+          type: string
+          format: email
+          description: Email address of the owner
+        gender:
+          type: string
+          enum: ["MALE", "FEMALE", "OTHER"]
+          description: Gender of the owner
+        guardian:
+          type: string
+          description: Guardian's name
+        guardianType:
+          type: string
+          enum: ["FATHER", "MOTHER", "SPOUSE", "OTHER"]
+          description: Type of guardian relationship
+        relationshipToProperty:
+          type: string
+          enum: ["OWNER", "CO_OWNER", "JOINT_OWNER", "LEGAL_HEIR", "POWER_OF_ATTORNEY", "OTHER"]
+          description: Relationship of the person to the property
+        ownershipShare:
+          type: number
+          format: double
+          description: Percentage of ownership (0-100)
+          minimum: 0.01
+          maximum: 100
+        isPrimaryOwner:
+          type: boolean
+          description: Whether this is the primary owner
+
+
+    Address:
+      type: object
+      required:
+        - addressLine1
+        - city
+        - state
+        - pinCode
+      properties:
+        addressLine1:
+          type: string
+          description: Address line 1
+          maxLength: 200
+        addressLine2:
+          type: string
+          description: Address line 2
+          maxLength: 200
+        city:
+          type: string
+          description: City
+          maxLength: 50
+        state:
+          type: string
+          description: State
+          maxLength: 50
+        pinCode:
+          type: string
+          description: PIN code
+          pattern: '^[0-9]{6}$'
+
+    PropertyAddress:
+      type: object
+      required:
+        - locality
+        - zoneNo
+        - wardNo
+        - blockNo
+        - electionWard
+        - secretariatWard
+        - pinCode
+        - differentCorrespondenceAddress
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the address
+        locality:
+          type: string
+          description: Locality of the property
+        zoneNo:
+          type: string
+          description: Zone number
+        wardNo:
+          type: string
+          description: Ward number (validated from dropdown)
+        blockNo:
+          type: string
+          description: Block number (validated from dropdown)
+        street:
+          type: string
+          description: Street name (validated from dropdown)
+        electionWard:
+          type: string
+          description: Election ward
+        secretariatWard:
+          type: string
+          description: Secretariat ward
+        pinCode:
+          type: integer
+          description: PIN code
+        differentCorrespondenceAddress:
+          type: boolean
+          description: Whether correspondence address is different
+        propertyId:
+          type: integer
+          format: int64
+          description: Foreign key reference to Property
+
+    AssessmentDetails:
+      type: object
+      required:
+        - extendOfSite
+        - isLandUnderneathBuilding
+        - isUnspecifiedShare
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for assessment details
+        reasonOfCreation:
+          type: string
+          enum: ["YET_TO_COME"]
+          description: Reason for creating assessment
+        occupancyCertificateNumber:
+          type: string
+          description: Occupancy certificate number
+        occupancyCertificateDate:
+          type: string
+          format: date
+          description: Occupancy certificate date
+        extendOfSite:
+          type: string
+          description: Extent of site
+        isLandUnderneathBuilding:
+          type: boolean
+          description: Whether land is underneath building
+        isUnspecifiedShare:
+          type: boolean
+          description: Whether share is unspecified
+        propertyId:
+          type: integer
+          format: int64
+          description: Foreign key reference to Property
+
+    Amenities:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for amenity
+        type:
+          type: string
+          enum: ["LIFT", "WATER_SUPPLY", "CABLE_CONNECTION", "ELECTRICITY", "ATTACHED_BATHROOM", "WATER_HARVESTING", "OTHERS"]
+          description: Type of amenity
+        description:
+          type: string
+          description: Description of the amenity
+        expiryDate:
+          type: string
+          format: date
+          description: Expiry date of the amenity
+        propertyId:
+          type: integer
+          format: int64
+          description: Foreign key reference to Property
+
+    ConstructionDetails:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for construction details
+        floorType:
+          type: string
+          enum: ["YET_TO_COME"]
+          description: Type of floor
+        wallType:
+          type: string
+          enum: ["YET_TO_COME"]
+          description: Type of wall
+        roofType:
+          type: string
+          enum: ["YET_TO_COME"]
+          description: Type of roof
+        woodType:
+          type: string
+          enum: ["YET_TO_COME"]
+          description: Type of wood
+        propertyId:
+          type: integer
+          format: int64
+          description: Foreign key reference to Property
+        floorDetails:
+          type: array
+          items:
+            $ref: '#/components/schemas/FloorDetails'
+          description: List of floor details
+
+    FloorDetails:
+      type: object
+      required:
+        - floorNo
+        - classification
+        - natureOfUsage
+        - firmName
+        - occupancyType
+        - constructionDate
+        - effectiveFromDate
+        - unstructuredLand
+        - lengthFt
+        - breadthFt
+        - plinthAreadSqFt
+        - floorDetailsEntered
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for floor details
+        floorNo:
+          type: integer
+          description: Floor number
+        classification:
+          type: string
+          enum: ["YET_TO_COME"]
+          description: Floor classification
+        natureOfUsage:
+          type: string
+          enum: ["YET_TO_COME"]
+          description: Nature of usage
+        firmName:
+          type: string
+          description: Name of the firm
+        occupancyType:
+          type: string
+          enum: ["YET_TO_COME"]
+          description: Type of occupancy
+        occupancyName:
+          type: string
+          description: Occupancy name
+        constructionDate:
+          type: string
+          format: date
+          description: Construction date
+        effectiveFromDate:
+          type: string
+          format: date
+          description: Effective from date
+        unstructuredLand:
+          type: string
+          enum: ["YET_TO_COME"]
+          description: Unstructured land information
+        lengthFt:
+          type: number
+          format: float
+          description: Length in feet
+        breadthFt:
+          type: number
+          format: float
+          description: Breadth in feet
+        plinthAreadSqFt:
+          type: number
+          format: float
+          description: Plinth area in square feet
+        buildingPermissionNo:
+          type: string
+          description: Building permission number
+        floorDetailsEntered:
+          type: boolean
+          description: Whether floor details are entered
+        constructionDetailsId:
+          type: integer
+          format: int64
+          description: Foreign key reference to ConstructionDetails
+
+
+    AdditionalPropertyDetails:
+      type: object
+      required:
+        - fieldName
+        - fieldValue
+        - propertyId
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for additional details
+        fieldName:
+          type: string
+          description: Name of the additional field
+        fieldValue:
+          type: string
+          description: Value of the additional field
+        propertyId:
+          type: integer
+          format: int64
+          description: Foreign key reference to Property
+
+    GISData:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for GIS data
+        source:
+          type: string
+          enum: ["GPS", "MANUAL_ENTRY", "IMPORT"]
+          description: Source of the GIS data
+        type:
+          type: string
+          enum: ["POINT", "LINE", "POLYGON"]
+          description: Type of GIS data
+        entityType:
+          type: string
+          description: Entity type
+        propertyId:
+          type: integer
+          format: int64
+          description: Foreign key reference to Property
+        coordinates:
+          type: array
+          items:
+            $ref: '#/components/schemas/Coordinates'
+          description: List of coordinates
+
+    Coordinates:
+      type: object
+      required:
+        - latitude
+        - longitude
+        - gisDataId
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for coordinates
+        latitude:
+          type: number
+          format: float
+          description: Latitude coordinate
+        longitude:
+          type: number
+          format: float
+          description: Longitude coordinate
+        gisDataId:
+          type: integer
+          format: int64
+          description: Foreign key reference to GISData
+
+    # User Management Schemas
+    User:
+      type: object
+      required:
+        - username
+        - email
+        - role
+        - isActive
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the user
+          readOnly: true
+        username:
+          type: string
+          description: Unique username for login
+          minLength: 3
+          maxLength: 50
+          pattern: '^[a-zA-Z0-9_]+$'
+        email:
+          type: string
+          format: email
+          description: Email address of the user
+        password:
+          type: string
+          description: User password (write-only)
+          writeOnly: true
+          minLength: 8
+        role:
+          type: string
+          enum: ["COMMISSIONER_APPROVER", "SERVICE_MANAGER", "AGENT", "CITIZEN"]
+          description: User role in the system
+        isActive:
+          type: boolean
+          description: Whether the user account is active
+          default: true
+        ward:
+          type: string
+          description: Ward assigned to the user (optional, primarily for agents and commissioners)
+          maxLength: 50
+        lastLoginDate:
+          type: string
+          format: date-time
+          description: Last login timestamp
+          readOnly: true
+        createdDate:
+          type: string
+          format: date-time
+          description: Account creation timestamp
+          readOnly: true
+        permissions:
+          type: array
+          items:
+            type: string
+          description: List of specific permissions assigned to the user
+        profile:
+          $ref: '#/components/schemas/UserProfile'
+          description: User profile information
+
+    UserProfile:
+      type: object
+      properties:
+        firstName:
+          type: string
+          description: First name of the user
+          maxLength: 50
+        lastName:
+          type: string
+          description: Last name of the user
+          maxLength: 50
+        fullName:
+          type: string
+          description: Full name of the user
+          maxLength: 100
+        phoneNumber:
+          type: string
+          description: Contact phone number
+          pattern: '^[0-9]{10}$'
+        adhaarNo:
+          type: integer
+          description: Aadhaar number (for citizens and agents)
+        gender:
+          type: string
+          enum: ["MALE", "FEMALE", "OTHER"]
+          description: Gender of the user
+        guardian:
+          type: string
+          description: Guardian's name
+          maxLength: 100
+        guardianType:
+          type: string
+          enum: ["FATHER", "MOTHER", "SPOUSE", "GUARDIAN", "OTHER"]
+          description: Type of guardian relationship
+        dateOfBirth:
+          type: string
+          format: date
+          description: Date of birth
+        address:
+          $ref: '#/components/schemas/Address'
+          description: Current address of the user
+        department:
+          type: string
+          description: Department (for government officials)
+        designation:
+          type: string
+          description: Job designation
+        workLocation:
+          type: string
+          description: Work location/office
+        profilePicture:
+          type: string
+          description: URL to profile picture
+        # Property-related fields for citizens
+        relationshipToProperty:
+          type: string
+          enum: ["OWNER", "TENANT", "FAMILY_MEMBER", "OTHER"]
+          description: Relationship to the property (for citizens)
+        ownershipShare:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          description: Ownership percentage for property owners
+        isPrimaryOwner:
+          type: boolean
+          description: Whether this user is the primary property owner
+          default: false
+        # Verification fields
+        isVerified:
+          type: boolean
+          description: Whether the user's identity is verified
+          default: false
+        verificationDocuments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Document'
+          description: List of verification documents
+
+    Document:
+      type: object
+      required:
+        - documentType
+        - documentNumber
+        - fileStoreId
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the document
+        documentType:
+          type: string
+          enum: ["AADHAAR", "PAN", "VOTER_ID", "PASSPORT", "DRIVING_LICENSE", "UTILITY_BILL", "PROPERTY_DEED", "OTHER"]
+          description: Type of document
+        documentNumber:
+          type: string
+          description: Document number/ID
+        issueDate:
+          type: string
+          format: date
+          description: Document issue date
+        expiryDate:
+          type: string
+          format: date
+          description: Document expiry date (if applicable)
+        fileStoreId:
+          type: integer
+          format: int64
+          description: Reference to uploaded document file
+        isVerified:
+          type: boolean
+          description: Whether document is verified
+          default: false
+        verifiedBy:
+          type: integer
+          format: int64
+          description: User ID who verified the document
+        verificationDate:
+          type: string
+          format: date-time
+          description: Document verification timestamp
+
+    # User Request/Response Schemas
+    UserCreateRequest:
+      type: object
+      required:
+        - username
+        - email
+        - password
+        - role
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 50
+          pattern: '^[a-zA-Z0-9_]+$'
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        role:
+          type: string
+          enum: ["COMMISSIONER_APPROVER", "SERVICE_MANAGER", "AGENT", "CITIZEN"]
+        ward:
+          type: string
+          description: Ward assigned to the user (optional)
+          maxLength: 50
+        profile:
+          $ref: '#/components/schemas/UserProfile'
+        permissions:
+          type: array
+          items:
+            type: string
+
+    UserUpdateRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: ["COMMISSIONER_APPROVER", "SERVICE_MANAGER", "AGENT", "CITIZEN"]
+        isActive:
+          type: boolean
+        ward:
+          type: string
+          description: Ward assigned to the user (optional)
+          maxLength: 50
+        profile:
+          $ref: '#/components/schemas/UserProfile'
+        permissions:
+          type: array
+          items:
+            type: string
+
+
+    # Workflow Integration Schemas
+
+
+
+
+    # Common Response Schemas
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Whether the operation was successful
+        message:
+          type: string
+          description: Response message
+        data:
+          type: object
+          description: Response data
+        errors:
+          type: array
+          items:
+            type: string
+          description: List of errors if any
+
+    PaginatedResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            type: object
+          description: List of items
+
+    PaginatedListResponse:
+      type: array
+      items:
+        type: object
+      description: List of items with pagination details in headers
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          description: Error message
+        errors:
+          type: array
+          items:
+            type: string
+          description: List of detailed errors
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    PaginatedList:
+      description: Paginated list with headers
+      headers:
+        X-Total-Count:
+          description: Total number of items
+          schema:
+            type: integer
+        X-Current-Page:
+          description: Current page number (0-based)
+          schema:
+            type: integer
+        X-Per-Page:
+          description: Number of items per page
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              type: object
+
+paths:
+  # Application endpoints
+  /applications:
+    get:
+      tags:
+        - Application
+      summary: Get all applications
+      description: Retrieve a paginated list of all applications
+      parameters:
+        - name: page
+          in: query
+          description: Page number (0-based)
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: Page size
+          required: false
+          schema:
+            type: integer
+            default: 20
+        - name: status
+          in: query
+          description: Filter by application status (values from workflow microservice)
+          required: false
+          schema:
+            type: string
+        - name: priority
+          in: query
+          description: Filter by priority
+          required: false
+          schema:
+            type: string
+            enum: ["LOW", "MEDIUM", "HIGH"]
+        - name: propertyOwnerName
+          in: query
+          description: Filter by any property owner name (partial match across all owners)
+          required: false
+          schema:
+            type: string
+        - name: propertyOwnerAdhaar
+          in: query
+          description: Filter by any property owner Aadhaar number
+          required: false
+          schema:
+            type: integer
+        - name: primaryOwnerName
+          in: query
+          description: Filter by primary property owner name (partial match)
+          required: false
+          schema:
+            type: string
+        - name: primaryOwnerAdhaar
+          in: query
+          description: Filter by primary property owner Aadhaar number
+          required: false
+          schema:
+            type: integer
+        - name: ownershipShare
+          in: query
+          description: Filter by minimum ownership share percentage
+          required: false
+          schema:
+            type: number
+            format: float
+            minimum: 0
+            maximum: 100
+        - name: assesseeName
+          in: query
+          description: Filter by assessee name (partial match)
+          required: false
+          schema:
+            type: string
+        - name: assesseeAdhaar
+          in: query
+          description: Filter by assessee Aadhaar number
+          required: false
+          schema:
+            type: integer
+        - name: isResubmission
+          in: query
+          description: Filter by resubmission status
+          required: false
+          schema:
+            type: boolean
+        - name: originalApplicationId
+          in: query
+          description: Filter by original application ID (for resubmission chains)
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: resubmissionNumber
+          in: query
+          description: Filter by resubmission number
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+        - name: resubmittedBy
+          in: query
+          description: Filter by user who resubmitted
+          required: false
+          schema:
+            type: integer
+            format: int64
+        
+      responses:
+        '200':
+          description: List of applications retrieved successfully
+          headers:
+            X-Total-Count:
+              description: Total number of applications
+              schema:
+                type: integer
+            X-Current-Page:
+              description: Current page number (0-based)
+              schema:
+                type: integer
+            X-Per-Page:
+              description: Number of applications per page
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Application'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - Application
+      summary: Create a new application
+      description: Create a new property tax application. Property owners submitted in the request will be stored as independent PropertyOwner entities and are not returned in the response.
+      parameters:
+        - name: deleteDraftId
+          in: query
+          schema:
+            type: integer
+            format: int64
+          description: Draft ID to delete after successful application creation (optional)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationCreateRequest'
+            example:
+              propertyId: 123
+              priority: "MEDIUM"
+              dueDate: "2025-12-31"
+              appliedBy: "John Smith"
+              propertyOwners:
+                - applicationId: "APP-2025-001"
+                  propertyId: 123
+                  adhaarNo: 123456789012
+                  name: "John Doe"
+                  contactNo: "9876543210"
+                  email: "john.doe@example.com"
+                  gender: "MALE"
+                  guardian: "Robert Doe"
+                  guardianType: "FATHER"
+                  relationshipToProperty: "OWNER"
+                  ownershipShare: 60.0
+                  isPrimaryOwner: true
+                - applicationId: "APP-2025-001"
+                  propertyId: 123
+                  adhaarNo: 234567890123
+                  name: "Mary Doe"
+                  contactNo: "9876543211"
+                  email: "mary.doe@example.com"
+                  gender: "FEMALE"
+                  guardian: "William Doe"
+                  guardianType: "FATHER"
+                  relationshipToProperty: "CO_OWNER"
+                  ownershipShare: 40.0
+                  isPrimaryOwner: false
+              assessee:
+                adhaarNo: 987654321098
+                name: "Jane Smith"
+                contactNo: "9123456789"
+                email: "jane.smith@example.com"
+                gender: "FEMALE"
+                guardian: "Michael Smith"
+                guardianType: "FATHER"
+                dateOfBirth: "1985-05-20"
+                citizenType: "ASSESSEE"
+                relationshipToProperty: "TENANT"
+                address:
+                  addressLine1: "456 Oak Avenue"
+                  city: "Mumbai"
+                  state: "Maharashtra"
+                  pinCode: "400002"
+      responses:
+        '201':
+          description: Application created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Application'
+                      draftDeleted:
+                        type: boolean
+                        description: Whether a draft was deleted after successful creation
+                        default: false
+                      deletedDraftId:
+                        type: integer
+                        format: int64
+                        description: ID of the deleted draft (if any)
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /applications/{id}:
+    get:
+      tags:
+        - Application
+      summary: Get application by ID
+      description: Retrieve a specific application by its ID
+      parameters:
+        - name: id
+          in: path
+          description: Application ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Application retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Application'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      tags:
+        - Application
+      summary: Update application
+      description: Update an existing application. Property owners submitted in the request will be stored as independent PropertyOwner entities and are not returned in the response.
+      parameters:
+        - name: id
+          in: path
+          description: Application ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationUpdateRequest'
+      responses:
+        '200':
+          description: Application updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Application'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - Application
+      summary: Delete application
+      description: Delete an application by its ID
+      parameters:
+        - name: id
+          in: path
+          description: Application ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Application deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /applications/{id}/status:
+    patch:
+      tags:
+        - Application
+      summary: Update application status
+      description: Update the status of an application with optional comment
+      parameters:
+        - name: id
+          in: path
+          description: Application ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+                - tenantId
+              properties:
+                action:
+                  type: string
+                  description: Workflow action to perform (dynamically retrieved from workflow microservice)
+                  example: "APPROVE"
+                comment:
+                  type: string
+                  description: Optional comment for the status change
+                  maxLength: 500
+                  example: "Application approved after verification"
+                tenantId:
+                  type: string
+                  description: Tenant identifier
+                  example: "pb.amritsar"
+      responses:
+        '200':
+          description: Application status updated successfully via workflow microservice
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Application status updated successfully"
+                  data:
+                    type: object
+                    properties:
+                      application:
+                        $ref: '#/components/schemas/Application'
+                      previousStatus:
+                        type: string
+                        example: "UNDER_REVIEW"
+                        description: Status before the transition
+                      currentStatus:
+                        type: string
+                        example: "APPROVED"
+                        description: Current status after workflow transition
+                      workflowInstanceId:
+                        type: string
+                        description: Workflow instance ID from workflow microservice
+                      
+                      statusHistory:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            previousStatus:
+                              type: string
+                              description: Previous status (from workflow)
+                            newStatus:
+                              type: string
+                              description: New status after transition (from workflow)
+                            changedBy:
+                              type: string
+                              description: User who made the change
+                            changedAt:
+                              type: string
+                              format: date-time
+                              description: Timestamp of the change
+                            comment:
+                              type: string
+                              description: Comment provided during status change
+                        description: Status change history from workflow
+        '400':
+          description: Invalid status transition or bad request
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorResponse'
+                  - type: object
+                    properties:
+                      validTransitions:
+                        type: array
+                        items:
+                          type: string
+                        description: List of valid status transitions from current status
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          description: Invalid status transition
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorResponse'
+                  - type: object
+                    properties:
+                      currentStatus:
+                        type: string
+                        description: Current application status
+                      requestedStatus:
+                        type: string
+                        description: Requested status that is invalid
+                      allowedTransitions:
+                        type: array
+                        items:
+                          type: string
+                        description: List of allowed status transitions from current status
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /applications/{id}/transfer-to-registry:
+    post:
+      tags:
+        - Application
+      summary: Transfer application to registry
+      description: Transfer an approved application to the registry system for final processing
+      parameters:
+        - name: id
+          in: path
+          description: Application ID to transfer to registry
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Application successfully transferred to registry
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          application:
+                            $ref: '#/components/schemas/Application'
+                          registryTransfer:
+                            type: object
+                            properties:
+                              registryId:
+                                type: string
+                                description: Registry system reference ID
+                              transferredAt:
+                                type: string
+                                format: date-time
+                                description: Timestamp when transfer was completed
+                              transferredBy:
+                                type: string
+                                description: User who initiated the transfer
+                              registryStatus:
+                                type: string
+                                enum: ["PENDING", "ACCEPTED", "PROCESSING"]
+                                description: Current status in registry system
+                              estimatedProcessingTime:
+                                type: string
+                                description: Estimated time for registry processing
+                            description: Registry transfer details
+        '400':
+          description: Bad request - Application cannot be transferred
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorResponse'
+                  - type: object
+                    properties:
+                      reason:
+                        type: string
+                        description: Reason why application cannot be transferred
+                      currentStatus:
+                        type: string
+                        description: Current application status
+                      requiredStatus:
+                        type: array
+                        items:
+                          type: string
+                        description: Required status(es) for transfer
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Conflict - Application already transferred or in progress
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorResponse'
+                  - type: object
+                    properties:
+                      existingRegistryId:
+                        type: string
+                        description: Existing registry reference ID
+                      transferDate:
+                        type: string
+                        format: date-time
+                        description: When the application was previously transferred
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+
+  /applications/{id}/assign:
+    patch:
+      tags:
+        - Application
+      summary: Assign application to an agent
+      description: Assign an application to a specific agent for processing
+      parameters:
+        - name: id
+          in: path
+          description: Application ID to assign
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - agentId
+              properties:
+                userId:
+                  type: integer
+                  format: int64
+                  description: ID of the user (with AGENT role) to assign the application to
+                comment:
+                  type: string
+                  description: Optional comment explaining the assignment
+                  maxLength: 500
+              example:
+                userId: 456
+                comment: "Assigning to agent with expertise in residential properties"
+      responses:
+        '200':
+          description: Application successfully assigned to agent
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          application:
+                            $ref: '#/components/schemas/Application'
+                          assignment:
+                            type: object
+                            properties:
+                              previousAgent:
+                                type: object
+                                properties:
+                                  id:
+                                    type: integer
+                                    format: int64
+                                  name:
+                                    type: string
+                                  email:
+                                    type: string
+                                description: Previously assigned agent (if any)
+                                nullable: true
+                              newAgent:
+                                type: object
+                                properties:
+                                  id:
+                                    type: integer
+                                    format: int64
+                                  name:
+                                    type: string
+                                  email:
+                                    type: string
+                                  ward:
+                                    type: string
+                                description: Newly assigned agent details
+                              assignedAt:
+                                type: string
+                                format: date-time
+                                description: Timestamp when assignment was made
+                              assignedBy:
+                                type: string
+                                description: User who made the assignment
+                              comment:
+                                type: string
+                                description: Assignment comment
+                            description: Assignment details
+        '400':
+          description: Bad request - Invalid assignment
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorResponse'
+                  - type: object
+                    properties:
+                      reason:
+                        type: string
+                        description: Reason why assignment failed
+                      userId:
+                        type: integer
+                        format: int64
+                        description: The user ID (with AGENT role) that caused the error
+        '404':
+          description: Application or User not found
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorResponse'
+                  - type: object
+                    properties:
+                      missingResource:
+                        type: string
+                        enum: ["application", "user"]
+                        description: Which resource was not found
+                      resourceId:
+                        type: integer
+                        format: int64
+                        description: ID of the missing resource
+        '409':
+          description: Conflict - Agent not available or other assignment conflict
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorResponse'
+                  - type: object
+                    properties:
+                      conflictReason:
+                        type: string
+                        enum: ["agent_unavailable", "agent_overloaded", "ward_mismatch"]
+                        description: Specific reason for the conflict
+                      agentWorkload:
+                        type: object
+                        properties:
+                          currentApplications:
+                            type: integer
+                            description: Number of applications currently assigned to agent
+                          maximumCapacity:
+                            type: integer
+                            description: Maximum applications the agent can handle
+                        description: Agent workload information
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ApplicationLog endpoints
+  /application-logs:
+    get:
+      tags:
+        - ApplicationLog
+      summary: Get all application logs
+      description: Retrieve a paginated list of all application logs
+      parameters:
+        - name: page
+          in: query
+          description: Page number (0-based)
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: Page size
+          required: false
+          schema:
+            type: integer
+            default: 20
+        - name: applicationId
+          in: query
+          description: Filter by application ID
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: action
+          in: query
+          description: Filter by action type
+          required: false
+          schema:
+            type: string
+            enum: ["CREATE", "UPDATE", "FILE_UPLOAD", "STATUS_CHANGE"]
+      responses:
+        '200':
+          description: List of application logs retrieved successfully
+          headers:
+            X-Total-Count:
+              description: Total number of application logs
+              schema:
+                type: integer
+            X-Current-Page:
+              description: Current page number (0-based)
+              schema:
+                type: integer
+            X-Per-Page:
+              description: Number of application logs per page
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApplicationLog'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - ApplicationLog
+      summary: Create a new application log
+      description: Create a new application log entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationLog'
+      responses:
+        '201':
+          description: Application log created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ApplicationLog'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /application-logs/{id}:
+    get:
+      tags:
+        - ApplicationLog
+      summary: Get application log by ID
+      description: Retrieve a specific application log by its ID
+      parameters:
+        - name: id
+          in: path
+          description: Application log ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Application log retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ApplicationLog'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      tags:
+        - ApplicationLog
+      summary: Update application log
+      description: Update an existing application log
+      parameters:
+        - name: id
+          in: path
+          description: Application log ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationLog'
+      responses:
+        '200':
+          description: Application log updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ApplicationLog'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - ApplicationLog
+      summary: Delete application log
+      description: Delete an application log by its ID
+      parameters:
+        - name: id
+          in: path
+          description: Application log ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Application log deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  
+  /applications/{id}/assessee:
+    get:
+      tags:
+        - Application
+      summary: Get assessee details for application
+      description: Retrieve assessee details associated with a specific application
+      parameters:
+        - name: id
+          in: path
+          description: Application ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Assessee details retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      tags:
+        - Application
+      summary: Update assessee details
+      description: Update assessee details for a specific application
+      parameters:
+        - name: id
+          in: path
+          description: Application ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: Assessee updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+
+
+  # Application Resubmission endpoints
+
+  /applications/{id}/resubmission-eligibility:
+    get:
+      tags:
+        - Application
+      summary: Check resubmission eligibility
+      description: Check if an application can be resubmitted and get eligibility details
+      parameters:
+        - name: id
+          in: path
+          description: Application ID to check
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Resubmission eligibility retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/ResubmissionEligibility'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /applications/search:
+    get:
+      tags:
+        - Application
+      summary: Search applications with advanced filters
+      description: Search applications by various criteria including owner details, location, and application status
+      parameters:
+        # Pagination parameters
+        - name: page
+          in: query
+          description: Page number (0-based)
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: Page size
+          required: false
+          schema:
+            type: integer
+            default: 20
+        
+        # Search parameters
+        - name: ownerName
+          in: query
+          description: Search by applications owner name
+          required: false
+          schema:
+            type: string
+        - name: ownerEmail
+          in: query
+          description: Search by applications owner email
+          required: false
+          schema:
+            type: string
+        - name: ownerPhone
+          in: query
+          description: Search by applications owner phone number
+          required: false
+          schema:
+            type: string
+        - name: latitude
+          in: query
+          description: Search by latitude coordinate
+          required: false
+          schema:
+            type: number
+            format: float
+        - name: longitude
+          in: query
+          description: Search by longitude coordinate
+          required: false
+          schema:
+            type: number
+            format: float
+        - name: address
+          in: query
+          description: Search by property address (locality, street, etc.)
+          required: false
+          schema:
+            type: string
+        - name: propertyId
+          in: query
+          description: Search by property ID
+          required: false
+          schema:
+            type: integer
+            format: int64
+        
+        # Filter parameters
+        - name: agentName
+          in: query
+          description: Filter by assigned agent name
+          required: false
+          schema:
+            type: string
+        - name: wardNo
+          in: query
+          description: Filter by ward number
+          required: false
+          schema:
+            type: string
+        - name: zoneNo
+          in: query
+          description: Filter by zone number
+          required: false
+          schema:
+            type: string
+        - name: applicationStatus
+          in: query
+          description: Filter by application status (values from workflow microservice)
+          required: false
+          schema:
+            type: string
+        - name: applicationDueDateFrom
+          in: query
+          description: Filter applications with due date from this date (YYYY-MM-DD)
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: applicationDueDateTo
+          in: query
+          description: Filter applications with due date to this date (YYYY-MM-DD)
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: applicationCreatedDateFrom
+          in: query
+          description: Filter applications created from this date (YYYY-MM-DD)
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: applicationCreatedDateTo
+          in: query
+          description: Filter applications created to this date (YYYY-MM-DD)
+          required: false
+          schema:
+            type: string
+            format: date
+        
+        # Sort parameters
+        - name: sortBy
+          in: query
+          description: Sort by field
+          required: false
+          schema:
+            type: string
+            enum: ["createdAt", "updatedAt", "dueDate"]
+            default: "createdAt"
+        - name: sortOrder
+          in: query
+          description: Sort order
+          required: false
+          schema:
+            type: string
+            enum: ["asc", "desc"]
+            default: "desc"
+      responses:
+        '200':
+          description: Properties search results retrieved successfully
+          headers:
+            X-Total-Count:
+              description: Total number of matching properties
+              schema:
+                type: integer
+            X-Current-Page:
+              description: Current page number (0-based)
+              schema:
+                type: integer
+            X-Per-Page:
+              description: Number of properties per page
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/Property'
+                    - type: object
+                      properties:
+                        searchScore:
+                          type: number
+                          format: float
+                          description: Relevance score for the search result
+                        matchedFields:
+                          type: array
+                          items:
+                            type: string
+                          description: List of fields that matched the search criteria
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+
+  # Property endpoints
+  /properties:
+    get:
+      tags:
+        - Property
+      summary: Get all properties
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: propertyType
+          in: query
+          schema:
+            type: string
+            enum: ["MIXED", "NON_RESIDENTIAL", "RESIDENTIAL"]
+      responses:
+        '200':
+          description: Properties retrieved successfully
+          headers:
+            X-Total-Count:
+              description: Total number of properties
+              schema:
+                type: integer
+            X-Current-Page:
+              description: Current page number (0-based)
+              schema:
+                type: integer
+            X-Per-Page:
+              description: Number of properties per page
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Property'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Property
+      summary: Create a new property
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Property'
+      responses:
+        '201':
+          description: Property created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Property'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /properties/{id}:
+    get:
+      tags:
+        - Property
+      summary: Get property by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Property retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Property'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - Property
+      summary: Update property
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Property'
+      responses:
+        '200':
+          description: Property updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Property'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - Property
+      summary: Delete property
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Property deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+
+
+# Property Owner endpoints (independent)
+  /property-owners:
+    get:
+      tags:
+        - PropertyOwner
+      summary: Get all property owners
+      description: Retrieve property owners with filtering by applicationNo and propertyId
+      parameters:
+        - name: page
+          in: query
+          description: Page number (0-based)
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: Page size
+          required: false
+          schema:
+            type: integer
+            default: 20
+        - name: applicationNo
+          in: query
+          description: Filter by application number
+          required: false
+          schema:
+            type: string
+        - name: propertyId
+          in: query
+          description: Filter by property ID
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: isPrimaryOwner
+          in: query
+          description: Filter by primary owner status
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Property owners retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/ApiResponse'
+                    - type: object
+                      properties:
+                        data:
+                          $ref: '#/components/schemas/PropertyOwner'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - PropertyOwner
+      summary: Create property owner
+      description: Create a new property owner with applicationId and propertyId mapping
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PropertyOwnerCreateRequest'
+      responses:
+        '201':
+          description: Property owner created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PropertyOwner'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /property-owners/{id}:
+    get:
+      tags:
+        - PropertyOwner
+      summary: Get property owner by ID
+      description: Retrieve a specific property owner by ID
+      parameters:
+        - name: id
+          in: path
+          description: Property Owner ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Property owner retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PropertyOwner'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      tags:
+        - PropertyOwner
+      summary: Update property owner
+      description: Update an existing property owner
+      parameters:
+        - name: id
+          in: path
+          description: Property Owner ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PropertyOwnerUpdateRequest'
+      responses:
+        '200':
+          description: Property owner updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PropertyOwner'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - PropertyOwner
+      summary: Delete property owner
+      description: Delete a property owner (only if not the last owner for the application)
+      parameters:
+        - name: id
+          in: path
+          description: Property Owner ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Property owner deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Bad request - Cannot remove the last property owner
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /property-owners/search:
+    get:
+      tags:
+        - PropertyOwner
+      summary: Get property owners by application number or property ID
+      description: Retrieve all property owners for a specific application
+      parameters:
+        - name: applicationId
+          in: query
+          description: Application Id
+          required: false
+          schema:
+            type: string
+            default: ""
+        
+        - name: propertyId
+          in: query
+          description: Property ID
+          required: false
+          schema:
+            type: integer
+            format: int64
+            
+
+      responses:
+        '200':
+          description: Property owners retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PropertyOwner'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+
+  /property-owners/ownership-validation:
+    post:
+      tags:
+        - PropertyOwner
+      summary: Validate property ownership shares
+      description: Validate that all property ownership shares total 100% for a given application and property
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - applicationId
+                - propertyId
+              properties:
+                applicationId:
+                  type: string
+                  description: Application Id
+                propertyId:
+                  type: integer
+                  format: int64
+                  description: Property ID
+      responses:
+        '200':
+          description: Ownership validation result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          isValid:
+                            type: boolean
+                            description: Whether ownership shares are valid
+                          totalShare:
+                            type: number
+                            format: double
+                            description: Total ownership percentage
+                          message:
+                            type: string
+                            description: Validation message
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # AssessmentDetails endpoints
+  /assessment-details:
+    get:
+      tags:
+        - AssessmentDetails
+      summary: Get all assessment details
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Assessment details retrieved successfully
+          headers:
+            X-Total-Count:
+              description: Total number of assessment details
+              schema:
+                type: integer
+            X-Current-Page:
+              description: Current page number (0-based)
+              schema:
+                type: integer
+            X-Per-Page:
+              description: Number of assessment details per page
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AssessmentDetails'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - AssessmentDetails
+      summary: Create assessment details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssessmentDetails'
+      responses:
+        '201':
+          description: Assessment details created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AssessmentDetails'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /assessment-details/{id}:
+    get:
+      tags:
+        - AssessmentDetails
+      summary: Get assessment details by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Assessment details retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AssessmentDetails'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - AssessmentDetails
+      summary: Update assessment details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssessmentDetails'
+      responses:
+        '200':
+          description: Assessment details updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AssessmentDetails'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - AssessmentDetails
+      summary: Delete assessment details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Assessment details deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # Amenities endpoints
+  /amenities:
+    get:
+      tags:
+        - Amenities
+      summary: Get all amenities
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: ["LIFT", "WATER_SUPPLY", "CABLE_CONNECTION", "ELECTRICITY", "ATTACHED_BATHROOM", "WATER_HARVESTING", "OTHERS"]
+        - name: propertyId
+          in: query
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Amenities retrieved successfully
+          headers:
+            X-Total-Count:
+              description: Total number of amenities
+              schema:
+                type: integer
+            X-Current-Page:
+              description: Current page number (0-based)
+              schema:
+                type: integer
+            X-Per-Page:
+              description: Number of amenities per page
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Amenities'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Amenities
+      summary: Create amenity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Amenities'
+      responses:
+        '201':
+          description: Amenity created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Amenities'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /amenities/{id}:
+    get:
+      tags:
+        - Amenities
+      summary: Get amenity by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Amenity retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Amenities'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - Amenities
+      summary: Update amenity
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Amenities'
+      responses:
+        '200':
+          description: Amenity updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Amenities'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - Amenities
+      summary: Delete amenity
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Amenity deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ConstructionDetails endpoints
+  /construction-details:
+    get:
+      tags:
+        - ConstructionDetails
+      summary: Get all construction details
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: propertyId
+          in: query
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Construction details retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ConstructionDetails'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - ConstructionDetails
+      summary: Create construction details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConstructionDetails'
+      responses:
+        '201':
+          description: Construction details created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ConstructionDetails'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /construction-details/{id}:
+    get:
+      tags:
+        - ConstructionDetails
+      summary: Get construction details by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Construction details retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ConstructionDetails'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - ConstructionDetails
+      summary: Update construction details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConstructionDetails'
+      responses:
+        '200':
+          description: Construction details updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ConstructionDetails'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - ConstructionDetails
+      summary: Delete construction details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Construction details deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # FloorDetails endpoints
+  /floor-details:
+    get:
+      tags:
+        - FloorDetails
+      summary: Get all floor details
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: constructionDetailsId
+          in: query
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Floor details retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/FloorDetails'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - FloorDetails
+      summary: Create floor details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FloorDetails'
+      responses:
+        '201':
+          description: Floor details created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/FloorDetails'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /floor-details/{id}:
+    get:
+      tags:
+        - FloorDetails
+      summary: Get floor details by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Floor details retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/FloorDetails'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - FloorDetails
+      summary: Update floor details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FloorDetails'
+      responses:
+        '200':
+          description: Floor details updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/FloorDetails'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - FloorDetails
+      summary: Delete floor details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Floor details deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+
+  # AdditionalPropertyDetails endpoints
+  /additional-property-details:
+    get:
+      tags:
+        - AdditionalPropertyDetails
+      summary: Get all additional property details
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: propertyId
+          in: query
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Additional property details retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AdditionalPropertyDetails'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - AdditionalPropertyDetails
+      summary: Create additional property details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdditionalPropertyDetails'
+      responses:
+        '201':
+          description: Additional property details created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AdditionalPropertyDetails'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /additional-property-details/{id}:
+    get:
+      tags:
+        - AdditionalPropertyDetails
+      summary: Get additional property details by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Additional property details retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AdditionalPropertyDetails'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - AdditionalPropertyDetails
+      summary: Update additional property details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdditionalPropertyDetails'
+      responses:
+        '200':
+          description: Additional property details updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AdditionalPropertyDetails'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - AdditionalPropertyDetails
+      summary: Delete additional property details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Additional property details deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # GISData endpoints
+  /gis-data:
+    get:
+      tags:
+        - GISData
+      summary: Get all GIS data
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: propertyId
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: source
+          in: query
+          schema:
+            type: string
+            enum: ["GPS", "MANUAL_ENTRY", "IMPORT"]
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: ["POINT", "LINE", "POLYGON"]
+      responses:
+        '200':
+          description: GIS data retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/GISData'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - GISData
+      summary: Create GIS data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GISData'
+      responses:
+        '201':
+          description: GIS data created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/GISData'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /gis-data/{id}:
+    get:
+      tags:
+        - GISData
+      summary: Get GIS data by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: GIS data retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/GISData'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - GISData
+      summary: Update GIS data
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GISData'
+      responses:
+        '200':
+          description: GIS data updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/GISData'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - GISData
+      summary: Delete GIS data
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: GIS data deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # Coordinates endpoints
+  /coordinates:
+    get:
+      tags:
+        - Coordinates
+      summary: Get all coordinates
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: gisDataId
+          in: query
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Coordinates retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Coordinates'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Coordinates
+      summary: Create coordinates
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Coordinates'
+      responses:
+        '201':
+          description: Coordinates created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Coordinates'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /coordinates/{id}:
+    get:
+      tags:
+        - Coordinates
+      summary: Get coordinates by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Coordinates retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Coordinates'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - Coordinates
+      summary: Update coordinates
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Coordinates'
+      responses:
+        '200':
+          description: Coordinates updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Coordinates'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - Coordinates
+      summary: Delete coordinates
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Coordinates deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+
+  # User Management endpoints
+  /users:
+    get:
+      tags:
+        - User
+      summary: Get all users
+      description: Retrieve a paginated list of all users with optional filtering
+      parameters:
+        - name: page
+          in: query
+          description: Page number (0-based)
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: Page size
+          required: false
+          schema:
+            type: integer
+            default: 20
+        - name: role
+          in: query
+          description: Filter by user role
+          required: false
+          schema:
+            type: string
+            enum: ["COMMISSIONER_APPROVER", "SERVICE_MANAGER", "AGENT", "CITIZEN"]
+        - name: isActive
+          in: query
+          description: Filter by active status
+          required: false
+          schema:
+            type: boolean
+        - name: username
+          in: query
+          description: Filter by username (partial match)
+          required: false
+          schema:
+            type: string
+        - name: email
+          in: query
+          description: Filter by email (partial match)
+          required: false
+          schema:
+            type: string
+        - name: ward
+          in: query
+          description: Filter by ward (partial match)
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Users retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/User'
+                    - type: object
+                      properties:
+                        password:
+                          type: string
+                          readOnly: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - User
+      summary: Create a new user
+      description: Create a new user account with specified role and permissions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+            example:
+              username: "john.doe"
+              email: "john.doe@example.com"
+              password: "SecurePass123"
+              role: "CITIZEN"
+              ward: "Ward-5"
+              profile:
+                firstName: "John"
+                lastName: "Doe"
+                fullName: "John Doe"
+                phoneNumber: "9876543210"
+                adhaarNo: 123456789012
+                gender: "MALE"
+                relationshipToProperty: "OWNER"
+                ownershipShare: 100.0
+                isPrimaryOwner: true
+                department: null
+                designation: "Property Owner"
+              permissions: ["VIEW_APPLICATIONS", "CREATE_APPLICATIONS"]
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        allOf:
+                          - $ref: '#/components/schemas/User'
+                          - type: object
+                            properties:
+                              password:
+                                type: string
+                                readOnly: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Username or email already exists
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /users/{id}:
+    get:
+      tags:
+        - User
+      summary: Get user by ID
+      description: Retrieve a specific user by their ID
+      parameters:
+        - name: id
+          in: path
+          description: User ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: User retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        allOf:
+                          - $ref: '#/components/schemas/User'
+                          - type: object
+                            properties:
+                              password:
+                                type: string
+                                readOnly: true
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      tags:
+        - User
+      summary: Update user
+      description: Update an existing user's information
+      parameters:
+        - name: id
+          in: path
+          description: User ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        allOf:
+                          - $ref: '#/components/schemas/User'
+                          - type: object
+                            properties:
+                              password:
+                                type: string
+                                readOnly: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - User
+      summary: Delete user
+      description: Delete a user account (soft delete - marks as inactive)
+      parameters:
+        - name: id
+          in: path
+          description: User ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+
+  /users/by-role/{role}:
+    get:
+      tags:
+        - User
+      summary: Get users by role
+      description: Retrieve all users with a specific role
+      parameters:
+        - name: role
+          in: path
+          description: User role
+          required: true
+          schema:
+            type: string
+            enum: ["COMMISSIONER_APPROVER", "SERVICE_MANAGER", "AGENT", "CITIZEN"]
+        - name: page
+          in: query
+          description: Page number (0-based)
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: Page size
+          required: false
+          schema:
+            type: integer
+            default: 20
+        - name: isActive
+          in: query
+          description: Filter by active status
+          required: false
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Users retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/User'
+                    - type: object
+                      properties:
+                        password:
+                          type: string
+                          readOnly: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+

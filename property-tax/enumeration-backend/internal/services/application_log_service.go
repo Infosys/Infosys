@@ -78,9 +78,9 @@ func (s *applicationLogService) Update(ctx context.Context, id uuid.UUID, req *d
     existingLog, err := s.repo.GetByID(ctx, id)
     if err != nil {
         if err == gorm.ErrRecordNotFound {
-            return nil, fmt.Errorf("record not found")
+            return nil, fmt.Errorf(constants.ErrRecordNotFound)
         }
-        return nil, fmt.Errorf("failed to get application log: %w", err)
+        return nil, fmt.Errorf(constants.ErrMsgFailedToGetApplicationLog, err)
     }
 
     // Update fields if provided

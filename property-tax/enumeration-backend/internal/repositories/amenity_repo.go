@@ -44,7 +44,7 @@ func (r *amenityRepository) GetAllWithFilters(ctx context.Context, page, size in
 		query = query.Where("type = ?", amenityType)
 	}
 	if propertyID != "" {
-		query = query.Where("property_id = ?", propertyID)
+		query = query.Where(QueryByPropertyID, propertyID)
 	}
 
 	// Count total records
@@ -64,7 +64,7 @@ func (r *amenityRepository) GetAllWithFilters(ctx context.Context, page, size in
 // GetByID retrieves an amenity by its ID.
 func (r *amenityRepository) GetByID(ctx context.Context, id string) (*models.Amenities, error) {
 	var amenity models.Amenities
-	err := r.db.First(&amenity, "id = ?", id).Error
+	err := r.db.First(&amenity, QueryByID, id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("amenity with id %s not found", id)
@@ -85,7 +85,7 @@ func (r *amenityRepository) Create(ctx context.Context, amenity *models.Amenitie
 // Update modifies an existing amenity record by its ID.
 // Returns an error if the record does not exist or update fails.
 func (r *amenityRepository) Update(ctx context.Context, id string, amenity *models.Amenities) error {
-	result := r.db.Model(&models.Amenities{}).Where("id = ?", id).Updates(amenity)
+	result := r.db.Model(&models.Amenities{}).Where(QueryByID, id).Updates(amenity)
 	if result.Error != nil {
 		return fmt.Errorf("failed to update amenity with id %s: %w", id, result.Error)
 	}
@@ -98,7 +98,7 @@ func (r *amenityRepository) Update(ctx context.Context, id string, amenity *mode
 // Delete removes an amenity record by its ID.
 // Returns an error if the record does not exist or deletion fails.
 func (r *amenityRepository) Delete(ctx context.Context, id string) error {
-	result := r.db.Delete(&models.Amenities{}, "id = ?", id)
+	result := r.db.Delete(&models.Amenities{}, QueryByID, id)
 	if result.Error != nil {
 		return fmt.Errorf("failed to delete amenity with id %s: %w", id, result.Error)
 	}
@@ -112,7 +112,7 @@ func (r *amenityRepository) Delete(ctx context.Context, id string) error {
 // Returns an error if not found or on failure.
 func (r *amenityRepository) GetByPropertyID(ctx context.Context, propertyID string) (*models.Amenities, error) {
 	var amenity models.Amenities                                                            // Changed from pointer to value
-	err := r.db.WithContext(ctx).Where("property_id = ?", propertyID).First(&amenity).Error // Use First() instead of Find()
+	err := r.db.WithContext(ctx).Where(QueryByPropertyID, propertyID).First(&amenity).Error // Use First() instead of Find()
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("amenity with property ID %s not found", propertyID)

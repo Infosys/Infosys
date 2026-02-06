@@ -2,12 +2,16 @@
 package handlers
 
 import (
+	"enumeration/internal/constants"
+	"enumeration/internal/dto"
 	"enumeration/internal/models"
 	"enumeration/internal/services"
 	"enumeration/pkg/response"
+	"enumeration/pkg/utils"
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -17,12 +21,14 @@ import (
 // AssessmentDetailsHandler handles HTTP requests for assessment details resources.
 type AssessmentDetailsHandler struct {
 	assessmentDetailsService services.AssessmentDetailsService // Service layer for assessment details operations
+	applicationLogService    services.ApplicationLogService
 }
 
 // NewAssessmentDetailsHandler creates a new AssessmentDetailsHandler with the provided service.
-func NewAssessmentDetailsHandler(assessmentDetailsService services.AssessmentDetailsService) *AssessmentDetailsHandler {
+func NewAssessmentDetailsHandler(assessmentDetailsService services.AssessmentDetailsService, applicationLogService services.ApplicationLogService) *AssessmentDetailsHandler {
 	return &AssessmentDetailsHandler{
 		assessmentDetailsService: assessmentDetailsService,
+		applicationLogService:    applicationLogService,
 	}
 }
 
@@ -49,17 +55,17 @@ func (h *AssessmentDetailsHandler) GetAssessmentDetailsByID(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, response.ErrorResponseBody("Invalid assessment details ID", err.Error()))
+		c.JSON(http.StatusBadRequest, response.ErrorResponseBody(constants.ErrInvalidAssessmentDetailsIDFormat, err.Error()))
 		return
 	}
 
 	assessmentDetails, err := h.assessmentDetailsService.GetAssessmentDetailsByID(c.Request.Context(), id)
 	if err != nil {
-		if err.Error() == "assessment details not found" {
-			c.JSON(http.StatusNotFound, response.ErrorResponseBody("Assessment details not found", err.Error()))
+		if err.Error() == constants.ErrAssessmentDetailsNotFound {
+			c.JSON(http.StatusNotFound, response.ErrorResponseBody(constants.ErrAssessmentDetailsNotFoundMsg, err.Error()))
 			return
 		}
-		c.JSON(http.StatusInternalServerError, response.ErrorResponseBody("Failed to get assessment details", err.Error()))
+		c.JSON(http.StatusInternalServerError, response.ErrorResponseBody(constants.ErrFailedToGetAssessmentDetails, err.Error()))
 		return
 	}
 
@@ -72,9 +78,16 @@ func (h *AssessmentDetailsHandler) UpdateAssessmentDetails(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, response.ErrorResponseBody("Invalid assessment details ID", err.Error()))
+		c.JSON(http.StatusBadRequest, response.ErrorResponseBody(constants.ErrInvalidAssessmentDetailsIDFormat, err.Error()))
 		return
 	}
+
+	applicationId, err := uuid.Parse(c.Param("applicationId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.ErrorResponseBody(constants.ErrInvalidApplicationID, err.Error()))
+		return
+	}
+	isVerifying := c.DefaultQuery("isVerifying", "false") == "true"
 
 	var assessmentDetails models.AssessmentDetails
 	if err := c.ShouldBindJSON(&assessmentDetails); err != nil {
@@ -82,15 +95,31 @@ func (h *AssessmentDetailsHandler) UpdateAssessmentDetails(c *gin.Context) {
 		return
 	}
 
+	existingAssessmentDetails, err := h.assessmentDetailsService.GetAssessmentDetailsByID(c.Request.Context(), id)
+	if err != nil {
+		if err.Error() == constants.ErrAssessmentDetailsNotFound {
+			c.JSON(http.StatusNotFound, response.ErrorResponseBody(constants.ErrAssessmentDetailsNotFoundMsg, err.Error()))
+			return
+		}
+	}
+
 	assessmentDetails.ID = id
 
 	if err := h.assessmentDetailsService.UpdateAssessmentDetails(c.Request.Context(), &assessmentDetails); err != nil {
-		if err.Error() == "assessment details not found" {
-			c.JSON(http.StatusNotFound, response.ErrorResponseBody("Assessment details not found", err.Error()))
+		if err.Error() == constants.ErrAssessmentDetailsNotFound {
+			c.JSON(http.StatusNotFound, response.ErrorResponseBody(constants.ErrAssessmentDetailsNotFoundMsg, err.Error()))
 			return
 		}
 		c.JSON(http.StatusBadRequest, response.ErrorResponseBody("Failed to update assessment details", err.Error()))
 		return
+	}
+
+	if isVerifying && existingAssessmentDetails != nil {
+		comments := h.buildAssessmentChangeComments(existingAssessmentDetails, &assessmentDetails)
+		if err := h.logAssessmentChange(c, applicationId, comments); err != nil {
+			c.JSON(http.StatusInternalServerError, response.ErrorResponseBody("Failed to log assessment verification", err.Error()))
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, response.SuccessResponseBody("Assessment details updated successfully", assessmentDetails))
@@ -101,13 +130,13 @@ func (h *AssessmentDetailsHandler) DeleteAssessmentDetails(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, response.ErrorResponseBody("Invalid assessment details ID", err.Error()))
+		c.JSON(http.StatusBadRequest, response.ErrorResponseBody(constants.ErrInvalidAssessmentDetailsIDFormat, err.Error()))
 		return
 	}
 
 	if err := h.assessmentDetailsService.DeleteAssessmentDetails(c.Request.Context(), id); err != nil {
-		if err.Error() == "assessment details not found" {
-			c.JSON(http.StatusNotFound, response.ErrorResponseBody("Assessment details not found", err.Error()))
+		if err.Error() == constants.ErrAssessmentDetailsNotFound {
+			c.JSON(http.StatusNotFound, response.ErrorResponseBody(constants.ErrAssessmentDetailsNotFoundMsg, err.Error()))
 			return
 		}
 		c.JSON(http.StatusInternalServerError, response.ErrorResponseBody("Failed to delete assessment details", err.Error()))
@@ -164,4 +193,91 @@ func (h *AssessmentDetailsHandler) GetAssessmentDetailsByPropertyID(c *gin.Conte
 	}
 
 	c.JSON(http.StatusOK, response.SuccessResponseBody("Assessment details retrieved successfully", assessmentDetails))
+}
+
+// compareAssessmentStringField compares string fields and returns change message if different
+func compareAssessmentStringField(fieldName, existing, new string) string {
+	if new == "" || existing == new {
+		return ""
+	}
+	if existing == "" {
+		return "Assessment Details " + fieldName + " is added as " + new
+	}
+	return "Assessment Details " + fieldName + " is changed from " + existing + " to " + new
+}
+
+// buildAssessmentFieldChanges builds change comments for assessment detail fields
+func (h *AssessmentDetailsHandler) buildAssessmentFieldChanges(existing, updated *models.AssessmentDetails) []string {
+	changes := []string{}
+
+	if change := compareAssessmentStringField("Reason of Creation", existing.ReasonOfCreation, updated.ReasonOfCreation); change != "" {
+		changes = append(changes, change)
+	}
+	if change := compareAssessmentStringField("Extent of Site", existing.ExtentOfSite, updated.ExtentOfSite); change != "" {
+		changes = append(changes, change)
+	}
+	if change := compareAssessmentStringField("Is Land Underneath Building", existing.IsLandUnderneathBuilding, updated.IsLandUnderneathBuilding); change != "" {
+		changes = append(changes, change)
+	}
+	if change := compareAssessmentStringField("Occupancy Certificate Number", existing.OccupancyCertificateNumber, updated.OccupancyCertificateNumber); change != "" {
+		changes = append(changes, change)
+	}
+
+	if existing.IsUnspecifiedShare != updated.IsUnspecifiedShare {
+		changes = append(changes, "Assessment Details Is Unspecified Share is changed from "+strconv.FormatBool(existing.IsUnspecifiedShare)+" to "+strconv.FormatBool(updated.IsUnspecifiedShare))
+	}
+
+	// Occupancy Certificate Date
+	if updated.OccupancyCertificateDate != nil && !updated.OccupancyCertificateDate.Time.IsZero() {
+		newDateStr := updated.OccupancyCertificateDate.Time.Format("2006-01-02")
+		existingIsEmpty := existing.OccupancyCertificateDate == nil || existing.OccupancyCertificateDate.Time.IsZero()
+		dateChanged := existingIsEmpty || !existing.OccupancyCertificateDate.Time.Equal(updated.OccupancyCertificateDate.Time)
+
+		switch {
+		case !dateChanged:
+			// No change
+		case existingIsEmpty:
+			// Date was added
+			changes = append(changes, "Assessment Details Occupancy CertificateDate is added as "+newDateStr)
+		default:
+			// Date was changed
+			existingDateStr := existing.OccupancyCertificateDate.Time.Format("2006-01-02")
+			changes = append(changes, "Assessment Details Occupancy CertificateDate is changed from "+existingDateStr+" to "+newDateStr)
+		}
+	}
+
+	return changes
+}
+
+// buildAssessmentChangeComments constructs change comments from existing and updated assessment details
+func (h *AssessmentDetailsHandler) buildAssessmentChangeComments(existing, updated *models.AssessmentDetails) string {
+	if existing == nil {
+		return ""
+	}
+
+	changes := h.buildAssessmentFieldChanges(existing, updated)
+	if len(changes) == 0 {
+		return ""
+	}
+
+	return strings.Join(changes, ";\n") + ";\n"
+}
+
+func (h *AssessmentDetailsHandler) logAssessmentChange(c *gin.Context, applicationID uuid.UUID, comments string) error {
+	if comments == "" || h.applicationLogService == nil {
+		return nil
+	}
+
+	userName, userRole := utils.GetUserInfoFromContext(c)
+	appLogReq := &dto.CreateApplicationLogRequest{
+		ApplicationID: applicationID,
+		Action:        "EDIT_ASSESSMENT_DETAILS",
+		Actor:         userRole,
+		PerformedBy:   userName,
+		Comments:      comments,
+		Metadata:      map[string]interface{}{},
+	}
+
+	_, err := h.applicationLogService.Create(c.Request.Context(), appLogReq)
+	return err
 }

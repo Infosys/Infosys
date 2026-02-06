@@ -56,7 +56,7 @@ func (s *assessmentDetailsService) UpdateAssessmentDetails(ctx context.Context, 
 	}
 
 	if assessmentDetails.ID == uuid.Nil {
-		return fmt.Errorf("invalid assessment details ID: cannot be nil")
+		return fmt.Errorf(constants.ErrInvalidAssessmentDetailsID)
 	}
 
 	if err := s.validateAssessmentDetails(assessmentDetails); err != nil {

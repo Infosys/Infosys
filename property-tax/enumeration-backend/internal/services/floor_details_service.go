@@ -55,7 +55,7 @@ func (s *floorDetailsService) UpdateFloorDetails(ctx context.Context, floorDetai
 	}
 
 	if floorDetails.ID == uuid.Nil {
-		return fmt.Errorf("invalid floor details ID: cannot be nil")
+		return fmt.Errorf(constants.ErrInvalidFloorDetailsID)
 	}
 	if err := s.validateFloorDetails(floorDetails); err != nil {
 		return err

@@ -79,139 +79,236 @@ func Init() {
 // RoleMiddleware checks if the user has the necessary role to perform the action specified in the request.
 func ActionMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Extract Keycloak claims from context (set by AuthMiddleware)
-		claimsVal, exists := c.Get("claims")
-		if !exists {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "MissingClaims"})
-			return
-		}
-		claims, ok := claimsVal.(*security.KeycloakClaims)
-		if !ok {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "InvalidClaimsType"})
+		_, roles, err := extractClaimsAndRoles(c)
+		if err != nil {
 			return
 		}
 
-		// Extract roles from Keycloak claims (RealmAccess["roles"])
-		var roles []string
-		if claims.RealmAccess != nil {
-			if r, ok := claims.RealmAccess["roles"]; ok {
-				roles = r
-			}
-		}
-		if len(roles) == 0 {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "No roles found in token"})
+		action, err := extractActionFromRequest(c)
+		if err != nil {
 			return
 		}
 
-		var req dto.ActionRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"success": false,
-				"message": "Invalid request body",
-				"errors":  []string{err.Error()},
-			})
+		if isActionAllowedForRoles(roles, action) {
+			c.Next()
 			return
-		}
-		c.Set("actionRequest", req)
-		action := req.Action
-		// Check if any role allows the action
-		for _, role := range roles {
-			allowedActions, exists := rolePermissions[role]
-			if !exists {
-				continue
-			}
-			for _, a := range allowedActions {
-				if a == action {
-					c.Next()
-					return
-				}
-			}
 		}
 		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Access denied for this action"})
 	}
+}
+
+// extractClaimsAndRoles extracts Keycloak claims and roles from the context
+func extractClaimsAndRoles(c *gin.Context) (*security.KeycloakClaims, []string, error) {
+	claimsVal, exists := c.Get("claims")
+	if !exists {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "MissingClaims"})
+		return nil, nil, fmt.Errorf("missing claims")
+	}
+	claims, ok := claimsVal.(*security.KeycloakClaims)
+	if !ok {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "InvalidClaimsType"})
+		return nil, nil, fmt.Errorf("invalid claims type")
+	}
+
+	var roles []string
+	if claims.RealmAccess != nil {
+		if r, ok := claims.RealmAccess["roles"]; ok {
+			roles = r
+		}
+	}
+	if len(roles) == 0 {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "No roles found in token"})
+		return nil, nil, fmt.Errorf("no roles found")
+	}
+
+	return claims, roles, nil
+}
+
+// extractActionFromRequest parses the action from the request body
+func extractActionFromRequest(c *gin.Context) (string, error) {
+	var req dto.ActionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Invalid request body",
+			"errors":  []string{err.Error()},
+		})
+		return "", err
+	}
+	c.Set("actionRequest", req)
+	return req.Action, nil
+}
+
+// isActionAllowedForRoles checks if any role allows the specified action
+func isActionAllowedForRoles(roles []string, action string) bool {
+	for _, role := range roles {
+		if isActionAllowedForRole(role, action) {
+			return true
+		}
+	}
+	return false
+}
+
+// isActionAllowedForRole checks if a specific role allows the action
+func isActionAllowedForRole(role, action string) bool {
+	allowedActions, exists := rolePermissions[role]
+	if !exists {
+		return false
+	}
+	for _, a := range allowedActions {
+		if a == action {
+			return true
+		}
+	}
+	return false
 }
 
 // AuthMiddleware validates JWT tokens and stores user claims in the Gin context
 // Performs signature, issuer, and audience checks
 func AuthMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		base := os.Getenv("KEYCLOAK_BASE_URL")
-		realm := os.Getenv("KEYCLOAK_REALM")
-		clientID := os.Getenv("KEYCLOAK_CLIENT_ID")
-		expectedIssuer := strings.TrimRight(base, "/") + "/realms/" + realm
-		authHeader := ctx.GetHeader("Authorization")
-		if authHeader == "" || !strings.HasPrefix(strings.ToLower(authHeader), "bearer ") {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "MissingBearerToken"})
+		tokenStr, err := extractBearerToken(ctx)
+		if err != nil {
 			return
 		}
-		tokenStr := strings.TrimSpace(authHeader[len("Bearer "):])
-		token, err := jwt.ParseWithClaims(tokenStr, &security.KeycloakClaims{}, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
-				return nil, fmt.Errorf("unexpected signing method %v", token.Header["alg"])
-			}
-			kid, _ := token.Header["kid"].(string)
-			return security.GetPublicKey(ctx.Request.Context(), kid)
-		})
-		if err != nil || !token.Valid {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "InvalidToken", "details": err.Error()})
+
+		claims, err := validateToken(ctx, tokenStr)
+		if err != nil {
 			return
 		}
-		claims, _ := token.Claims.(*security.KeycloakClaims)
-		// Issuer validation
-		if base != "" && realm != "" && claims.Issuer != expectedIssuer {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "BadIssuer", "expected": expectedIssuer, "actual": claims.Issuer})
+
+		if err := validateIssuer(ctx, claims); err != nil {
 			return
 		}
-		// Audience / authorized party validation:
-		// Keycloak may put client id in aud OR azp depending on flow.
-		strictAud := strings.ToLower(os.Getenv("KEYCLOAK_STRICT_AUD")) == "true"
-		if clientID != "" {
-			audOK := false
-			// Audience may be a slice of strings in RegisteredClaims.Audience
-			for _, a := range claims.Audience {
-				if a == clientID {
-					audOK = true
-					break
-				}
-			}
-			if claims.AuthorizedParty == clientID {
-				audOK = true
-			}
-			if !audOK && strictAud {
-				ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "BadAudience", "expected": clientID, "aud": claims.Audience, "azp": claims.AuthorizedParty})
-				return
-			}
+
+		if err := validateAudience(ctx, claims); err != nil {
+			return
 		}
-		var roles []string
-		if claims.RealmAccess != nil {
-			if r, ok := claims.RealmAccess["roles"]; ok {
-				roles = r
-			}
-		}
-		logger.Info("Authenticated user:", claims.PreferredUsername, " with roles: ", claims.RealmAccess["roles"])
-		ctx.Set("claims", claims)
-		ctx.Set("user", claims.PreferredUsername)
-		ctx.Set("roles", roles)
-		if len(roles) > 0 {
-			ctx.Set("role", roles[0])
-		}
-		reqCtx := ctx.Request.Context()
-		reqCtx = context.WithValue(reqCtx, "user", claims.PreferredUsername)
-		reqCtx = context.WithValue(reqCtx, "roles", roles)
-		selectedRole := ""
-		if len(roles) > 0 {
-			for _, r := range roles {
-				if r == strings.ToUpper(r) {
-					selectedRole = r
-					break
-				}
-			}
-			reqCtx = context.WithValue(reqCtx, "role", selectedRole)
-		}
-		ctx.Request = ctx.Request.WithContext(reqCtx)
+
+		roles := extractRoles(claims)
+		setContextValues(ctx, claims, roles)
+		updateRequestContext(ctx, claims, roles)
 
 		ctx.Next()
 	}
+}
+
+// extractBearerToken extracts the bearer token from the Authorization header
+func extractBearerToken(ctx *gin.Context) (string, error) {
+	authHeader := ctx.GetHeader("Authorization")
+	if authHeader == "" || !strings.HasPrefix(strings.ToLower(authHeader), "bearer ") {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "MissingBearerToken"})
+		return "", fmt.Errorf("missing bearer token")
+	}
+	return strings.TrimSpace(authHeader[len("Bearer "):]), nil
+}
+
+// validateToken parses and validates the JWT token
+func validateToken(ctx *gin.Context, tokenStr string) (*security.KeycloakClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenStr, &security.KeycloakClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+			return nil, fmt.Errorf("unexpected signing method %v", token.Header["alg"])
+		}
+		kid, _ := token.Header["kid"].(string)
+		return security.GetPublicKey(ctx.Request.Context(), kid)
+	})
+	if err != nil || !token.Valid {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "InvalidToken", "details": err.Error()})
+		return nil, err
+	}
+	claims, _ := token.Claims.(*security.KeycloakClaims)
+	return claims, nil
+}
+
+// validateIssuer checks if the token issuer matches the expected issuer
+func validateIssuer(ctx *gin.Context, claims *security.KeycloakClaims) error {
+	base := os.Getenv("KEYCLOAK_BASE_URL")
+	realm := os.Getenv("KEYCLOAK_REALM")
+	if base == "" || realm == "" {
+		return nil
+	}
+	expectedIssuer := strings.TrimRight(base, "/") + "/realms/" + realm
+	if claims.Issuer != expectedIssuer {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "BadIssuer", "expected": expectedIssuer, "actual": claims.Issuer})
+		return fmt.Errorf("invalid issuer")
+	}
+	return nil
+}
+
+// validateAudience checks if the token audience matches the expected client ID
+func validateAudience(ctx *gin.Context, claims *security.KeycloakClaims) error {
+	clientID := os.Getenv("KEYCLOAK_CLIENT_ID")
+	if clientID == "" {
+		return nil
+	}
+
+	strictAud := strings.ToLower(os.Getenv("KEYCLOAK_STRICT_AUD")) == "true"
+	if !strictAud {
+		return nil
+	}
+
+	audOK := isAudienceValid(claims, clientID)
+	if !audOK {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "BadAudience", "expected": clientID, "aud": claims.Audience, "azp": claims.AuthorizedParty})
+		return fmt.Errorf("invalid audience")
+	}
+	return nil
+}
+
+// isAudienceValid checks if the clientID is in audience or authorized party
+func isAudienceValid(claims *security.KeycloakClaims, clientID string) bool {
+	for _, a := range claims.Audience {
+		if a == clientID {
+			return true
+		}
+	}
+	return claims.AuthorizedParty == clientID
+}
+
+// extractRoles retrieves roles from the claims
+func extractRoles(claims *security.KeycloakClaims) []string {
+	var roles []string
+	if claims.RealmAccess != nil {
+		if r, ok := claims.RealmAccess["roles"]; ok {
+			roles = r
+		}
+	}
+	return roles
+}
+
+// setContextValues sets user information in the Gin context
+func setContextValues(ctx *gin.Context, claims *security.KeycloakClaims, roles []string) {
+	logger.Info("Authenticated user:", claims.PreferredUsername, " with roles: ", claims.RealmAccess["roles"])
+	ctx.Set("claims", claims)
+	ctx.Set("user", claims.PreferredUsername)
+	ctx.Set("roles", roles)
+	if len(roles) > 0 {
+		ctx.Set("role", roles[0])
+	}
+}
+
+// updateRequestContext updates the request context with user information
+func updateRequestContext(ctx *gin.Context, claims *security.KeycloakClaims, roles []string) {
+	reqCtx := ctx.Request.Context()
+	reqCtx = context.WithValue(reqCtx, "user", claims.PreferredUsername)
+	reqCtx = context.WithValue(reqCtx, "roles", roles)
+
+	selectedRole := selectUppercaseRole(roles)
+	if selectedRole != "" {
+		reqCtx = context.WithValue(reqCtx, "role", selectedRole)
+	}
+
+	ctx.Request = ctx.Request.WithContext(reqCtx)
+}
+
+// selectUppercaseRole finds the first uppercase role from the roles list
+func selectUppercaseRole(roles []string) string {
+	for _, r := range roles {
+		if r == strings.ToUpper(r) {
+			return r
+		}
+	}
+	return ""
 }
 
 // MDMSRoleMiddleware checks roles based on MDMS API configuration

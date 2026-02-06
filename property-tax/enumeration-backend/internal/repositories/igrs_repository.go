@@ -34,7 +34,7 @@ func (r *igrsRepository) Create(ctx context.Context, igrs *models.IGRS) error {
 // Returns the IGRS record or an error if not found.
 func (r *igrsRepository) GetByPropertyID(ctx context.Context, propertyID uuid.UUID) (*models.IGRS, error) {
 	var m models.IGRS
-	if err := r.db.WithContext(ctx).First(&m, "property_id = ?", propertyID).Error; err != nil {
+	if err := r.db.WithContext(ctx).First(&m, QueryByPropertyID, propertyID).Error; err != nil {
 		return nil, err
 	}
 	return &m, nil
@@ -44,7 +44,7 @@ func (r *igrsRepository) GetByPropertyID(ctx context.Context, propertyID uuid.UU
 // Returns the IGRS record or an error if not found.
 func (r *igrsRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.IGRS, error) {
 	var m models.IGRS
-	if err := r.db.WithContext(ctx).First(&m, "id = ?", id).Error; err != nil {
+	if err := r.db.WithContext(ctx).First(&m, QueryByID, id).Error; err != nil {
 		return nil, err
 	}
 	return &m, nil
@@ -62,7 +62,7 @@ func (r *igrsRepository) Update(ctx context.Context, igrs *models.IGRS) error {
 // Delete removes an IGRS record by its ID.
 // Returns an error if the deletion fails.
 func (r *igrsRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	if err := r.db.WithContext(ctx).Delete(&models.IGRS{}, "id = ?", id).Error; err != nil {
+	if err := r.db.WithContext(ctx).Delete(&models.IGRS{}, QueryByID, id).Error; err != nil {
 		return fmt.Errorf("failed to delete igrs: %w", err)
 	}
 	return nil

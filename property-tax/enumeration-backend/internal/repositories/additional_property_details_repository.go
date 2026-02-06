@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"enumeration/internal/constants"
 	"enumeration/internal/models"
 	"errors"
 	"fmt"
@@ -33,10 +34,10 @@ func (r *additionalPropertyDetailsRepository) Create(ctx context.Context, detail
 // GetByID retrieves an AdditionalPropertyDetails record by its ID.
 func (r *additionalPropertyDetailsRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.AdditionalPropertyDetails, error) {
 	var details models.AdditionalPropertyDetails
-	err := r.db.Where("id = ?", id).First(&details).Error
+	err := r.db.Where(QueryByID, id).First(&details).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, fmt.Errorf("additional property details with id %s not found", id)
+			return nil, errors.New(constants.ErrAdditionalPropertyDetailsNotFound)
 		}
 		return nil, fmt.Errorf("failed to get additional property details by id %s: %w", id, err)
 	}
@@ -54,12 +55,12 @@ func (r *additionalPropertyDetailsRepository) Update(ctx context.Context, detail
 // Delete removes an AdditionalPropertyDetails record by its ID.
 // Returns an error if the record does not exist or deletion fails.
 func (r *additionalPropertyDetailsRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	result := r.db.Delete(&models.AdditionalPropertyDetails{}, "id = ?", id)
+	result := r.db.Delete(&models.AdditionalPropertyDetails{}, QueryByID, id)
 	if result.Error != nil {
 		return fmt.Errorf("failed to delete additional property details with id %s: %w", id, result.Error)
 	}
 	if result.RowsAffected == 0 {
-		return fmt.Errorf("additional property details with id %s not found for deletion", id)
+		return errors.New(constants.ErrAdditionalPropertyDetailsNotFound)
 	}
 	return nil
 }
@@ -73,7 +74,7 @@ func (r *additionalPropertyDetailsRepository) GetAll(ctx context.Context, page, 
 	query := r.db.Model(&models.AdditionalPropertyDetails{})
 
 	if propertyID != nil {
-		query = query.Where("property_id = ?", *propertyID)
+		query = query.Where(QueryByPropertyID, *propertyID)
 	}
 
 	if fieldName != nil && *fieldName != "" {
@@ -97,7 +98,7 @@ func (r *additionalPropertyDetailsRepository) GetAll(ctx context.Context, page, 
 // GetByPropertyID retrieves all AdditionalPropertyDetails records for a given property ID.
 func (r *additionalPropertyDetailsRepository) GetByPropertyID(ctx context.Context, propertyID uuid.UUID) ([]*models.AdditionalPropertyDetails, error) {
 	var details []*models.AdditionalPropertyDetails
-	if err := r.db.Where("property_id = ?", propertyID).Find(&details).Error; err != nil {
+	if err := r.db.Where(QueryByPropertyID, propertyID).Find(&details).Error; err != nil {
 		return nil, fmt.Errorf("failed to get additional property details by property id %s: %w", propertyID, err)
 	}
 	return details, nil

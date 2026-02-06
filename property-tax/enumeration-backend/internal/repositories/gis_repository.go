@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"enumeration/internal/constants"
 	"enumeration/internal/models"
 	"fmt"
 
@@ -37,7 +38,7 @@ func (r *gisRepository) Create(ctx context.Context, gisData *models.GISData) err
 
 	// Check if GIS data already exists for this property
 	var existingGISData models.GISData
-	if err := r.db.Where("property_id = ?", gisData.PropertyID).First(&existingGISData).Error; err == nil {
+	if err := r.db.Where(QueryByPropertyID, gisData.PropertyID).First(&existingGISData).Error; err == nil {
 		return fmt.Errorf("GIS data already exists for property ID %s", gisData.PropertyID)
 	}
 
@@ -52,11 +53,11 @@ func (r *gisRepository) Create(ctx context.Context, gisData *models.GISData) err
 // GetByID retrieves a GISData record by its ID, including related Coordinates.
 func (r *gisRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.GISData, error) {
 	var gisData models.GISData
-	if err := r.db.Preload("Coordinates").First(&gisData, "id = ?", id).Error; err != nil {
+	if err := r.db.Preload("Coordinates").First(&gisData, QueryByID, id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, fmt.Errorf("GIS data not found with ID %s", id)
+			return nil, fmt.Errorf(constants.ErrGISDataNotFound+" %s: %w", id, err)
 		}
-		return nil, fmt.Errorf("failed to get GIS data: %w", err)
+		return nil, fmt.Errorf(constants.ErrGISDataGetFailed+": %w", err)
 	}
 	return &gisData, nil
 }
@@ -64,11 +65,11 @@ func (r *gisRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.GISD
 // GetByPropertyID retrieves a GISData record by property ID, including related Coordinates.
 func (r *gisRepository) GetByPropertyID(ctx context.Context, propertyID uuid.UUID) (*models.GISData, error) {
 	var gisData models.GISData
-	if err := r.db.Preload("Coordinates").First(&gisData, "property_id = ?", propertyID).Error; err != nil {
+	if err := r.db.Preload("Coordinates").First(&gisData, QueryByPropertyID, propertyID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, fmt.Errorf("GIS data not found for property ID %s", propertyID)
+			return nil, fmt.Errorf(constants.ErrGISDataNotFound+" for property ID %s: %w", propertyID, err)
 		}
-		return nil, fmt.Errorf("failed to get GIS data: %w", err)
+		return nil, fmt.Errorf(constants.ErrGISDataGetFailed+": %w", err)
 	}
 	return &gisData, nil
 }
@@ -82,11 +83,11 @@ func (r *gisRepository) Update(ctx context.Context, gisData *models.GISData) err
 
 	// Check if the record exists
 	var existingGISData models.GISData
-	if err := r.db.First(&existingGISData, "id = ?", gisData.ID).Error; err != nil {
+	if err := r.db.First(&existingGISData, QueryByID, gisData.ID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return fmt.Errorf("GIS data not found with ID %s", gisData.ID)
+			return fmt.Errorf(constants.ErrGISDataNotFound+" with ID %s: %w", gisData.ID, err)
 		}
-		return fmt.Errorf("failed to find GIS data: %w", err)
+		return fmt.Errorf(constants.ErrGISDataGetFailed+": %w", err)
 	}
 
 	// If property ID is being changed, check if another GIS data exists for the new property
@@ -103,7 +104,7 @@ func (r *gisRepository) Update(ctx context.Context, gisData *models.GISData) err
 	}
 
 	// Reload the updated data
-	if err := r.db.Preload("Coordinates").First(gisData, "id = ?", gisData.ID).Error; err != nil {
+	if err := r.db.Preload("Coordinates").First(gisData, QueryByID, gisData.ID).Error; err != nil {
 		return fmt.Errorf("failed to reload updated GIS data: %w", err)
 	}
 
@@ -116,11 +117,11 @@ func (r *gisRepository) Update(ctx context.Context, gisData *models.GISData) err
 func (r *gisRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	// Check if the record exists
 	var gisData models.GISData
-	if err := r.db.First(&gisData, "id = ?", id).Error; err != nil {
+	if err := r.db.First(&gisData, QueryByID, id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return fmt.Errorf("GIS data not found with ID %s", id)
+			return fmt.Errorf(constants.ErrGISDataNotFound+" %s: %w", id, err)
 		}
-		return fmt.Errorf("failed to find GIS data: %w", err)
+		return fmt.Errorf(constants.ErrGISDataGetFailed+": %w", err)
 	}
 
 	// Delete the record (coordinates will be deleted automatically due to CASCADE)
@@ -150,7 +151,7 @@ func (r *gisRepository) GetAll(ctx context.Context, page, size int) ([]*models.G
 		Offset(offset).
 		Limit(size).
 		Find(&gisDataList).Error; err != nil {
-		return nil, 0, fmt.Errorf("failed to get GIS data: %w", err)
+		return nil, 0, fmt.Errorf(constants.ErrGISDataGetFailed+": %w", err)
 	}
 
 	return gisDataList, total, nil

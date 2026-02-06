@@ -8,6 +8,11 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	QueryByID         = "id = ?"
+	QueryByPropertyID = "property_id = ?"
+)
+
 // ApplicationLogRepository handles CRUD for ApplicationLog entities
 type ApplicationLogRepository interface {
 	Create(ctx context.Context, log *models.ApplicationLog) error
@@ -105,13 +110,14 @@ type PropertyRepository interface {
 	GetByID(ctx context.Context, id uuid.UUID) (*models.Property, error)
 	Update(ctx context.Context, property *models.Property) error
 	Delete(ctx context.Context, id uuid.UUID) error
-	GetAll(ctx context.Context, page, size int, propertyType *string) ([]*models.Property, int64, error)
+	GetAll(ctx context.Context, tenantID string, page, size int, propertyType *string, status *string) ([]*models.Property, int64, error)
 	GetByPropertyNo(ctx context.Context, propertyNo string) (*models.Property, error)
 	Search(ctx context.Context, params SearchPropertyParams) ([]*models.Property, int64, error)
 }
 
 // SearchPropertyParams holds filters and options for property search
 type SearchPropertyParams struct {
+	TenantID      string // REQUIRED - tenant identifier
 	Page          int
 	Size          int
 	PropertyType  *string
@@ -122,8 +128,7 @@ type SearchPropertyParams struct {
 	ZoneNo        *string
 	Street        *string
 	SortBy        string
-	// SearchPropertyParams holds parameters for searching properties with various filters and sorting options.
-	SortOrder string
+	SortOrder     string
 }
 
 // PropertyAddressRepository handles CRUD and search for PropertyAddress entities

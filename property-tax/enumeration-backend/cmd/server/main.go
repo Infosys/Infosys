@@ -12,7 +12,10 @@ import (
 	"enumeration/internal/services"
 	"enumeration/pkg/logger"
 
+	"github.com/redis/go-redis/v9"
+
 	// Standard and third-party packages
+	"context"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
@@ -33,6 +36,19 @@ func main() {
 	cfg := config.GetConfig() // Load configuration
 
 	logger.Info("Starting Property Tax Enumeration Service...")
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     cfg.RedisAddr, // Update with your Redis address
+		Password: "",            // Update if you have password
+		DB:       0,             // Default DB
+	})
+	ctx := context.Background()
+	if err := redisClient.Ping(ctx).Err(); err != nil {
+		logger.Errorf("Redis connection failed: %v (continuing without cache)", err)
+		redisClient = nil // Disable Redis if connection fails
+
+	} else {
+		logger.Info("Redis connected successfully")
+	}
 
 	// Initialize workflow client for external workflow integration
 	workflowClient := workflow.NewClient(cfg.WorkflowURL)
@@ -44,7 +60,7 @@ func main() {
 	coordinatesRepo := repositories.NewCoordinatesRepository(db)
 	floorDetailsRepo := repositories.NewFloorDetailsRepository(db)
 	applicationRepo := repositories.NewApplicationRepository(db)
-	applicationLogRepo:=repositories.NewApplicationLogRepository(db)
+	applicationLogRepo := repositories.NewApplicationLogRepository(db)
 	propertyOwnerRepo := repositories.NewPropertyOwnerRepository(db)
 	constructionDetailsRepo := repositories.NewConstructionDetailsRepository(db)
 	additionalPropertyDetailsRepo := repositories.NewAdditionalPropertyDetailsRepository(db)
@@ -60,8 +76,7 @@ func main() {
 	coordinatesService := services.NewCoordinatesService(coordinatesRepo)
 	floorDetailsService := services.NewFloorDetailsService(floorDetailsRepo)
 	applicationLogService := services.NewApplicationLogService(applicationLogRepo)
-	applicationService := services.NewApplicationService(applicationRepo, propertyOwnerRepo, workflowClient, cfg,applicationLogService)
-	
+	applicationService := services.NewApplicationService(applicationRepo, propertyOwnerRepo, workflowClient, cfg, applicationLogService)
 
 	propertyOwnerService := services.NewPropertyOwnerService(propertyOwnerRepo)
 	constructionDetailsService := services.NewConstructionDetailsService(constructionDetailsRepo)
@@ -76,19 +91,20 @@ func main() {
 
 	// Initialize handlers
 	coordinatesHandler := handlers.NewCoordinatesHandler(coordinatesService)
-	floorDetailsHandler := handlers.NewFloorDetailsHandler(floorDetailsService)
+	floorDetailsHandler := handlers.NewFloorDetailsHandler(floorDetailsService, applicationLogService)
 	applicationHandler := handlers.NewApplicationHandler(applicationService)
-	applicationLogHandler:= handlers.NewApplicationLogHandler(applicationLogService)
-	propertyOwnerHandler := handlers.NewPropertyOwnerHandler(propertyOwnerService)
-	constructionDetailsHandler := handlers.NewConstructionDetailsHandler(constructionDetailsService)
-	additionalPropertyDetailsHandler := handlers.NewAdditionalPropertyDetailsHandler(additionalPropertyDetailsService)
-	assessmentDetailsHandler := handlers.NewAssessmentDetailsHandler(assessmentDetailsService)
-	propertyHandler := handlers.NewPropertyHandler(propertyService)
-	propertyAddressHandler := handlers.NewPropertyAddressHandler(propertyAddressService)
+	applicationLogHandler := handlers.NewApplicationLogHandler(applicationLogService)
+	propertyOwnerHandler := handlers.NewPropertyOwnerHandler(propertyOwnerService, applicationLogService)
+	constructionDetailsHandler := handlers.NewConstructionDetailsHandler(constructionDetailsService, applicationLogService)
+	additionalPropertyDetailsHandler := handlers.NewAdditionalPropertyDetailsHandler(additionalPropertyDetailsService, applicationLogService)
+	assessmentDetailsHandler := handlers.NewAssessmentDetailsHandler(assessmentDetailsService, applicationLogService)
+	propertyHandler := handlers.NewPropertyHandler(propertyService, applicationLogService)
+	propertyAddressHandler := handlers.NewPropertyAddressHandler(propertyAddressService, applicationLogService)
 	gisHandler := handlers.NewGISHandler(gisService)
-	amenityHandler := handlers.NewAmenityHandler(amenityService)
+	amenityHandler := handlers.NewAmenityHandler(amenityService, applicationLogService)
 	documentHandler := handlers.NewDocumentHandler(documentService)
-	igrsHandler := handlers.NewIGRSHandler(igrsService)
+	igrsHandler := handlers.NewIGRSHandler(igrsService, applicationLogService)
+	geojsonHandler := handlers.NewGeoJSONHandler(cfg, redisClient)
 
 	// Setup Gin router for HTTP requests
 	router := gin.Default()
@@ -104,8 +120,25 @@ func main() {
 		})
 	})
 
-	// Setup routes
-	routes.SetupRoutes(router, coordinatesHandler, floorDetailsHandler, constructionDetailsHandler, additionalPropertyDetailsHandler, assessmentDetailsHandler, propertyHandler, propertyAddressHandler, gisHandler, applicationHandler, propertyOwnerHandler, amenityHandler, documentHandler, igrsHandler,applicationLogHandler)
+	// Setup routes with handlers configuration
+	handlersConfig := &routes.HandlersConfig{
+		Coordinates:               coordinatesHandler,
+		FloorDetails:              floorDetailsHandler,
+		ConstructionDetails:       constructionDetailsHandler,
+		AdditionalPropertyDetails: additionalPropertyDetailsHandler,
+		AssessmentDetails:         assessmentDetailsHandler,
+		Property:                  propertyHandler,
+		PropertyAddress:           propertyAddressHandler,
+		GIS:                       gisHandler,
+		Application:               applicationHandler,
+		PropertyOwner:             propertyOwnerHandler,
+		Amenity:                   amenityHandler,
+		Document:                  documentHandler,
+		IGRS:                      igrsHandler,
+		ApplicationLog:            applicationLogHandler,
+		GeoJSON:                   geojsonHandler,
+	}
+	routes.SetupRoutes(router, handlersConfig)
 
 	// Start the HTTP server
 	address := fmt.Sprintf(":%s", cfg.Port)

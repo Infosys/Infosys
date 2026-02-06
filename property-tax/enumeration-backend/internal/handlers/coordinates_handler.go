@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"enumeration/internal/constants"
 	"enumeration/internal/models"
 	"enumeration/internal/services"
 	"io"
@@ -87,7 +88,7 @@ func (h *CoordinatesHandler) Create(c *gin.Context) {
 	if err := c.ShouldBindJSON(&coordinates); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
-			"message": "Invalid request body",
+			"message": constants.ErrInvalidRequestBody,
 			"errors":  []string{err.Error()},
 		})
 		return
@@ -115,7 +116,7 @@ func (h *CoordinatesHandler) GetByID(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
-			"message": "Invalid coordinates ID",
+			"message": constants.ErrInvalidCoordinatesID,
 			"errors":  []string{err.Error()},
 		})
 		return
@@ -145,7 +146,7 @@ func (h *CoordinatesHandler) Update(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
-			"message": "Invalid coordinates ID",
+			"message": constants.ErrInvalidCoordinatesID,
 			"errors":  []string{err.Error()},
 		})
 		return
@@ -155,7 +156,7 @@ func (h *CoordinatesHandler) Update(c *gin.Context) {
 	if err := c.ShouldBindJSON(&coordinates); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
-			"message": "Invalid request body",
+			"message": constants.ErrInvalidRequestBody,
 			"errors":  []string{err.Error()},
 		})
 		return
@@ -184,7 +185,7 @@ func (h *CoordinatesHandler) Delete(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
-			"message": "Invalid coordinates ID",
+			"message": constants.ErrInvalidCoordinatesID,
 			"errors":  []string{err.Error()},
 		})
 		return
@@ -210,7 +211,7 @@ func (h *CoordinatesHandler) Delete(c *gin.Context) {
 func (h *CoordinatesHandler) CreateBatch(c *gin.Context) {
 	raw, err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid request body", "error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"message": constants.ErrInvalidRequestBodyLower, "error": err.Error()})
 		return
 	}
 
@@ -260,7 +261,7 @@ func (h *CoordinatesHandler) ReplaceByGISDataID(c *gin.Context) {
 	// Read raw body to support either array or single object
 	raw, err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "invalid request body", "errors": []string{err.Error()}})
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": constants.ErrInvalidRequestBodyLower, "errors": []string{err.Error()}})
 		return
 	}
 	trimmed := bytes.TrimLeft(raw, " \t\r\n")
@@ -271,13 +272,13 @@ func (h *CoordinatesHandler) ReplaceByGISDataID(c *gin.Context) {
 		coordsSlice = []*models.Coordinates{}
 	} else if trimmed[0] == '[' {
 		if err := json.Unmarshal(raw, &coordsSlice); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "invalid request body", "errors": []string{err.Error()}})
+			c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": constants.ErrInvalidRequestBodyLower, "errors": []string{err.Error()}})
 			return
 		}
 	} else {
 		var single models.Coordinates
 		if err := json.Unmarshal(raw, &single); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "invalid request body", "errors": []string{err.Error()}})
+			c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": constants.ErrInvalidRequestBodyLower, "errors": []string{err.Error()}})
 			return
 		}
 		coordsSlice = append(coordsSlice, &single)

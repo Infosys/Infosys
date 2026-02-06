@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"enumeration/internal/constants"
 	"enumeration/internal/models"
 	"enumeration/internal/services"
 	"net/http"
@@ -51,7 +52,7 @@ func (h *GISHandler) GetAll(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"message": "GIS data retrieved successfully",
+		"message": constants.ErrGISDataRetrievedSuccessfully,
 		"data":    gisDataList,
 		"pagination": gin.H{
 			"page":       page,
@@ -103,7 +104,7 @@ func (h *GISHandler) GetByID(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
-			"message": "Invalid GIS data ID",
+			"message": constants.ErrInvalidGISDataIDFormat,
 			"errors":  []string{err.Error()},
 		})
 		return
@@ -113,7 +114,7 @@ func (h *GISHandler) GetByID(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"success": false,
-			"message": "GIS data not found",
+			"message": constants.ErrGISDataNotFound,
 			"errors":  []string{err.Error()},
 		})
 		return
@@ -121,7 +122,7 @@ func (h *GISHandler) GetByID(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"message": "GIS data retrieved successfully",
+		"message": constants.ErrGISDataRetrievedSuccessfully,
 		"data":    gisData,
 	})
 }
@@ -133,7 +134,7 @@ func (h *GISHandler) Update(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
-			"message": "Invalid GIS data ID",
+			"message": constants.ErrInvalidGISDataIDFormat,
 			"errors":  []string{err.Error()},
 		})
 		return
@@ -155,7 +156,7 @@ func (h *GISHandler) Update(c *gin.Context) {
 	if err := h.service.UpdateGISData(c.Request.Context(), &gisData); err != nil {
 		// Check if it's a not found error
 		statusCode := http.StatusBadRequest
-		if err.Error() == "GIS data not found" {
+		if err.Error() == constants.ErrGISDataNotFound {
 			statusCode = http.StatusNotFound
 		}
 
@@ -180,7 +181,7 @@ func (h *GISHandler) Delete(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
-			"message": "Invalid GIS data ID",
+			"message": constants.ErrInvalidGISDataIDFormat,
 			"errors":  []string{err.Error()},
 		})
 		return
@@ -189,7 +190,7 @@ func (h *GISHandler) Delete(c *gin.Context) {
 	if err := h.service.DeleteGISData(c.Request.Context(), id); err != nil {
 		// Check if it's a not found error
 		statusCode := http.StatusInternalServerError
-		if err.Error() == "GIS data not found" {
+		if err.Error() == constants.ErrGISDataNotFound {
 			statusCode = http.StatusNotFound
 		}
 
@@ -231,7 +232,7 @@ func (h *GISHandler) GetByPropertyID(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"message": "GIS data retrieved successfully",
+		"message": constants.ErrGISDataRetrievedSuccessfully,
 		"data":    gisData,
 	})
 }

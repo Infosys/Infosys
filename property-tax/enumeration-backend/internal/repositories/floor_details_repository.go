@@ -61,7 +61,7 @@ func (r *floorDetailsRepository) Create(ctx context.Context, floorDetails *model
 // GetByID retrieves a FloorDetails record by its ID.
 func (r *floorDetailsRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.FloorDetails, error) {
 	var floorDetails models.FloorDetails
-	err := r.db.Where("id = ?", id).First(&floorDetails).Error
+	err := r.db.Where(QueryByID, id).First(&floorDetails).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("floor details with id %s not found", id)
@@ -87,7 +87,7 @@ func (r *floorDetailsRepository) Update(ctx context.Context, floorDetails *model
 // Delete removes a FloorDetails record by its ID.
 // Returns an error if the record does not exist or deletion fails.
 func (r *floorDetailsRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	result := r.db.Delete(&models.FloorDetails{}, "id = ?", id)
+	result := r.db.Delete(&models.FloorDetails{}, QueryByID, id)
 	if result.Error != nil {
 		return fmt.Errorf("failed to delete floor details with id %s: %w", id, result.Error)
 	}

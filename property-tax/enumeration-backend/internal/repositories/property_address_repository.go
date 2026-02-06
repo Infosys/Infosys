@@ -39,7 +39,7 @@ func (r *propertyAddressRepository) Create(address *models.PropertyAddress) erro
 // Returns: pointer to PropertyAddress and error if not found or on failure.
 func (r *propertyAddressRepository) GetByID(id uuid.UUID) (*models.PropertyAddress, error) {
 	var address models.PropertyAddress
-	err := r.db.Where("id = ?", id).First(&address).Error
+	err := r.db.Where(QueryByID, id).First(&address).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("property address with id %s not found", id)
@@ -67,7 +67,7 @@ func (r *propertyAddressRepository) Update(address *models.PropertyAddress) erro
 // id: UUID of the property address to delete.
 // Returns: error if deletion fails or record not found.
 func (r *propertyAddressRepository) Delete(id uuid.UUID) error {
-	result := r.db.Delete(&models.PropertyAddress{}, "id = ?", id)
+	result := r.db.Delete(&models.PropertyAddress{}, QueryByID, id)
 	if result.Error != nil {
 		return fmt.Errorf("failed to delete property address with id %s: %w", id, result.Error)
 	}
@@ -87,7 +87,7 @@ func (r *propertyAddressRepository) GetAll(page, size int, propertyID *uuid.UUID
 	query := r.db.Model(&models.PropertyAddress{})
 
 	if propertyID != nil {
-		query = query.Where("property_id = ?", *propertyID)
+		query = query.Where(QueryByPropertyID, *propertyID)
 	}
 
 	// Count total records
@@ -112,7 +112,7 @@ func (r *propertyAddressRepository) GetAll(page, size int, propertyID *uuid.UUID
 // Returns: pointer to PropertyAddress and error if not found or on failure.
 func (r *propertyAddressRepository) GetByPropertyID(propertyID uuid.UUID) (*models.PropertyAddress, error) {
 	var address models.PropertyAddress
-	err := r.db.Where("property_id = ?", propertyID).First(&address).Error
+	err := r.db.Where(QueryByPropertyID, propertyID).First(&address).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("property address with property id %s not found", propertyID)
@@ -132,88 +132,15 @@ func (r *propertyAddressRepository) Search(params SearchPropertyAddressParams) (
 	query := r.db.Model(&models.PropertyAddress{})
 
 	// Apply filters
-	var conditions []string
-	var args []interface{}
-
-	if params.PropertyID != nil {
-		conditions = append(conditions, "property_id = ?")
-		args = append(args, *params.PropertyID)
-	}
-
-	if params.Locality != nil && *params.Locality != "" {
-		conditions = append(conditions, "locality ILIKE ?")
-		args = append(args, "%"+*params.Locality+"%")
-	}
-
-	if params.ZoneNo != nil && *params.ZoneNo != "" {
-		conditions = append(conditions, "zone_no = ?")
-		args = append(args, *params.ZoneNo)
-	}
-
-	if params.WardNo != nil && *params.WardNo != "" {
-		conditions = append(conditions, "ward_no = ?")
-		args = append(args, *params.WardNo)
-	}
-
-	if params.BlockNo != nil && *params.BlockNo != "" {
-		conditions = append(conditions, "block_no = ?")
-		args = append(args, *params.BlockNo)
-	}
-
-	if params.Street != nil && *params.Street != "" {
-		conditions = append(conditions, "street ILIKE ?")
-		args = append(args, "%"+*params.Street+"%")
-	}
-
-	if params.ElectionWard != nil && *params.ElectionWard != "" {
-		conditions = append(conditions, "election_ward = ?")
-		args = append(args, *params.ElectionWard)
-	}
-
-	if params.SecretariatWard != nil && *params.SecretariatWard != "" {
-		conditions = append(conditions, "secretariat_ward = ?")
-		args = append(args, *params.SecretariatWard)
-	}
-
-	if params.PinCode != nil {
-		conditions = append(conditions, "pin_code = ?")
-		args = append(args, *params.PinCode)
-	}
-
-	if len(conditions) > 0 {
-		query = query.Where(strings.Join(conditions, " AND "), args...)
-	}
+	query = r.applySearchFilters(query, params)
 
 	// Count total records
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to count property addresses: %w", err)
 	}
 
-	// Apply sorting
-	orderBy := "created_at DESC"
-	if params.SortBy != "" {
-		direction := "ASC"
-		if strings.ToUpper(params.SortOrder) == "DESC" {
-			direction = "DESC"
-		}
-
-		switch params.SortBy {
-		case "locality":
-			orderBy = fmt.Sprintf("locality %s", direction)
-		case "zoneNo":
-			orderBy = fmt.Sprintf("zone_no %s", direction)
-		case "wardNo":
-			orderBy = fmt.Sprintf("ward_no %s", direction)
-		case "createdAt":
-			orderBy = fmt.Sprintf("created_at %s", direction)
-		case "updatedAt":
-			orderBy = fmt.Sprintf("updated_at %s", direction)
-		default:
-			orderBy = "created_at DESC"
-		}
-	}
-
-	// Apply pagination and ordering
+	// Apply sorting and pagination
+	orderBy := r.buildOrderByClause(params.SortBy, params.SortOrder)
 	offset := params.Page * params.Size
 	if err := query.Order(orderBy).Offset(offset).Limit(params.Size).Find(&addresses).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -222,4 +149,81 @@ func (r *propertyAddressRepository) Search(params SearchPropertyAddressParams) (
 		return nil, 0, fmt.Errorf("failed to get property addresses: %w", err)
 	}
 	return addresses, total, nil
+}
+
+// applySearchFilters applies all search filters to the query
+func (r *propertyAddressRepository) applySearchFilters(query *gorm.DB, params SearchPropertyAddressParams) *gorm.DB {
+	var conditions []string
+	var args []interface{}
+
+	r.addPropertyIDFilter(&conditions, &args, params.PropertyID)
+	r.addStringFilter(&conditions, &args, params.Locality, "locality", true)
+	r.addStringFilter(&conditions, &args, params.ZoneNo, "zone_no", false)
+	r.addStringFilter(&conditions, &args, params.WardNo, "ward_no", false)
+	r.addStringFilter(&conditions, &args, params.BlockNo, "block_no", false)
+	r.addStringFilter(&conditions, &args, params.Street, "street", true)
+	r.addStringFilter(&conditions, &args, params.ElectionWard, "election_ward", false)
+	r.addStringFilter(&conditions, &args, params.SecretariatWard, "secretariat_ward", false)
+	r.addUint64Filter(&conditions, &args, params.PinCode, "pin_code")
+
+	if len(conditions) > 0 {
+		query = query.Where(strings.Join(conditions, " AND "), args...)
+	}
+	return query
+}
+
+// addPropertyIDFilter adds property ID filter if present
+func (r *propertyAddressRepository) addPropertyIDFilter(conditions *[]string, args *[]interface{}, propertyID *uuid.UUID) {
+	if propertyID != nil {
+		*conditions = append(*conditions, QueryByPropertyID)
+		*args = append(*args, *propertyID)
+	}
+}
+
+// addStringFilter adds string filter with specified operator (= or ILIKE)
+func (r *propertyAddressRepository) addStringFilter(conditions *[]string, args *[]interface{}, value *string, column string, useLike bool) {
+	if value != nil && *value != "" {
+		if useLike {
+			*conditions = append(*conditions, fmt.Sprintf("%s ILIKE ?", column))
+			*args = append(*args, "%"+*value+"%")
+		} else {
+			*conditions = append(*conditions, fmt.Sprintf("%s = ?", column))
+			*args = append(*args, *value)
+		}
+	}
+}
+
+// addUint64Filter adds equality filter for uint64 fields
+func (r *propertyAddressRepository) addUint64Filter(conditions *[]string, args *[]interface{}, value *uint64, column string) {
+	if value != nil {
+		*conditions = append(*conditions, fmt.Sprintf("%s = ?", column))
+		*args = append(*args, *value)
+	}
+}
+
+// buildOrderByClause builds the ORDER BY clause based on sortBy and sortOrder parameters
+func (r *propertyAddressRepository) buildOrderByClause(sortBy, sortOrder string) string {
+	if sortBy == "" {
+		return "created_at DESC"
+	}
+
+	direction := "ASC"
+	if strings.ToUpper(sortOrder) == "DESC" {
+		direction = "DESC"
+	}
+
+	switch sortBy {
+	case "locality":
+		return fmt.Sprintf("locality %s", direction)
+	case "zoneNo":
+		return fmt.Sprintf("zone_no %s", direction)
+	case "wardNo":
+		return fmt.Sprintf("ward_no %s", direction)
+	case "createdAt":
+		return fmt.Sprintf("created_at %s", direction)
+	case "updatedAt":
+		return fmt.Sprintf("updated_at %s", direction)
+	default:
+		return "created_at DESC"
+	}
 }

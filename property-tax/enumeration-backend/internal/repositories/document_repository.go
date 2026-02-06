@@ -44,7 +44,7 @@ func (r *documentRepository) CreateBatch(ctx context.Context, docs []*models.Doc
 // GetByID retrieves a Document record by its ID.
 func (r *documentRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.Document, error) {
 	var doc models.Document
-	err := r.db.Where("id = ?", id).First(&doc).Error
+	err := r.db.Where(QueryByID, id).First(&doc).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("document with id %s not found", id)
@@ -57,7 +57,7 @@ func (r *documentRepository) GetByID(ctx context.Context, id uuid.UUID) (*models
 // GetByPropertyID retrieves all Document records for a given property ID.
 func (r *documentRepository) GetByPropertyID(ctx context.Context, propertyID uuid.UUID) ([]*models.Document, error) {
 	var docs []*models.Document
-	err := r.db.Where("property_id = ?", propertyID).Find(&docs).Error
+	err := r.db.Where(QueryByPropertyID, propertyID).Find(&docs).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("no documents found for property id %s", propertyID)
@@ -76,7 +76,7 @@ func (r *documentRepository) GetAll(ctx context.Context, page, size int, propert
 	query := r.db.Model(&models.Document{})
 
 	if propertyID != nil {
-		query = query.Where("property_id = ?", *propertyID)
+		query = query.Where(QueryByPropertyID, *propertyID)
 	}
 
 	if err := query.Count(&total).Error; err != nil {
@@ -98,7 +98,7 @@ func (r *documentRepository) GetAll(ctx context.Context, page, size int, propert
 // Delete removes a Document record by its ID.
 // Returns an error if the record does not exist or deletion fails.
 func (r *documentRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	result := r.db.Delete(&models.Document{}, "id = ?", id)
+	result := r.db.Delete(&models.Document{}, QueryByID, id)
 	if result.Error != nil {
 		return fmt.Errorf("failed to delete document with id %s: %w", id, result.Error)
 	}
@@ -111,7 +111,7 @@ func (r *documentRepository) Delete(ctx context.Context, id uuid.UUID) error {
 // Update modifies an existing Document record by its ID.
 // Returns an error if the record does not exist or update fails.
 func (r *documentRepository) Update(ctx context.Context, doc *models.Document) error {
-	result := r.db.Model(&models.Document{}).Where("id = ?", doc.ID).Updates(doc)
+	result := r.db.Model(&models.Document{}).Where(QueryByID, doc.ID).Updates(doc)
 	if result.Error != nil {
 		return fmt.Errorf("failed to update document with id %s: %w", doc.ID, result.Error)
 	}

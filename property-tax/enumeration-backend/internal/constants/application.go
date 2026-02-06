@@ -50,20 +50,27 @@ const (
 
 // Default values for pagination and application
 const (
-    DefaultPage = 0
-    DefaultSize = 20
-    MaxSize = 100
-    
-    // Add jurisdiction constants
-    DefaultJurisdiction = "pb.amritsar"
-    
-    // Header names
-    HeaderTenantID = "X-Tenant-ID"
-    HeaderUserID = "X-User-ID"
-    HeaderUserRole = "X-User-Role"
-    HeaderStatus = "X-Status"
-    HeaderTotalCount = "X-Total-Count"
-    HeaderCurrentPage = "X-Current-Page"
-    HeaderPerPage = "X-Per-Page"
-    HeaderTotalPages = "X-Total-Pages"
+	DefaultPage = 0
+	DefaultSize = 20
+	MaxSize     = 100
+
+	// Add jurisdiction constants
+	DefaultJurisdiction = "pb.amritsar"
+
+	// Header names
+	HeaderTenantID    = "X-Tenant-ID"
+	HeaderUserID      = "X-User-ID"
+	HeaderUserRole    = "X-User-Role"
+	HeaderStatus      = "X-Status"
+	HeaderTotalCount  = "X-Total-Count"
+	HeaderCurrentPage = "X-Current-Page"
+	HeaderPerPage     = "X-Per-Page"
+	HeaderTotalPages  = "X-Total-Pages"
 )
+
+const MsgAdditionalPropertyDetailsRetrieved = "Additional property details retrieved successfully"
+const MsgApplicationUpdatedSuccessfully = "Application updated successfully"
+	const Prop="PROP-%d-%s"
+	const MsgApplicationStatusUpdated = " to status: "
+	const MsgApplication="application "
+	

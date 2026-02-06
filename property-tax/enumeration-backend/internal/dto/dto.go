@@ -100,6 +100,7 @@ type ApplicationSearchCriteria struct {
 	SortField       string     `form:"sortField"` // created_at or due_date
 	IsCountOnly     bool       `form:"isCountOnly"`
 	PropertyNo      string     `form:"propertyNo"`
+	Enumerated      *bool      `form:"enumerated"`
 }
 
 // ============================================================================
@@ -113,10 +114,10 @@ type CreatePropertyOwnerRequest struct {
 	Name                   string    `json:"name" binding:"required"`
 	ContactNo              string    `json:"contactNo" binding:"required"`
 	Email                  string    `json:"email" binding:"omitempty,email"`
-	Gender                 string    `json:"gender" binding:"required,oneof=MALE FEMALE OTHER"`
+	Gender                 string    `json:"gender" binding:"required"`
 	Guardian               string    `json:"guardian"`
-	GuardianType           string    `json:"guardianType" binding:"omitempty,oneof=FATHER MOTHER SPOUSE OTHER"`
-	RelationshipToProperty string    `json:"relationshipToProperty" binding:"omitempty,oneof=OWNER CO_OWNER JOINT_OWNER LEGAL_HEIR POWER_OF_ATTORNEY OTHER"`
+	GuardianType           string    `json:"guardianType" binding:"omitempty"`
+	RelationshipToProperty string    `json:"relationshipToProperty" binding:"omitempty"`
 	OwnershipShare         float64   `json:"ownershipShare" binding:"required,min=0.01,max=100"`
 	IsPrimaryOwner         bool      `json:"isPrimaryOwner"`
 }
@@ -145,12 +146,13 @@ type UpdatePropertyOwnerRequest struct {
 	Name                   string  `json:"name"`
 	ContactNo              string  `json:"contactNo"`
 	Email                  string  `json:"email" binding:"omitempty,email"`
-	Gender                 string  `json:"gender" binding:"omitempty,oneof=MALE FEMALE OTHER"`
+	Gender                 string  `json:"gender" binding:"omitempty"`
 	Guardian               string  `json:"guardian"`
-	GuardianType           string  `json:"guardianType" binding:"omitempty,oneof=FATHER MOTHER SPOUSE GUARDIAN OTHER"`
-	RelationshipToProperty string  `json:"relationshipToProperty" binding:"omitempty,oneof=OWNER CO_OWNER JOINT_OWNER LEGAL_HEIR POWER_OF_ATTORNEY TENANT FAMILY_MEMBER OTHER"`
+	GuardianType           string  `json:"guardianType" binding:"omitempty"`
+	RelationshipToProperty string  `json:"relationshipToProperty" binding:"omitempty"`
 	OwnershipShare         float64 `json:"ownershipShare" binding:"omitempty,min=0.01,max=100"`
 	IsPrimaryOwner         bool    `json:"isPrimaryOwner"`
+	AdhaarNo               uint64  `json:"AdhaarNo"`
 }
 
 //IGRS DTOs
@@ -191,4 +193,46 @@ type UpdateApplicationLogRequest struct {
 	Comments    string                 `json:"comments,omitempty"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 	FileStoreID *uuid.UUID             `json:"fileStoreId,omitempty"`
+}
+
+type CreatePropertyRequest struct {
+	PropertyNo        string `json:"PropertyNo,omitempty"` // Matches model field name (no json tag in model)
+	OwnershipType     string `json:"OwnershipType" binding:"required"`
+	PropertyType      string `json:"PropertyType" binding:"required"`
+	ComplexName       string `json:"ComplexName,omitempty"`
+	TypeOfLand        string `json:"typeOfLand" binding:"required"` // Matches model json tag
+	NoOfFloors        int    `json:"noOfFloors,omitempty"`          // Changed to int
+	NoOfBasements     int    `json:"noOfBasements,omitempty"`       // Changed to int
+	NoOfBuildings     int    `json:"noOfBuildings,omitempty"`       // Changed to int
+	BuildingName      string `json:"buildingName,omitempty"`        // Changed from BuildingNumber
+	HasMezzanineFloor bool   `json:"hasMezzanineFloor,omitempty"`   // New field
+}
+
+// UpdatePropertyRequest - DTO for updating a property (NO tenant ID in body)
+type UpdatePropertyRequest struct {
+	OwnershipType     *string `json:"OwnershipType,omitempty"`
+	PropertyType      *string `json:"PropertyType,omitempty"`
+	ComplexName       *string `json:"ComplexName,omitempty"`
+	TypeOfLand        *string `json:"typeOfLand,omitempty"`
+	NoOfFloors        *int    `json:"noOfFloors,omitempty"`        // Changed to *int
+	NoOfBasements     *int    `json:"noOfBasements,omitempty"`     // Changed to *int
+	NoOfBuildings     *int    `json:"noOfBuildings,omitempty"`     // Changed to *int
+	BuildingName      *string `json:"buildingName,omitempty"`      // Changed from BuildingNumber
+	HasMezzanineFloor *bool   `json:"hasMezzanineFloor,omitempty"` // New field
+}
+
+type PropertyResponse struct {
+    ID             uuid.UUID  `json:"ID"`
+    PropertyNo     string     `json:"PropertyNo"`
+    OwnershipType  string     `json:"OwnershipType"`
+    PropertyType   string     `json:"PropertyType"`
+    ComplexName    string     `json:"ComplexName,omitempty"`
+    TypeOfLand     string     `json:"typeOfLand,omitempty"`
+    NoOfFloors     string     `json:"noOfFloors,omitempty"`
+    NoOfBasements  string     `json:"noOfBasements,omitempty"`
+    NoOfBuildings  string     `json:"noOfBuildings,omitempty"`
+    BuildingNumber string     `json:"buildingNumber,omitempty"`
+    // TenantID       string     `json:"TenantID"`
+    CreatedAt      time.Time  `json:"CreatedAt"`
+    UpdatedAt      time.Time  `json:"UpdatedAt"`
 }

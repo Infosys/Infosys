@@ -7,6 +7,13 @@ import (
 	"time"
 )
 
+const (
+	// DateFormat is the standard date format (YYYY-MM-DD)
+	DateFormat = "2006-01-02"
+	// DateTimeFormat is the standard datetime format (RFC3339)
+	DateTimeFormat = time.RFC3339
+)
+
 // Date wraps time.Time to handle date-only and datetime formats
 type Date struct {
 	time.Time
@@ -20,13 +27,13 @@ func (d *Date) UnmarshalJSON(data []byte) error {
 	}
 
 	// Try parsing as date first (YYYY-MM-DD)
-	if t, err := time.Parse("2006-01-02", str); err == nil {
+	if t, err := time.Parse(DateFormat, str); err == nil {
 		d.Time = t
 		return nil
 	}
 
 	// Try parsing as datetime (RFC3339)
-	if t, err := time.Parse(time.RFC3339, str); err == nil {
+	if t, err := time.Parse(DateTimeFormat, str); err == nil {
 		d.Time = t
 		return nil
 	}
@@ -45,7 +52,7 @@ func (d Date) MarshalJSON() ([]byte, error) {
 	if d.Time.IsZero() {
 		return []byte("null"), nil
 	}
-	return []byte(`"` + d.Time.Format("2006-01-02") + `"`), nil
+	return []byte(`"` + d.Time.Format(DateFormat) + `"`), nil
 }
 
 // Value returns the date for database storage (driver.Valuer)
@@ -68,7 +75,7 @@ func (d *Date) Scan(value interface{}) error {
 		d.Time = v
 		return nil
 	case string:
-		t, err := time.Parse("2006-01-02", v)
+		t, err := time.Parse(DateFormat, v)
 		if err != nil {
 			return err
 		}
