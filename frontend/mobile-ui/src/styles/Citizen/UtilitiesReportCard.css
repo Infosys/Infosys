@@ -1,0 +1,88 @@
+.po-card {
+  width: 340px;
+  border-radius: 8px;
+  padding: 12px;
+  box-sizing: border-box;
+  background: #ffffff;
+  font-family: Roboto, Arial, sans-serif;
+}
+
+.po-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.po-left { max-width: 68%; }
+
+.po-title {
+  font-size: 16px;
+  font-weight: 200;
+  margin: 0 0 6px 0;
+  color: #161515;
+}
+
+.po-sub {
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0 0 6px 0;
+  color: #000;
+}
+
+.po-id {
+  font-size: 12px;
+  color: #000000;
+  margin-top: -4px;
+  font-weight: 700;
+}
+
+.po-submitted {
+  font-size: 12px;
+  color: rgb(0, 0, 0, 0.20); 
+  margin-top: 8px;
+  font-weight: 700;
+}
+
+.po-card .po-submitted-block .po-submitted-date {
+  display: block;
+  /* margin-top: 4px; */
+  font-size: 12px;
+  color: rgb(0, 0, 0, 0.20);     /* muted gray */
+  font-weight: 700;
+  line-height: 1;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.po-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.po-chip {
+  background: #DBFAD3;
+  color: #000000;
+  font-size: 12px;
+  height: 16px;
+  border-radius: 10px;
+  width: 74px
+}
+
+.po-track-btn {
+  background: #C84C04;
+  color: #fff;
+  text-transform: none;
+  height: 30px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 13px;
+  border: none;
+  cursor: pointer;
+  margin-top: 40px;
+}
+
+
+.po-track-btn:hover { background: #a63f18; }

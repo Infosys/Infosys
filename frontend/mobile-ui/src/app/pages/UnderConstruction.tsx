@@ -5,8 +5,11 @@ import { type FC } from 'react';
 import { Box, Typography } from '@mui/material';
 
 // Local asset (replace with correct path if needed)
-import builderGif from '../assets/Citizen/under_construction/tenor.gif'; 
-import { getMessagesFromSession, useLocalization } from '../../services/Citizen/Localization/LocalizationContext';
+import builderGif from '../assets/Citizen/under_construction/tenor.gif';
+import {
+  getMessagesFromSession,
+  useLocalization,
+} from '../../services/Citizen/Localization/LocalizationContext';
 import { getUserFromSession } from '../../context/AuthProvider';
 import { useAppSelector } from '../../redux/Hooks';
 import LoadingPage from '../components/Loader';
@@ -20,11 +23,12 @@ const UnderConstructionPage: FC = () => {
   // Get loading state, user info, and localized messages
   const { loading } = useLocalization();
   const user = getUserFromSession();
-  const messages = getMessagesFromSession(user!.role === "CITIZEN" ? "CITIZEN" : "AGENT")!;
-  const lang =
-    user!.role.toUpperCase() === 'CITIZEN'
-      ? useAppSelector((state) => state.lang.citizenLang)
-      : useAppSelector((state) => state.lang.agentLang);
+  const messages = getMessagesFromSession(
+    user!.role === 'CITIZEN' ? 'CITIZEN' : 'AGENT'
+  )!;
+  const lang = useAppSelector((state) =>
+    user!.role.toUpperCase() === 'CITIZEN' ? state.lang.citizenLang : state.lang.agentLang
+  );
   // Show loader if localization is loading
   if (loading) {
     return <LoadingPage />;
@@ -99,7 +103,8 @@ const UnderConstructionPage: FC = () => {
             gutterBottom
             textAlign="center"
           >
-            {messages['under-construction'][lang]['page-under-construction'] ?? "Page Under Construction"}
+            {messages['under-construction'][lang]['page-under-construction'] ??
+              'Page Under Construction'}
           </Typography>
           {/* Subtext with additional info */}
           <Typography
@@ -108,9 +113,12 @@ const UnderConstructionPage: FC = () => {
             textAlign="center"
             sx={{ mb: 2 }}
           >
-            {messages['under-construction'][lang]['making-something-awesome'] ?? "We're making something awesome for you!"}
+            {messages['under-construction'][lang]['making-something-awesome'] ??
+              "We're making something awesome for you!"}
             <br />
-            {messages['under-construction'][lang]['check-back-soon'] ?? "Please check back soon."}.
+            {messages['under-construction'][lang]['check-back-soon'] ??
+              'Please check back soon.'}
+            .
           </Typography>
         </Box>
       </Box>

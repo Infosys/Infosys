@@ -5,6 +5,7 @@ export interface UserProfile {
   role?: string;
   isActive?: boolean;
   zone?: string[];
+  zoneData?: { zoneNumber: string; wards: string[] }[]; // More specific type
   ward?: string[];
   preferred_language?: string;
   createdDate?: string;

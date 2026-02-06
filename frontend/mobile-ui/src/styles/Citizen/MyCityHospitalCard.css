@@ -1,0 +1,132 @@
+/* Prefix "hc-" (Hospital Card) to avoid collisions */
+
+.hc-card {
+  width: 358px;
+  height: 200px;
+  border-radius: 10px !important;
+  padding: 16px;
+  box-sizing: border-box;
+  background: #D5EFFF !important; /* Light blue*/
+  font-family: 'Roboto', Arial, sans-serif;
+  overflow: hidden;
+  border-color: rgb(0, 0, 0, 20%) !important;
+}
+
+/* Header section */
+.hc-card .hc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.hc-card .hc-icon-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 40px; /* Move slightly to the right */
+}
+
+.hc-card .hc-hospital-icon {
+  color: #1976D2;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  margin-left: -30px;
+}
+
+.hc-card .hc-name {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #000000;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.hc-card .hc-info-icon {
+  color: #000000;
+  font-size: 18px;
+  margin-top: 2px;
+}
+
+/* Description */
+.hc-card .hc-description {
+  font-size: 0.875rem;
+  color: #333333;
+  line-height: 1.4;
+  margin: 0 0 8px 40px; /* Align below name */
+}
+
+/* Hours section */
+.hc-card .hc-hours-section {
+  margin-bottom: 16px;
+  margin-left: 40px; /* Align below name */
+}
+
+.hc-card .hc-hours-label {
+  font-size: 0.875rem;
+  color: #333333;
+  margin: 0 0 2px 0;
+  font-weight: 400;
+}
+
+.hc-card .hc-hours-value {
+  font-size: 0.875rem;
+  color: #000000;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* Action section */
+.hc-card .hc-action-section {
+  display: flex;
+  justify-content: flex-start;
+  width: 114px;
+  height: 30px;
+  margin-left: 40px; /* Align below name */
+}
+
+.hc-card .hc-location-btn.MuiButton-root {
+  background: #DBFAD3; /* Light green background */
+  color: #000000; /* Dark green text */
+  border-radius: 8px;
+  font-weight: 400;
+  text-transform: none;
+  padding: 6px 12px;
+  font-size: 11px;
+  box-shadow: none;
+  min-width: 0;
+}
+
+
+
+.hc-card .hc-location-btn .MuiSvgIcon-root {
+  color: #000000;
+  font-size: 12px;
+  margin-left: -2px;
+  
+
+}
+
+/* Responsive design */
+@media (max-width: 460px) {
+  .hc-card {
+    padding: 14px;
+    max-width: 100%;
+  }
+  
+  .hc-card .hc-name {
+    font-size: 1rem;
+  }
+  
+  .hc-card .hc-description {
+    font-size: 0.8125rem;
+  }
+}
+
+/* Defensive specificity to prevent external CSS overrides */
+.hc-card .hc-name,
+.hc-card .hc-description,
+.hc-card .hc-location-btn {
+  -webkit-font-smoothing: antialiased;
+}

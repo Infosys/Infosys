@@ -7,7 +7,6 @@ import { usePropertyForm } from "../../../../context/PropertyFormContext";
 import { useSubmitCoordinateBatchMutation, useSubmitGISDataMutation, useUpdateCoordinatesMutation, useUpdateGISDataMutation } from "../../../../redux/apis/gisApi";
 import { useSubmitPropertyBasicsMutation, useUpdatePropertyMutation } from "../../../../redux/apis/propertyApi";
 
-
 // usePropertyData provides async functions to save property basics, GIS data, and coordinates.
 // It uses form data from context and exposes three main operations:
 //   - savePropertyBasics: create or update property basic info
@@ -23,18 +22,25 @@ export const usePropertyData = () => {
   const [updateGISData] = useUpdateGISDataMutation();
   const [updateCoordinates] = useUpdateCoordinatesMutation();
 
-
   // Save or update property basic information
   // If propertyID is provided, updates existing property; otherwise, creates new property
-  const savePropertyBasics = async (propertyID?: string) => {
+  const savePropertyBasics = async (applicationId: string, isVerifying: boolean,propertyID?: string,) => {
     if (propertyID) {
       const result = await updateProperty({
         propertyId: propertyID,
+        applicationId: applicationId,
+        isVerifying: isVerifying,
         ownershipType: formData.categoryOfOwnership,
         propertyType: formData.propertyType,
         complexName: formData.apartmentName,
         address: formData.propertyAddress!,
         propertyNo: formData.propertyNo || '',
+        buildingName: formData.buildingName || '',
+        noOfBuildings: formData.noOfBuildings || 0,
+        typeOfLand: formData.typeOfLand,
+        noOfFloors: formData.noOfFloors || 0,
+        noOfBasements: formData.noOfBasements || 0,
+        hasMezzanine: formData.hasMezzanine,
       }).unwrap();
       // Return updated property ID and number
 
@@ -44,6 +50,12 @@ export const usePropertyData = () => {
         ownershipType: formData.categoryOfOwnership,
         propertyType: formData.propertyType,
         complexName: formData.apartmentName,
+        typeOfLand: formData.typeOfLand,
+        buildingName: formData.buildingName || '',
+        noOfBuildings: formData.noOfBuildings || 0,
+        noOfFloors: formData.noOfFloors|| 0,
+        noOfBasements: formData.noOfBasements || 0,
+        hasMezzanine: formData.hasMezzanine,
       }).unwrap();
       // Return new property ID and number
 
@@ -99,13 +111,8 @@ export const usePropertyData = () => {
           // If shape coordinate format is unexpected, try to salvage by swapping
           const [a, b] = coord as any[];
           if (typeof a === 'number' && typeof b === 'number') {
-            if (Math.abs(a) > 90 && Math.abs(b) <= 90) {
-              lat = b;
-              lng = a;
-            } else {
-              lat = b;
-              lng = a;
-            }
+            lat = b;
+            lng = a;
           }
         }
         return { latitude: lat, longitude: lng, gisDataId };

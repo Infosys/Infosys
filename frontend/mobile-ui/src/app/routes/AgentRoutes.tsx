@@ -1,4 +1,4 @@
-// AgentRoutes.tsx
+/// AgentRoutes.tsx
 // Defines all route mappings for the agent user role.
 // Uses ProtectedRoute to restrict access to authenticated agents only.
 
@@ -10,9 +10,9 @@ import HomePage from '../pages/Agent/HomePage';
 import ReviewedProperty from '../pages/Agent/ReviewedProperty';
 import PropertyFormVerification from '../pages/Agent/PropertyFormVerification';
 import SearchProperty from '../pages/Agent/SearchProperty';
-import DraftPage from '../pages/PropertyForm/DraftPage';
 import SendEmail from '../pages/Agent/SendEmail';
 import {AddRequestOrComment, ApplicationLog} from '../pages/Agent';
+import PropertyInformationSubmitted from '../pages/Agent/PropertyInformationSubmitted';
 
 /**
  * AgentRoutes component
@@ -52,7 +52,7 @@ const AgentRoutes: FC = () => {
       />
       {/* Add comment/request route */}
       <Route
-        path="add-comment"
+        path="add-comment/:propertyId"
         element={
           <ProtectedRoute allowedRoles={['AGENT']}>
             <AddRequestOrComment />
@@ -69,19 +69,9 @@ const AgentRoutes: FC = () => {
         }
       />
 
-      {/* Draft property route (dynamic by propertyId) */}
-      <Route
-        path="draft/:propertyId"
-        element={
-          <ProtectedRoute allowedRoles={['AGENT']}>
-            <DraftPage />
-          </ProtectedRoute>
-        }
-      />
-
       {/* Application log route (dynamic by id) */}
       <Route
-        path="ApplicationLog/:id"
+        path="ApplicationLog/:propertyId"
         element={
           <ProtectedRoute allowedRoles={['AGENT']}>
             <ApplicationLog />
@@ -105,6 +95,15 @@ const AgentRoutes: FC = () => {
         element={
           <ProtectedRoute allowedRoles={['AGENT']}>
             <SendEmail />
+          </ProtectedRoute>
+        }
+      />
+      {/* Send email route */}
+      <Route
+        path="property-information-submitted"
+        element={
+          <ProtectedRoute allowedRoles={['AGENT']}>
+            <PropertyInformationSubmitted />
           </ProtectedRoute>
         }
       />

@@ -1,4 +1,7 @@
 // Service functions and types for user profile management
+
+import env from "../../config/env";
+
 // Address type for user profile
 export type Address = {
   addressLine1: string;
@@ -50,7 +53,7 @@ export type User = {
 
 // Fetch user details by username from API
 export const getUserByUsername = async (username: string): Promise<User> => {
-  const response = await fetch(`${import.meta.env.VITE_ONBOARDING_HOST}/api/v1/users?username=${username}`);
+  const response = await fetch(`${env.ONBOARDING_HOST}/api/v1/users?username=${username}`);
   if (response.status !== 200) throw new Error("User not found");
   const data = await response.json();
   return data.data; // assuming your API structure is { data: { ...user } }
@@ -74,7 +77,7 @@ export const removeAppLocale = () => {
 // Update the user's preferred language in the backend
 export const updatePreferredLanguage = async (userId: string, lang: string) => {
   const response = await fetch(
-    `${import.meta.env.VITE_ONBOARDING_HOST}/api/v1/users/${userId}`,
+    `${env.ONBOARDING_HOST}/api/v1/users/${userId}`,
     {
       method: "PUT",
       headers: { "Content-Type": "application/json" },

@@ -15,9 +15,9 @@ export type AddressDetails = {
   PropertyID: string;
   CreatedAt: string;
   UpdatedAt: string;
-  CororespondenceAddress1: string;
-  CororespondenceAddress2: string;
-  CororespondenceAddress3: string;
+  CorrespondenceAddress1: string;
+  CorrespondenceAddress2: string;
+  CorrespondenceAddress3: string;
 };
 
 // Assessment details for a property

@@ -239,15 +239,17 @@ const MapView: React.FC<MapViewProps> = ({
   }, [properties]);
 
   // computed center in [lng, lat] for MapLibre
-  const computedCenterLngLat: [number, number] =
-    markersData.length > 0
-      ? [
-          markersData[0].lng ?? FALLBACK_CENTER[1],
-          markersData[0].lat ?? FALLBACK_CENTER[0],
-        ]
-      : center
-      ? [center[1], center[0]]
-      : [FALLBACK_CENTER[1], FALLBACK_CENTER[0]];
+  let computedCenterLngLat: [number, number];
+  if (markersData.length > 0) {
+    computedCenterLngLat = [
+      markersData[0].lng ?? FALLBACK_CENTER[1],
+      markersData[0].lat ?? FALLBACK_CENTER[0],
+    ];
+  } else if (center) {
+    computedCenterLngLat = [center[1], center[0]];
+  } else {
+    computedCenterLngLat = [FALLBACK_CENTER[1], FALLBACK_CENTER[0]];
+  }
 
   // init map once
   useEffect(() => {
@@ -346,7 +348,7 @@ const MapView: React.FC<MapViewProps> = ({
         e.stopPropagation();
         const target = e.target as HTMLElement;
         // if the click was on the view-details button, let document handler handle it
-        if (target.closest && target.closest('.marker-card-btn-2')) return;
+        if (target.closest?.('.marker-card-btn-2')) return;
         setSelectedMarkerIdx(selectedMarkerIdx === idx ? null : idx);
       };
       el.addEventListener('click', onMarkerClick);
@@ -377,24 +379,8 @@ const MapView: React.FC<MapViewProps> = ({
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       const target = e.target as HTMLElement;
-      const btn = target.closest
-        ? (target.closest('.marker-card-btn-2') as HTMLElement | null)
-        : null;
+      const btn = target.closest?.('.marker-card-btn-2') || null;
       if (!btn) return;
-      const idAttr = btn.getAttribute('data-prop-id');
-      const markerData = markersData.find((m) => String(m.id) === String(idAttr));
-
-      if (markerData) {
-        // if (onViewDetails) {
-        //   onViewDetails(markerData.original);
-        // } else {
-        //   navigate(`/citizen/properties/${markerData.id}`, {
-        //     state: {
-        //       applicationId: markerData.id,
-        //     },
-        //   });
-        // }
-      }
     }
     document.addEventListener('click', handleClick);
     return () => document.removeEventListener('click', handleClick);

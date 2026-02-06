@@ -88,7 +88,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
 
   // Handle selection change
   const handleChange = (e: SelectChangeEvent<string>) => {
-    const selected = e.target.value as string;
+    const selected = e.target.value;
     // mark that the close that follows is caused by selection
     justSelectedRef.current = true;
     onSelect(name, selected);
@@ -117,9 +117,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
           value={safeValue}
           onChange={handleChange}
           renderValue={(selected) =>
-            selected ? (
-              (selected as string)
-            ) : (
+            selected ?? (
               <span style={placeholderStyle}>{selectText}</span>
             )
           }

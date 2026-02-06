@@ -13,37 +13,32 @@ import React, { useState, useEffect, useRef } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import '../../../styles/CustomDrawingToolbar.css';
-import locatePropertyIcon from '../../../assets/CitizenAssets/mycity_page/locateProperty.svg';
+import locatePropertyIcon from '../../assets/PropertyMarker.svg';
 
 interface LocationMapWithDrawingProps {
   center: [number, number];
   onLocationUpdate: (lat: number, lng: number, address: string) => void;
   addressLabel?: string;
-  onShapeDrawn?: (shapeData: any) => void;
+  onShapeDrawn?: (shapeData: ShapeData) => void;
   initialShapes?: Array<{
     type: 'polyline' | 'rectangle' | 'polygon' | 'point';
     coordinates: number[] | number[][];
     area?: number;
   }>;
   readOnly?: boolean;
-  // optional external map ref to allow parent to control map (pan/zoom)
-  externalMapRef?: React.MutableRefObject<any | null>;
-  // external ref to call finish or start from parent
-  externalFinishRef?: React.MutableRefObject<{
+  externalMapRef?: React.RefObject<maplibregl.Map | null>;
+  externalFinishRef?: React.RefObject<{
     finish?: () => void;
     start?: () => void;
     clear?: () => void;
   } | null>;
   onClearAll?: () => void;
   startDrawing?: boolean;
-  // notify parent when user starts moving the map (used to hide center instruction)
   onMapMoveStart?: () => void;
-  // notify parent when the map locks/unlocks a selected location (true when locked)
   onLocationLockChange?: (locked: boolean) => void;
-  // (deprecated) showCenterInstruction removed; center pin overlay is always visible
+  onDrawingPathChange?: (pointCount: number) => void;
 }
 
-// Shape data interface
 interface ShapeData {
   type: 'rectangle' | 'polygon';
   coordinates: number[] | number[][];
@@ -53,8 +48,23 @@ interface ShapeData {
   addedAt?: string;
 }
 
-// Drawing tool types
 type DrawingTool = 'polygon' | null;
+
+// Helper function to build address from properties
+const buildAddressFromProperties = (props: Record<string, string>): string => {
+  const parts = [];
+  if (props.housenumber) parts.push(props.housenumber);
+  if (props.street) parts.push(props.street);
+  if (props.district) parts.push(props.district);
+  if (props.city) parts.push(props.city);
+  if (props.state) parts.push(props.state);
+
+  if (parts.length > 0) {
+    return parts.join(', ');
+  }
+
+  return props.name || '';
+};
 
 // Helper function for reverse geocoding
 const getReverseGeocodedAddress = async (lat: number, lng: number): Promise<string> => {
@@ -71,25 +81,11 @@ const getReverseGeocodedAddress = async (lat: number, lng: number): Promise<stri
 
     if (response.ok) {
       const data = await response.json();
-      if (data.features && data.features.length > 0) {
-        const feature = data.features[0];
-        if (feature.properties) {
-          const props = feature.properties;
-          const parts = [];
-
-          if (props.housenumber) parts.push(props.housenumber);
-          if (props.street) parts.push(props.street);
-          if (props.district) parts.push(props.district);
-          if (props.city) parts.push(props.city);
-          if (props.state) parts.push(props.state);
-
-          if (parts.length > 0) {
-            return parts.join(', ');
-          }
-
-          if (props.name) {
-            return props.name;
-          }
+      const feature = data.features?.[0];
+      if (feature?.properties) {
+        const address = buildAddressFromProperties(feature.properties);
+        if (address) {
+          return address;
         }
       }
     }
@@ -113,10 +109,11 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
   startDrawing,
   onMapMoveStart,
   onLocationLockChange,
+  onDrawingPathChange,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
-  const debounceTimeoutRef = useRef<number | null>(null);
+  const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isDrawingRef = useRef<boolean>(false);
   const activeToolRef = useRef<DrawingTool>(null);
   const programmaticPanRef = useRef<boolean>(false);
@@ -132,7 +129,11 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
   const [polygonCentroid, setPolygonCentroid] = useState<[number, number] | null>(null);
   const [locationLocked, setLocationLocked] = useState(false);
   const [mapReady, setMapReady] = useState(false);
-  // Clear all drawn shapes and reset selection
+
+  /**
+   * Clear all drawn shapes and reset selection
+   * Removes markers, polygon layers, and resets state
+   */
   const clearAllShapes = () => {
     setDrawnShapes([]);
     setCurrentPath([]);
@@ -157,45 +158,36 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
         }
       });
       polygonLayersRef.current = [];
-      // clear remembered centroid shape id
       lastCentroidShapeIdRef.current = null;
     }
 
     // Notify parent if provided
-    if (onLocationLockChange) {
-      try {
-        onLocationLockChange(false);
-      } catch (e) {
-        /* ignore */
-      }
-    }
-    if (onClearAll) {
-      try {
-        onClearAll();
-      } catch (e) {
-        /* ignore */
-      }
-    }
+    onLocationLockChange?.(false);
+    onClearAll?.();
   };
 
-  // Calculate polygon area (simple approximation)
+  /**
+   * Calculate polygon area using simple approximation
+   * Returns area in square meters
+   */
   const calculatePolygonArea = (coordinates: [number, number][]): number => {
     if (coordinates.length < 3) return 0;
 
     let area = 0;
-    for (let i = 0; i < coordinates.length; i++) {
-      const j = (i + 1) % coordinates.length;
-      area += coordinates[i][0] * coordinates[j][1];
-      area -= coordinates[j][0] * coordinates[i][1];
+    for (let coordIndex = 0; coordIndex < coordinates.length; coordIndex++) {
+      const nextIndex = (coordIndex + 1) % coordinates.length;
+      area += coordinates[coordIndex][0] * coordinates[nextIndex][1];
+      area -= coordinates[nextIndex][0] * coordinates[coordIndex][1];
     }
-    return Math.abs(area / 2) * 111320 * 111320; // Rough conversion to square meters
+    return Math.abs(area / 2) * 111320 * 111320;
   };
 
-  // Add polygon to map
+  /**
+   * Add polygon to map as a fill layer with outline
+   */
   const addPolygonToMap = (shape: ShapeData) => {
     if (!mapRef.current || shape.type !== 'polygon') return;
 
-    // Guard: ensure map style is loaded before adding sources/layers
     if (!mapRef.current.isStyleLoaded()) {
       console.warn('Map style not loaded yet, deferring polygon add');
       return;
@@ -204,9 +196,9 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
     const coords = shape.coordinates as number[][];
     const sourceId = shape.id;
 
-    // Convert coordinates to GeoJSON format [lng, lat]
+    // Convert coordinates and close the polygon
     const coordinates = coords.map(([lng, lat]) => [lng, lat]);
-    coordinates.push(coordinates[0]); // Close the polygon
+    coordinates.push(coordinates[0]);
 
     const geojson = {
       type: 'Feature' as const,
@@ -221,7 +213,7 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
       },
     };
 
-    // Add source
+    // Add source if not exists
     if (!mapRef.current.getSource(sourceId)) {
       mapRef.current.addSource(sourceId, {
         type: 'geojson',
@@ -260,14 +252,15 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
     }
   };
 
-  // Add marker to map
+  /**
+   * Add marker to map with custom icon
+   */
   const addMarkerToMap = (lng: number, lat: number, iconUrl: string) => {
     if (!mapRef.current) {
       console.warn('Map ref not available when trying to add marker');
       return null;
     }
 
-    // Create image element for the marker
     const img = document.createElement('img');
     img.src = iconUrl;
     img.style.width = '36px';
@@ -275,15 +268,14 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
     img.style.cursor = 'pointer';
     img.alt = 'Location marker';
 
-    // Create wrapper div
-    const el = document.createElement('div');
-    el.className = 'custom-marker';
-    el.style.width = '36px';
-    el.style.height = '36px';
-    el.appendChild(img);
+    const element = document.createElement('div');
+    element.className = 'custom-marker';
+    element.style.width = '36px';
+    element.style.height = '36px';
+    element.appendChild(img);
 
     const marker = new maplibregl.Marker({
-      element: el,
+      element,
       anchor: 'bottom',
       offset: [0, 0],
     })
@@ -294,81 +286,101 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
     return marker;
   };
 
-  // Helper function to compute polygon centroid
+  /**
+   * Compute polygon centroid using geographic coordinates
+   * Uses the shoelace formula
+   */
   const computePolygonCentroid = (coords: [number, number][]) => {
-    // coords are [lat, lng]
-    const pts = coords.map(([lat, lng]) => ({ x: lng, y: lat }));
+    const points = coords.map(([lat, lng]) => ({ xCoord: lng, yCoord: lat }));
     let twiceArea = 0;
     let xSum = 0;
     let ySum = 0;
-    for (let i = 0; i < pts.length; i++) {
-      const j = (i + 1) % pts.length;
-      const cross = pts[i].x * pts[j].y - pts[j].x * pts[i].y;
-      twiceArea += cross;
-      xSum += (pts[i].x + pts[j].x) * cross;
-      ySum += (pts[i].y + pts[j].y) * cross;
+    
+    for (let pointIndex = 0; pointIndex < points.length; pointIndex++) {
+      const nextIndex = (pointIndex + 1) % points.length;
+      const crossProduct = points[pointIndex].xCoord * points[nextIndex].yCoord - 
+                          points[nextIndex].xCoord * points[pointIndex].yCoord;
+      twiceArea += crossProduct;
+      xSum += (points[pointIndex].xCoord + points[nextIndex].xCoord) * crossProduct;
+      ySum += (points[pointIndex].yCoord + points[nextIndex].yCoord) * crossProduct;
     }
+    
     const area = twiceArea / 2;
+    
+    // Handle degenerate case (zero area)
     if (Math.abs(area) < 1e-9) {
-      // fallback to average of points
-      const avg = pts.reduce((acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }), {
-        x: 0,
-        y: 0,
-      });
-      return { lat: avg.y / pts.length, lng: avg.x / pts.length };
+      const average = points.reduce(
+        (accumulator, point) => ({ 
+          xCoord: accumulator.xCoord + point.xCoord, 
+          yCoord: accumulator.yCoord + point.yCoord 
+        }),
+        { xCoord: 0, yCoord: 0 }
+      );
+      return { 
+        lat: average.yCoord / points.length, 
+        lng: average.xCoord / points.length 
+      };
     }
-    const cx = xSum / (6 * area);
-    const cy = ySum / (6 * area);
-    return { lat: cy, lng: cx };
+    
+    const centroidX = xSum / (6 * area);
+    const centroidY = ySum / (6 * area);
+    return { lat: centroidY, lng: centroidX };
   };
 
-  // Compute centroid using map projection (pixel coordinates) for better accuracy
-  // on very small polygons. Falls back to geographic centroid if map not ready.
+  /**
+   * Compute centroid using map projection (pixel coordinates) for better accuracy
+   * Falls back to geographic centroid if map is not loaded
+   */
   const computePolygonCentroidProjected = (coords: [number, number][]) => {
-    // coords are [lat, lng]
     try {
       const map = mapRef.current;
-      if (!map || !map.loaded()) {
+      if (!map?.loaded()) {
         return computePolygonCentroid(coords);
       }
 
-      // Project geographic coordinates to screen (pixel) coordinates
+      // Project coordinates to pixel space
       const projected = coords.map(([lat, lng]) => {
-        const p = map.project([lng, lat]);
-        return { x: p.x, y: p.y };
+        const projectedPoint = map.project([lng, lat]);
+        return { xCoord: projectedPoint.x, yCoord: projectedPoint.y };
       });
 
-      // Compute centroid in projected space
       let twiceArea = 0;
       let xSum = 0;
       let ySum = 0;
-      for (let i = 0; i < projected.length; i++) {
-        const j = (i + 1) % projected.length;
-        const cross = projected[i].x * projected[j].y - projected[j].x * projected[i].y;
-        twiceArea += cross;
-        xSum += (projected[i].x + projected[j].x) * cross;
-        ySum += (projected[i].y + projected[j].y) * cross;
+      
+      for (let pointIndex = 0; pointIndex < projected.length; pointIndex++) {
+        const nextIndex = (pointIndex + 1) % projected.length;
+        const crossProduct = projected[pointIndex].xCoord * projected[nextIndex].yCoord - 
+                            projected[nextIndex].xCoord * projected[pointIndex].yCoord;
+        twiceArea += crossProduct;
+        xSum += (projected[pointIndex].xCoord + projected[nextIndex].xCoord) * crossProduct;
+        ySum += (projected[pointIndex].yCoord + projected[nextIndex].yCoord) * crossProduct;
       }
+      
       const area = twiceArea / 2;
+      
+      // Handle degenerate case
       if (Math.abs(area) < 1e-6) {
-        // fallback to average
-        const avg = projected.reduce((acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }), {
-          x: 0,
-          y: 0,
-        });
-        const cx = avg.x / projected.length;
-        const cy = avg.y / projected.length;
-        const un = map.unproject([cx, cy]);
-        return { lat: un.lat, lng: un.lng };
+        const average = projected.reduce(
+          (accumulator, point) => ({ 
+            xCoord: accumulator.xCoord + point.xCoord, 
+            yCoord: accumulator.yCoord + point.yCoord 
+          }),
+          { xCoord: 0, yCoord: 0 }
+        );
+        const centroidX = average.xCoord / projected.length;
+        const centroidY = average.yCoord / projected.length;
+        const unprojected = map.unproject([centroidX, centroidY]);
+        return { lat: unprojected.lat, lng: unprojected.lng };
       }
-      const cx = xSum / (6 * area);
-      const cy = ySum / (6 * area);
-
-      // Unproject back to geographic coordinates (use array form)
-      const un = map.unproject([cx, cy]);
-      return { lat: un.lat, lng: un.lng };
-    } catch (e) {
-      // anything fails, fallback to geographic centroid
+      
+      // Unproject back to geographic coordinates
+      const centroidX = xSum / (6 * area);
+      const centroidY = ySum / (6 * area);
+      const unprojected = map.unproject([centroidX, centroidY]);
+      return { lat: unprojected.lat, lng: unprojected.lng };
+    } catch (error) {
+      console.log(error);
       return computePolygonCentroid(coords);
     }
   };
@@ -376,13 +388,12 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
   // Initialize shapes from props
   useEffect(() => {
     if (initialShapes.length > 0) {
-      // Filter out any legacy polylines (we no longer support polyline drawing)
       const shapes = initialShapes
         .filter((shape) => shape.type !== 'polyline')
         .map(
-          (shape, index) =>
+          (shape, shapeIndex) =>
             ({
-              id: `initial_${shape.type}_${index}`,
+              id: `initial_${shape.type}_${shapeIndex}`,
               type: shape.type as 'rectangle' | 'polygon',
               coordinates: shape.coordinates,
               area: (shape as any).area,
@@ -391,11 +402,10 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
         );
       setDrawnShapes(shapes);
 
-      // If there's a polygon in initial shapes, calculate and set its centroid
+      // Compute centroid for initial polygon
       const polygon = shapes.find((shape) => shape.type === 'polygon');
-      if (polygon && polygon.coordinates) {
+      if (polygon?.coordinates) {
         const coords = polygon.coordinates as number[][];
-        // Convert from [lng, lat] to [lat, lng] format for centroid calculation
         const latLngCoords: [number, number][] = coords.map(([lng, lat]) => [lat, lng]);
         const centroid = computePolygonCentroidProjected(latLngCoords);
         setPolygonCentroid([centroid.lat, centroid.lng]);
@@ -409,13 +419,12 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
     if (initialShapes.length === 0) return;
     if (readOnly) return;
 
-    // Convert incoming shapes same as above
     const shapes = initialShapes
       .filter((shape) => shape.type !== 'polyline')
       .map(
-        (shape, index) =>
+        (shape, shapeIndex) =>
           ({
-            id: `initial_${shape.type}_${index}`,
+            id: `initial_${shape.type}_${shapeIndex}`,
             type: shape.type as 'rectangle' | 'polygon',
             coordinates: shape.coordinates,
             area: (shape as any).area,
@@ -423,7 +432,7 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
           } as ShapeData)
       );
 
-    // Remove any existing polygon layers first
+    // Clean up existing layers
     polygonLayersRef.current.forEach((layerId) => {
       try {
         if (!mapRef.current) return;
@@ -431,266 +440,245 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
         if (mapRef.current.getLayer(`${layerId}-outline`))
           mapRef.current.removeLayer(`${layerId}-outline`);
         if (mapRef.current.getSource(layerId)) mapRef.current.removeSource(layerId);
-      } catch (e) {
-        // ignore
+      } catch (error) {
+        console.log(error);
       }
     });
     polygonLayersRef.current = [];
 
-    shapes.forEach((s) => {
-      if (s.type === 'polygon') addPolygonToMap(s);
+    // Add shapes to map
+    shapes.forEach((shape) => {
+      if (shape.type === 'polygon') addPolygonToMap(shape);
     });
   }, [initialShapes, mapReady]);
 
-  // start drawing mode when requested by parent
+  // Start drawing mode when requested by parent
   useEffect(() => {
-    if (typeof startDrawing !== 'undefined' && startDrawing) {
+    if (startDrawing !== undefined && startDrawing) {
       setActiveTool('polygon');
       setIsDrawing(true);
     }
   }, [startDrawing]);
 
-  // keep refs in sync for event listeners attached in callbacks
+  // Keep refs in sync for event listeners attached in callbacks
   useEffect(() => {
     isDrawingRef.current = isDrawing;
   }, [isDrawing]);
+  
   useEffect(() => {
     activeToolRef.current = activeTool;
   }, [activeTool]);
 
+  // Notify parent when currentPath changes
+  useEffect(() => {
+    onDrawingPathChange?.(currentPath.length);
+  }, [currentPath, onDrawingPathChange]);
+
   // Update polygon centroid when drawn shapes change
   useEffect(() => {
-    // If we are programmatically panning the map (flyTo) after finishShape,
-    // skip recomputing centroid until the pan finishes to avoid marker jumping.
     if (programmaticPanRef.current) {
-      // console.log('Skipping centroid update while programmatic pan is active');
       return;
     }
 
     const polygon = drawnShapes.find((shape) => shape.type === 'polygon');
-    if (polygon && polygon.coordinates) {
-      // if the centroid was just set from finishShape for this shape id, skip recomputing to avoid marker jump
+    if (polygon?.coordinates) {
+      // Avoid recalculating centroid for the same shape
       if (
         lastCentroidShapeIdRef.current &&
         polygon.id === lastCentroidShapeIdRef.current
       ) {
-        // clear the ref after skipping once so future edits will update centroid
         lastCentroidShapeIdRef.current = null;
         return;
       }
       const coords = polygon.coordinates as number[][];
-      // Convert from [lng, lat] to [lat, lng] format for centroid calculation
       const latLngCoords: [number, number][] = coords.map(([lng, lat]) => [lat, lng]);
       const centroid = computePolygonCentroidProjected(latLngCoords);
       setPolygonCentroid([centroid.lat, centroid.lng]);
     } else {
-      // No polygon found, clear the centroid
       setPolygonCentroid(null);
     }
   }, [drawnShapes]);
 
-  // Note: point/pin drawing removed - only polygon drawing supported
-
-  // Handle path click (for lines and polygons)
+  /**
+   * Handle path click for polygon drawing
+   * Adds point to current path if not duplicate
+   */
   const handlePathClick = (lat: number, lng: number) => {
-    setCurrentPath((prev) => {
+    setCurrentPath((previousPath) => {
       const newPoint: [number, number] = [lat, lng];
-      // If last point equals new point (within tiny epsilon), skip adding
-      const last = prev[prev.length - 1];
-      const eps = 1e-7;
+      const lastPoint = previousPath.at(-1);
+      const epsilon = 1e-7;
+      
+      // Avoid adding duplicate consecutive points
       if (
-        last &&
-        Math.abs(last[0] - newPoint[0]) < eps &&
-        Math.abs(last[1] - newPoint[1]) < eps
+        lastPoint &&
+        Math.abs(lastPoint[0] - newPoint[0]) < epsilon &&
+        Math.abs(lastPoint[1] - newPoint[1]) < epsilon
       ) {
-        return prev;
+        return previousPath;
       }
-      const newPath: [number, number][] = [...prev, newPoint];
-      return newPath;
+      
+      return [...previousPath, newPoint];
     });
   };
 
-  // Finish drawing polygon
+  /**
+   * Finish drawing polygon
+   * Filters duplicate points, calculates centroid and area, performs reverse geocoding
+   */
   const finishShape = async () => {
-    if (currentPath.length < 3) return; // Need at least 3 points for a polygon
-    // Remove consecutive near-duplicate points to keep only real vertices
-    const eps = 1e-7;
+    if (currentPath.length < 3) return;
+    
+    const epsilon = 1e-7;
     const filteredPath: [number, number][] = [];
-    for (const pt of currentPath) {
-      const last = filteredPath[filteredPath.length - 1];
-      if (last && Math.abs(last[0] - pt[0]) < eps && Math.abs(last[1] - pt[1]) < eps) {
+    
+    // Remove duplicate consecutive points
+    for (const point of currentPath) {
+      const lastPoint = filteredPath.at(-1);
+      if (lastPoint && 
+          Math.abs(lastPoint[0] - point[0]) < epsilon && 
+          Math.abs(lastPoint[1] - point[1]) < epsilon) {
         continue;
       }
-      filteredPath.push(pt);
+      filteredPath.push(point);
     }
-    if (filteredPath.length < 3) return; // still need 3 unique vertices
+    
+    if (filteredPath.length < 3) return;
 
-    // Compute centroid using projected coordinates (more accurate for tiny polygons)
     const centroid = computePolygonCentroidProjected(filteredPath);
 
-    // Immediately set centroid and show marker so user sees instant feedback
-    // console.log('Setting polygon centroid (immediate):', { lat: centroid.lat, lng: centroid.lng });
     setPolygonCentroid([centroid.lat, centroid.lng]);
     setLocationLocked(true);
-    if (onLocationLockChange) {
-      try {
-        onLocationLockChange(true);
-      } catch (e) {
-        /* ignore */
-      }
+    onLocationLockChange?.(true);
+
+    // Update marker
+    if (mapRef.current) {
+      markersRef.current.forEach((marker) => marker.remove());
+      markersRef.current = [];
+      addMarkerToMap(centroid.lng, centroid.lat, locatePropertyIcon);
     }
 
-    // Force-add immediate marker to map (bypass state debounce)
-    try {
-      if (mapRef.current) {
-        // remove any existing markers to avoid duplicates
-        markersRef.current.forEach((m) => m.remove());
-        markersRef.current = [];
-        // addMarkerToMap expects [lng, lat]
-        addMarkerToMap(centroid.lng, centroid.lat, locatePropertyIcon);
-      }
-    } catch (e) {
-      console.warn('Immediate marker add failed', e);
-    }
-
-    // Create shape entry WITHOUT waiting for address (store address after geocode)
     const tempId = `polygon_${Date.now()}`;
     const shapeData: ShapeData = {
       type: 'polygon',
-      // store as MapLibre [lng, lat] order
       coordinates: filteredPath.map(([lat, lng]) => [lng, lat]),
       id: tempId,
-      // address will be filled after reverse-geocode
       addedAt: new Date().toISOString(),
     };
 
-    // Calculate approximate area for polygon
     const area = calculatePolygonArea(filteredPath);
     shapeData.area = area;
 
-    // Replace any existing polygon with the new one
-    setDrawnShapes((prev) => {
-      const nonPolygonShapes = prev.filter((shape) => shape.type !== 'polygon');
+    // Replace existing polygon with new one
+    setDrawnShapes((previousShapes) => {
+      const nonPolygonShapes = previousShapes.filter((shape) => shape.type !== 'polygon');
       return [...nonPolygonShapes, shapeData];
     });
 
-    // remember that this shape id produced the current centroid so drawnShapes effect doesn't override marker
     lastCentroidShapeIdRef.current = tempId;
 
-    // Perform reverse geocoding asynchronously and update the shape & parent afterwards
-    (async () => {
-      try {
-        const centroidAddress = await getReverseGeocodedAddress(
-          centroid.lat,
-          centroid.lng
-        );
-        // update the shape with the address
-        setDrawnShapes((prev) =>
-          prev.map((s) => (s.id === tempId ? { ...s, address: centroidAddress } : s))
-        );
-        // update parent location with nicer address
-        try {
-          onLocationUpdate(centroid.lat, centroid.lng, centroidAddress);
-        } catch (err) {
-          console.warn('onLocationUpdate failed after geocode', err);
-        }
-      } catch (err) {
-        console.warn('Reverse geocode failed (async), centroid already shown', err);
-        try {
-          onLocationUpdate(
-            centroid.lat,
-            centroid.lng,
-            `${centroid.lat.toFixed(6)}, ${centroid.lng.toFixed(6)}`
-          );
-        } catch {}
-      }
-    })();
+    await performReverseGeocoding(tempId, centroid);
+    panMapToCentroid(centroid, filteredPath);
 
-    // Also pan map directly to centroid now (avoid setView effect interfering with user panning)
-    try {
-      if (mapRef.current) {
-        programmaticPanRef.current = true;
-
-        // Compute zoom as before
-        const coords = filteredPath as [number, number][];
-        const lats = coords.map((c) => c[0]);
-        const lngs = coords.map((c) => c[1]);
-        const latDiff = Math.max(...lats) - Math.min(...lats);
-        const lngDiff = Math.max(...lngs) - Math.min(...lngs);
-        const maxDiff = Math.max(latDiff, lngDiff);
-
-        let targetZoom = 20;
-        if (maxDiff > 0.01) targetZoom = 15;
-        else if (maxDiff > 0.005) targetZoom = 16;
-        else if (maxDiff > 0.002) targetZoom = 17;
-        else if (maxDiff > 0.001) targetZoom = 18;
-        else if (maxDiff > 0.0005) targetZoom = 19;
-
-        mapRef.current.flyTo({
-          center: [centroid.lng, centroid.lat],
-          zoom: targetZoom,
-          essential: true,
-          duration: 1000,
-        });
-      }
-    } catch (e) {
-      /* ignore */
-    }
-
-    // finalize drawing state
+    // Reset drawing state
     setCurrentPath([]);
     setActiveTool(null);
     setIsDrawing(false);
 
-    // notify parent synchronously that a shape was started/drawn (address may be updated later)
-    if (onShapeDrawn) {
-      try {
-        onShapeDrawn(shapeData);
-      } catch (e) {
-        /* ignore */
-      }
+    onShapeDrawn?.(shapeData);
+  };
+
+  /**
+   * Perform reverse geocoding for centroid and update shape
+   */
+  const performReverseGeocoding = async (
+    tempId: string,
+    centroid: { lat: number; lng: number }
+  ) => {
+    try {
+      const centroidAddress = await getReverseGeocodedAddress(centroid.lat, centroid.lng);
+      setDrawnShapes((previousShapes) =>
+        previousShapes.map((shape) => 
+          shape.id === tempId ? { ...shape, address: centroidAddress } : shape
+        )
+      );
+      onLocationUpdate(centroid.lat, centroid.lng, centroidAddress);
+    } catch (err) {
+      console.warn('Reverse geocode failed (async), centroid already shown', err);
+      onLocationUpdate(
+        centroid.lat,
+        centroid.lng,
+        `${centroid.lat.toFixed(6)}, ${centroid.lng.toFixed(6)}`
+      );
     }
+  };
+
+  /**
+   * Pan map to centroid with appropriate zoom level based on polygon size
+   */
+  const panMapToCentroid = (
+    centroid: { lat: number; lng: number },
+    filteredPath: [number, number][]
+  ) => {
+    if (!mapRef.current) return;
+
+    programmaticPanRef.current = true;
+
+    // Calculate bounding box to determine zoom level
+    const latitudes = filteredPath.map((coord) => coord[0]);
+    const longitudes = filteredPath.map((coord) => coord[1]);
+    const latDiff = Math.max(...latitudes) - Math.min(...latitudes);
+    const lngDiff = Math.max(...longitudes) - Math.min(...longitudes);
+    const maxDiff = Math.max(latDiff, lngDiff);
+
+    // Determine appropriate zoom level
+    let targetZoom = 20;
+    if (maxDiff > 0.01) targetZoom = 15;
+    else if (maxDiff > 0.005) targetZoom = 16;
+    else if (maxDiff > 0.002) targetZoom = 17;
+    else if (maxDiff > 0.001) targetZoom = 18;
+    else if (maxDiff > 0.0005) targetZoom = 19;
+
+    mapRef.current.flyTo({
+      center: [centroid.lng, centroid.lat],
+      zoom: targetZoom,
+      essential: true,
+      duration: 1000,
+    });
   };
 
   // Expose control methods to parent via externalFinishRef
   useEffect(() => {
     if (externalFinishRef) {
-      try {
-        externalFinishRef.current = {
-          finish: () => {
-            finishShape();
-          },
-          start: () => {
-            setActiveTool('polygon');
-            setIsDrawing(true);
-          },
-          clear: () => {
-            clearAllShapes();
-          },
-        };
-      } catch (e) {
-        /* ignore */
-      }
+      externalFinishRef.current = {
+        finish: () => {
+          void finishShape();
+        },
+        start: () => {
+          setActiveTool('polygon');
+          setIsDrawing(true);
+        },
+        clear: () => {
+          clearAllShapes();
+        },
+      };
     }
     return () => {
       if (externalFinishRef) {
-        try {
-          externalFinishRef.current = null;
-        } catch (e) {
-          /* ignore */
-        }
+        externalFinishRef.current = null;
       }
     };
   }, [externalFinishRef, finishShape]);
 
-  // Handle map movement for location updates
+  /**
+   * Handle map movement end for location updates
+   * Debounced reverse geocoding for center position
+   */
   const handleMapMoveEnd = () => {
     if (!mapRef.current || readOnly) return;
-
-    // If location is locked (e.g. after finishing polygon) or a polygon centroid exists, do not update
     if (locationLocked || polygonCentroid) return;
 
-    // Ignore moveend events which were caused by our own programmatic setView
+    // Skip if programmatic pan
     if (programmaticPanRef.current) {
       programmaticPanRef.current = false;
       return;
@@ -698,24 +686,23 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
 
     try {
       const mapCenter = mapRef.current.getCenter();
-      const lat = mapCenter.lat;
-      const lng = mapCenter.lng;
+      const latitude = mapCenter.lat;
+      const longitude = mapCenter.lng;
 
-      // Clear previous timeout
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
       }
 
-      // Debounce the location update
-      debounceTimeoutRef.current = window.setTimeout(async () => {
+      // Debounced reverse geocoding
+      debounceTimeoutRef.current = globalThis.setTimeout(async () => {
         try {
-          const address = await getReverseGeocodedAddress(lat, lng);
-          onLocationUpdate(lat, lng, address);
+          const address = await getReverseGeocodedAddress(latitude, longitude);
+          onLocationUpdate(latitude, longitude, address);
         } catch (error) {
           console.error('Error getting address:', error);
-          onLocationUpdate(lat, lng, `${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+          onLocationUpdate(latitude, longitude, `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
         }
-      }, 1000); // Increased debounce time to reduce re-renders
+      }, 1000);
     } catch (error) {
       console.error('Error in handleMapMoveEnd:', error);
     }
@@ -728,7 +715,7 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
       style: 'https://api.maptiler.com/maps/base-v4/style.json?key=YguiTF06mLtcpSVKIQyc',
-      center: [center[1], center[0]], // MapLibre uses [lng, lat]
+      center: [center[1], center[0]],
       zoom: 16,
       attributionControl: false,
       interactive: !readOnly,
@@ -736,73 +723,58 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
 
     mapRef.current = map;
 
-    // Set external ref if provided
     if (externalMapRef) {
-      try {
-        externalMapRef.current = map;
-      } catch (err) {
-        /* ignore */
-      }
+      externalMapRef.current = map;
     }
 
-    // Add navigation controls if not readonly
-    try {
-      if (!readOnly) {
-        // show zoom control, hide compass
-        map.addControl(
-          new maplibregl.NavigationControl({ showCompass: false }),
-          'bottom-left'
-        );
-      }
-    } catch (e) {}
+    // Add navigation controls for interactive mode
+    if (!readOnly) {
+      map.addControl(
+        new maplibregl.NavigationControl({ showCompass: false }),
+        'bottom-left'
+      );
+    }
 
-    // Setup event handlers
     map.on('moveend', handleMapMoveEnd);
 
+    // Handle movestart to unlock location if manually moved
     map.on('movestart', () => {
       try {
-        // If the user starts moving the map after we locked the location (e.g. after finishing polygon),
-        // treat this as an explicit user interaction and unlock the location so subsequent moves update location again.
-        // Only unlock location if there is no polygon centroid (i.e. selection is not fixed by a marker)
         if (locationLocked && !programmaticPanRef.current) {
           if (!polygonCentroid) {
             setLocationLocked(false);
           }
-          // if polygonCentroid exists, keep locationLocked=true so marker/selection remains fixed
         }
-        if (typeof onMapMoveStart === 'function') {
-          onMapMoveStart();
-        }
-      } catch (e) {
-        /* ignore */
+        onMapMoveStart?.();
+      } catch (error) {
+        console.log(error);
       }
     });
 
-    // Handle map clicks for polygon drawing
-    map.on('click', (e) => {
+    // Handle click for polygon drawing
+    map.on('click', (event) => {
       try {
-        const { lat, lng } = e.lngLat;
+        const { lat, lng } = event.lngLat;
         if (activeToolRef.current === 'polygon' && isDrawingRef.current) {
           handlePathClick(lat, lng);
         }
       } catch (err) {
-        /* ignore */
+        console.log(err);
       }
     });
 
-    // Wait for map load and style readiness before marking ready
+    // Set map ready state when loaded
     map.once('load', () => {
       if (map.isStyleLoaded()) {
         setMapReady(true);
       } else {
-        // If style not ready yet, wait for styledata
         map.once('styledata', () => {
           setMapReady(true);
         });
       }
     });
 
-    // Initial address load
+    // Initial reverse geocode for non-readonly mode
     if (!readOnly) {
       setTimeout(() => handleMapMoveEnd(), 2000);
     }
@@ -813,12 +785,11 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
     };
   }, []);
 
-  // Update map center when center prop changes (for polygon centroid)
+  // Update map center when center prop changes
   useEffect(() => {
     if (mapRef.current && polygonCentroid) {
-      // Only update if we have a polygon centroid
-      const [lat, lng] = polygonCentroid;
-      mapRef.current.setCenter([lng, lat]);
+      const [latitude, longitude] = polygonCentroid;
+      mapRef.current.setCenter([longitude, latitude]);
     }
   }, [polygonCentroid]);
 
@@ -826,12 +797,11 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
   useEffect(() => {
     if (!mapRef.current || !shapesVisible || !mapReady) return;
 
-    // Guard: wait for style to be loaded before rendering shapes
+    // Wait for style to load
     if (!mapRef.current.isStyleLoaded()) {
-      // Wait for style to be ready, then clean up any old polygon layers/sources and add current shapes
       mapRef.current.once('styledata', () => {
-        if (mapRef.current && mapRef.current.isStyleLoaded()) {
-          // First, remove all existing polygon layers/sources that we manage
+        if (mapRef.current?.isStyleLoaded()) {
+          // Clean up existing layers
           polygonLayersRef.current.forEach((layerId) => {
             try {
               if (mapRef.current!.getLayer(layerId)) {
@@ -843,13 +813,13 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
               if (mapRef.current!.getSource(layerId)) {
                 mapRef.current!.removeSource(layerId);
               }
-            } catch (e) {
-              // Ignore errors during cleanup
+            } catch (error) {
+              console.log(error);
             }
           });
           polygonLayersRef.current = [];
 
-          // Then add all current shapes
+          // Re-add all shapes
           drawnShapes.forEach((shape) => {
             if (shape.type === 'polygon') {
               addPolygonToMap(shape);
@@ -860,8 +830,7 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
       return;
     }
 
-    // Style already loaded: ensure old layers removed, then add current shapes
-    // (cleanup in case sources/layers exist from prior renders)
+    // Clean up existing layers
     polygonLayersRef.current.forEach((layerId) => {
       try {
         if (!mapRef.current) return;
@@ -874,12 +843,13 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
         if (mapRef.current.getSource(layerId)) {
           mapRef.current.removeSource(layerId);
         }
-      } catch (e) {
-        /* ignore */
+      } catch (error) {
+        console.log(error);
       }
     });
     polygonLayersRef.current = [];
 
+    // Add shapes to map (skip in readonly mode)
     drawnShapes.forEach((shape) => {
       if (readOnly) return;
       if (shape.type === 'polygon') {
@@ -888,78 +858,62 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
     });
   }, [drawnShapes, shapesVisible, readOnly]);
 
-  // Render current drawing path
-  useEffect(() => {
-    if (!mapRef.current || !isDrawing || currentPath.length < 1) {
-      // Remove temporary drawing layer if exists
-      if (mapRef.current?.getLayer('temp-polygon-line')) {
-        mapRef.current.removeLayer('temp-polygon-line');
-      }
-      if (mapRef.current?.getSource('temp-polygon')) {
-        mapRef.current.removeSource('temp-polygon');
-      }
-      if (mapRef.current?.getLayer('temp-polygon-vertices')) {
-        mapRef.current.removeLayer('temp-polygon-vertices');
-      }
-      if (mapRef.current?.getSource('temp-polygon-vertices')) {
-        mapRef.current.removeSource('temp-polygon-vertices');
-      }
-      return;
+  /**
+   * Helper to remove temporary drawing layers
+   */
+  const removeTempDrawingLayers = (map: maplibregl.Map) => {
+    if (map.getLayer('temp-polygon-line')) {
+      map.removeLayer('temp-polygon-line');
     }
+    if (map.getSource('temp-polygon')) {
+      map.removeSource('temp-polygon');
+    }
+    if (map.getLayer('temp-polygon-vertices')) {
+      map.removeLayer('temp-polygon-vertices');
+    }
+    if (map.getSource('temp-polygon-vertices')) {
+      map.removeSource('temp-polygon-vertices');
+    }
+  };
 
-    const map = mapRef.current;
-    const pathCoords = currentPath.map(([lat, lng]) => [lng, lat]);
-    const coordinates =
-      pathCoords.length >= 2 ? [...pathCoords, pathCoords[0]] : pathCoords;
+  /**
+   * Helper to update or create polygon line layer
+   */
+  const updatePolygonLineLayer = (map: maplibregl.Map, geojson: any) => {
+    const source = map.getSource('temp-polygon');
+    if (source) {
+      (source as maplibregl.GeoJSONSource).setData(geojson);
+    } else {
+      map.addSource('temp-polygon', {
+        type: 'geojson',
+        data: geojson,
+      });
 
-    if (pathCoords.length >= 2) {
-      const geojson = {
-        type: 'Feature' as const,
-        geometry: {
-          type: 'LineString' as const,
-          coordinates,
+      map.addLayer({
+        id: 'temp-polygon-line',
+        type: 'line',
+        source: 'temp-polygon',
+        paint: {
+          'line-color': '#f59e0b',
+          'line-width': 3,
+          'line-opacity': 0.7,
+          'line-dasharray': [2, 2],
         },
-        properties: {},
-      };
-
-      if (!map.getSource('temp-polygon')) {
-        map.addSource('temp-polygon', {
-          type: 'geojson',
-          data: geojson as any,
-        });
-
-        map.addLayer({
-          id: 'temp-polygon-line',
-          type: 'line',
-          source: 'temp-polygon',
-          paint: {
-            'line-color': '#f59e0b',
-            'line-width': 3,
-            'line-opacity': 0.7,
-            'line-dasharray': [2, 2],
-          },
-        });
-      } else {
-        (map.getSource('temp-polygon') as maplibregl.GeoJSONSource).setData(
-          geojson as any
-        );
-      }
+      });
     }
-    // Create/update a GeoJSON source for vertices
-    const vertexFeatures = pathCoords.map((c) => ({
-      type: 'Feature',
-      geometry: { type: 'Point', coordinates: c },
-      properties: {},
-    }));
-    const verticesGeoJSON = {
-      type: 'FeatureCollection',
-      features: vertexFeatures,
-    };
+  };
 
-    if (!map.getSource('temp-polygon-vertices')) {
+  /**
+   * Helper to update or create vertices layer
+   */
+  const updateVerticesLayer = (map: maplibregl.Map, verticesGeoJSON: any) => {
+    const verticesSource = map.getSource('temp-polygon-vertices');
+    if (verticesSource) {
+      (verticesSource as maplibregl.GeoJSONSource).setData(verticesGeoJSON);
+    } else {
       map.addSource('temp-polygon-vertices', {
         type: 'geojson',
-        data: verticesGeoJSON as any,
+        data: verticesGeoJSON,
       });
 
       map.addLayer({
@@ -973,11 +927,50 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
           'circle-stroke-width': 1,
         },
       });
-    } else {
-      (map.getSource('temp-polygon-vertices') as maplibregl.GeoJSONSource).setData(
-        verticesGeoJSON as any
-      );
     }
+  };
+
+  // Render current drawing path
+  useEffect(() => {
+    if (!mapRef.current || !isDrawing || currentPath.length < 1) {
+      if (mapRef.current) {
+        removeTempDrawingLayers(mapRef.current);
+      }
+      return;
+    }
+
+    const map = mapRef.current;
+    const pathCoords = currentPath.map(([lat, lng]) => [lng, lat]);
+    const coordinates =
+      pathCoords.length >= 2 ? [...pathCoords, pathCoords[0]] : pathCoords;
+
+    // Draw line connecting points
+    if (pathCoords.length >= 2) {
+      const geojson = {
+        type: 'Feature' as const,
+        geometry: {
+          type: 'LineString' as const,
+          coordinates,
+        },
+        properties: {},
+      };
+
+      updatePolygonLineLayer(map, geojson);
+    }
+
+    // Draw vertices
+    const vertexFeatures = pathCoords.map((coord) => ({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: coord },
+      properties: {},
+    }));
+    
+    const verticesGeoJSON = {
+      type: 'FeatureCollection',
+      features: vertexFeatures,
+    };
+
+    updateVerticesLayer(map, verticesGeoJSON);
   }, [isDrawing, currentPath]);
 
   // Render markers (readonly marker and polygon centroid marker)
@@ -987,53 +980,44 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
     const renderMarkers = () => {
       if (!mapRef.current) return;
 
-      // console.log('Rendering markers - readOnly:', readOnly, 'polygonCentroid:', polygonCentroid);
-
-      // If we already added an immediate centroid marker and it's at the same position,
-      // keep it to avoid a visual jump. Compare approx equality within epsilon.
-      const eps = 1e-6;
+      const epsilon = 1e-6;
+      // Check if marker position needs update
       if (polygonCentroid && markersRef.current.length > 0) {
         try {
-          const existing = markersRef.current[0];
-          const pos = existing.getLngLat(); // {lng, lat}
-          const [plat, plng] = polygonCentroid;
-          if (Math.abs(pos.lat - plat) < eps && Math.abs(pos.lng - plng) < eps) {
-            // console.log('Existing marker matches centroid — reusing to avoid jump');
-            return; // nothing to do
+          const existingMarker = markersRef.current[0];
+          const position = existingMarker.getLngLat();
+          const [polygonLatitude, polygonLongitude] = polygonCentroid;
+          if (Math.abs(position.lat - polygonLatitude) < epsilon && 
+              Math.abs(position.lng - polygonLongitude) < epsilon) {
+            return;
           }
-        } catch (e) {
-          // fall through to re-create markers
+        } catch (error) {
+          console.log(error);
         }
       }
 
-      // Clear existing markers
+      // Remove existing markers
       markersRef.current.forEach((marker) => marker.remove());
       markersRef.current = [];
 
-      // If a polygon centroid exists, prefer showing a marker at the centroid
+      // Add marker based on mode
       if (polygonCentroid) {
-        // console.log('Adding marker at polygon centroid:', polygonCentroid);
-        // polygonCentroid is [lat, lng], so we need [lng, lat] for MapLibre
         addMarkerToMap(polygonCentroid[1], polygonCentroid[0], locatePropertyIcon);
       } else if (readOnly) {
-        // No polygon centroid available, fall back to center for readonly view
-        // console.log('Adding readonly marker at center (fallback):', center);
         addMarkerToMap(center[1], center[0], locatePropertyIcon);
       }
     };
 
-    // For MapLibre, we need to wait for both 'load' and 'style.load' events
+    // Wait for map to be fully loaded
     if (mapRef.current.loaded() && mapRef.current.isStyleLoaded()) {
       renderMarkers();
     } else if (mapRef.current.loaded()) {
-      // Map is loaded but style might not be
       if (mapRef.current.isStyleLoaded()) {
         renderMarkers();
       } else {
         mapRef.current.once('style.load', renderMarkers);
       }
     } else {
-      // Map not loaded yet
       mapRef.current.once('load', () => {
         if (mapRef.current?.isStyleLoaded()) {
           renderMarkers();
@@ -1046,11 +1030,6 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
 
   // Cleanup
   useEffect(() => {
-    // Reference onClearAll so TypeScript doesn't warn if it's unused
-    if (typeof onClearAll === 'undefined') {
-      // noop
-    }
-
     return () => {
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
@@ -1058,17 +1037,12 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
     };
   }, []);
 
-  // Note: we avoid forcing setView on every center change to not fight user panning.
-  // finishShape will pan the map to centroid when needed.
-
-  // Note: movestart is wired in the MapContainer ref callback if onMapMoveStart is provided
-
   return (
     <div className="location-map-container">
       <div
         ref={mapContainerRef}
         className="location-leaflet-map"
-        style={{ width: '100%', height: '100%' }}
+        style={{ width: '100%', height: '100%', borderRadius: '20px' }}
       />
 
       {/* Address overlay for readOnly view */}
@@ -1078,8 +1052,9 @@ const LocationMapWithDrawing: React.FC<LocationMapWithDrawingProps> = ({
         </div>
       )}
 
-      {/* Selection overlay: only when not readOnly and not actively drawing and no polygon centroid exists. This overlay is a DOM element
-            centered over the map and moves visually with the map (user pans map to change selected coordinates). */}
+      {/* Selection overlay: only when not readOnly and not actively drawing and no polygon centroid exists. 
+          This overlay is a DOM element centered over the map and moves visually with the map 
+          (user pans map to change selected coordinates). */}
       {!readOnly && !isDrawing && activeTool === null && !polygonCentroid && (
         <div className="center-pin">
           <img

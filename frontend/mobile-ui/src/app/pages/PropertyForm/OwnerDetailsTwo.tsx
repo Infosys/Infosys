@@ -6,14 +6,17 @@ import Typography from '@mui/material/Typography';
 import OwnerCardDetail from '../../features/PropertyForm/components/OwnerDetail/OwnerCardDetail';
 import { useFormMode } from '../../../context/FormModeContext';
 import { usePropertyForm } from '../../../context/PropertyFormContext';
-// import type { Owner } from '../../../context/PropertyFormContext';
 import { useOwnerDetailsLocalization } from '../../../services/AgentLocalisation/localisation-OwnerDetailsTwo';
 import StepHeader from '../../features/Agent/components/StepHeader';
 import { useLocalization } from '../../../services/AgentLocalisation/formLocalisation';
 import { verifyButtonSx } from './styles/sharedStyles';
 import Button from '@mui/material/Button';
 import type { AlertType } from '../../models/AlertType.model';
-import { useDeleteOwnerMutation, useGetOwnersByPropertyIdQuery, type Owner } from '../../../redux/apis/ownerApi';
+import {
+  useDeleteOwnerMutation,
+  useGetOwnersByPropertyIdQuery,
+  type Owner,
+} from '../../../redux/apis/ownerApi';
 import { NotificationPopup } from '../../components/Popup/NotificationPopup';
 
 // Main component for displaying, adding, and editing multiple property owners
@@ -25,6 +28,7 @@ const OwnerDetailsTwo: React.FC = () => {
   const [deleteOwner] = useDeleteOwnerMutation();
 
   const propertyId = formData.id;
+  const applicationId = localStorage.getItem('applicationLogId') || localStorage.getItem('applicationId') || '';
 
   const {
     data: ownersData,
@@ -36,15 +40,17 @@ const OwnerDetailsTwo: React.FC = () => {
 
   // List of owners fetched from API
   const owners = ownersData?.data ?? [];
+  // Calculate total ownership percentage
+  const totalOwnership = owners.reduce(
+    (sum, owner) => sum + (owner.OwnershipShare || 0),
+    0
+  );
+  const remainingOwnership = 100 - totalOwnership;
   const {
     noOwnersFoundText,
     addOwnerText,
     addOwnerRequiredAlert,
     // draftSavedAlert,
-    ownerNameLabel,
-    mobileNumberLabel,
-    aadhaarLabel,
-    emailLabel,
     guardianLabel,
     // guardianRelationshipLabel,
     primaryOwnerText,
@@ -126,25 +132,31 @@ const OwnerDetailsTwo: React.FC = () => {
 
   // Handle edit owner action (navigate to owner details form)
   const handleEditOwner = (owner: Owner) => {
-    navigate('/property-form/owner-details', { state: { editOwner: owner } });
+    navigate('/property-form/owner-details', { 
+      state: { editOwner: owner, editMode: true }, 
+    });
   };
 
   // Handle delete owner action (remove from form context)
   const handleDeleteOwner = async (id: string) => {
-  try {
-    await deleteOwner(id).unwrap();
-    
-    // Wait for refetch to get fresh data
-    const { data: freshOwnersData } = await refetch();
-    const freshOwners = freshOwnersData?.data ?? [];
-    
-    // Update form with fresh data from server
-    updateForm({ owners: freshOwners as Owner[] });
-  } catch (error) {
-    showErrorPopup('Failed to delete owner');
-    console.error('Delete owner error:', error);
-  }
-};
+    try {
+      await deleteOwner({
+        id,
+        applicationId,
+        isVerifying: mode === 'verify',
+      }).unwrap();
+
+      // Wait for refetch to get fresh data
+      const { data: freshOwnersData } = await refetch();
+      const freshOwners = freshOwnersData?.data ?? [];
+
+      // Update form with fresh data from server
+      updateForm({ owners: freshOwners });
+    } catch (error) {
+      showErrorPopup('Failed to delete owner');
+      console.error('Delete owner error:', error);
+    }
+  };
 
   // Handle add owner button click (navigate to owner details form)
   const handleAddOwner = () => {
@@ -190,10 +202,52 @@ const OwnerDetailsTwo: React.FC = () => {
     updateForm({ owners });
   };
 
+  // Helper function to render owner list or empty state
+  const renderOwnerList = () => {
+    if (isLoading) {
+      return (
+        <Typography variant="body1" sx={styles.noOwnersText}>
+          Loading owners...
+        </Typography>
+      );
+    }
+
+    if (owners.length === 0) {
+      return (
+        <Typography variant="body1" sx={styles.noOwnersText}>
+          {noOwnersFoundText}
+        </Typography>
+      );
+    }
+
+    return owners.map((owner, idx) => (
+      <OwnerCardDetail
+        key={owner.ID}
+        name={owner.Name}
+        isPrimary={idx === 0}
+        onDelete={() => handleDeleteOwner(owner.ID)}
+        isDetailed={true}
+        aadhar={owner.AdhaarNo.toString()}
+        mobile={owner.ContactNo}
+        email={owner.Email}
+        guardian={owner.Guardian}
+        guardianRelationship={owner.GuardianType}
+        guardianLabel={guardianLabel}
+        primaryOwnerText={primaryOwnerText}
+        onEdit={() => handleEditOwner(owner)}
+      />
+    ));
+  };
+
   // Handle submit button click (validate and go to next step)
   const handleSubmit = () => {
     if (owners.length === 0) {
       showErrorPopup(addOwnerRequiredAlert);
+      return;
+    }
+
+    if (totalOwnership !== 100) {
+      showErrorPopup('Total ownership percentage must be exactly 100%');
       return;
     }
     navigate('/property-form/property-address');
@@ -211,7 +265,6 @@ const OwnerDetailsTwo: React.FC = () => {
       />
       <Box sx={styles.container}>
         {/* Header area (StepHeader receives props exactly as before) */}
-        <Box sx={styles.headerWrapper}>
           <StepHeader
             title={`${
               mode === `${newPropertyFormTitle}`
@@ -226,71 +279,45 @@ const OwnerDetailsTwo: React.FC = () => {
             previousText={previousText}
             saveDraftText={saveDraftText}
           />
-        </Box>
 
         <Box sx={styles.formContent}>
-          {isLoading ? (
-            <Typography variant="body1" sx={styles.noOwnersText}>
-              Loading owners...
-            </Typography>
-          ) : owners.length > 0 ? (
-            owners.map((owner, idx) => (
-              <OwnerCardDetail
-                key={owner.ID}
-                name={owner.Name}
-                isPrimary={idx === 0}
-                onDelete={() => handleDeleteOwner(owner.ID)}
-                onViewOwners={() => {}}
-                isDetailed={true}
-                aadhar={owner.AdhaarNo.toString()}
-                mobile={owner.ContactNo}
-                email={owner.Email}
-                guardian={owner.Guardian}
-                guardianRelationship={owner.GuardianType}
-                nameText={ownerNameLabel}
-                mobileNumberLabel={mobileNumberLabel}
-                aadhaarLabel={aadhaarLabel}
-                emailLabel={emailLabel}
-                guardianLabel={guardianLabel}
-                primaryOwnerText={primaryOwnerText}
-                onEdit={() => handleEditOwner(owner)}
-              />
-            ))
-          ) : (
-            <Typography variant="body1" sx={styles.noOwnersText}>
-              {noOwnersFoundText}
-            </Typography>
-          )}
+          {renderOwnerList()}
         </Box>
 
-
-       <Box sx={{
-          ...styles.formSubmitWrapper,
-          justifyContent: 'space-between',
-          paddingLeft: '4%',
-        }}>
+        <Box
+          sx={{
+            ...styles.formSubmitWrapper,
+            justifyContent: 'space-between',
+            paddingLeft: '4%',
+          }}
+        >
           <Button
             onClick={handleAddOwner}
             startIcon={<AddIcon />}
             variant="contained"
             disableElevation
+            disabled={remainingOwnership <= 0}
             sx={{
               textTransform: 'none',
-              backgroundColor: '#f7e4db',
-              color: '#333333',
+              backgroundColor: remainingOwnership <= 0 ? '#d3d3d3' : '#f7e4db',
+              color: remainingOwnership <= 0 ? '#888' : '#333333',
               fontWeight: 600,
               borderRadius: '12px',
               padding: '10px 16px',
               width: '46%',
               '&:hover': {
-                backgroundColor: '#f0dacd',
+                backgroundColor: remainingOwnership <= 0 ? '#d3d3d3' : '#f0dacd',
+              },
+              '&:disabled': {
+                backgroundColor: '#d3d3d3',
+                color: '#888',
               },
             }}
           >
             {addOwnerText}
           </Button>
           <Button onClick={handleSubmit} sx={verifyButtonSx} variant="contained">
-            {mode === 'verify' ? 'Verify' :nextButtonText}
+            {mode === 'verify' ? 'Verify' : nextButtonText}
           </Button>
         </Box>
       </Box>

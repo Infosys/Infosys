@@ -1,0 +1,81 @@
+/* Unique vc- prefix to avoid overrides */
+
+.vc-card {
+  width: 300px;
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-sizing: border-box;
+  background: #F2F2F2;
+  /* border: 1px solid rgba(0,0,0,0.06); */
+  /* box-shadow: 0 1px 4px rgba(0,0,0,0.04); */
+  font-family: Roboto, Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #222;
+  overflow: hidden;
+}
+
+/* top title */
+.vc-top {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.vc-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0b7b3c; /* green title */
+  margin: 0;
+  line-height: 1;
+}
+
+/* body layout: two columns */
+.vc-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 6px;
+  background: transparent;
+}
+
+/* left labels */
+.vc-left-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.vc-label {
+  font-size: 12px;
+  color: #000000;
+  margin: 0;
+  line-height: 1;
+}
+
+/* right dates */
+.vc-right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.vc-date {
+  font-size: 12px;
+  color: rgba(0,0,0,0.9);
+  font-weight: 600;
+  margin: 0;
+  line-height: 1;
+}
+
+/* higher specificity so common global rules won't easily override */
+.vc-card .vc-title,
+.vc-card .vc-label,
+.vc-card .vc-date {
+  -webkit-font-smoothing: antialiased;
+}

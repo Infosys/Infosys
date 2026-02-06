@@ -44,6 +44,8 @@ export interface CreateAmenityResponse {
 
 export interface UpdateAmenityRequest {
   amenityId: string;
+  applicationId: string;
+  isVerifying: boolean;
   property_id: string;
   type: string[];
   Description?: string;
@@ -135,8 +137,8 @@ export const amenitiesApi = apiSlice.injectEndpoints({
 
     // Update an existing amenity by amenity ID
     updateAmenity: builder.mutation<UpdateAmenityResponse, UpdateAmenityRequest>({
-      query: ({ amenityId, ...data }) => ({
-        url: `/v1/amenities/${amenityId}`,
+      query: ({ amenityId, applicationId, isVerifying, ...data }) => ({
+        url: `/v1/amenities/${amenityId}/${applicationId}?isVerifying=${isVerifying}`,
         method: 'PUT',
         body: {
           property_id: data.property_id,

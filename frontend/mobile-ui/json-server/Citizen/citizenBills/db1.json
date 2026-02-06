@@ -1,0 +1,122 @@
+{
+    "bills": {
+        "billsByProperty": {
+            "PROP-001": [
+                {
+                    
+                    "address": {
+                        "street": "Maple Street",
+                        "wardNo": "Ward 3",
+                        "zoneNo": "2",
+                        "blockNo": "Block A",
+                        "pincode": "560001",
+                        "locality": "Central Park",
+                        "electionWard": "EW-17",
+                        "secretariatWard": "SW-14",
+                        "isCorrespondenceAddressDifferent": false
+                    },
+                    "amount": 15000,
+                    "billName": "property_tax",
+                    "dueDate": "2025-12-31",
+                    "locationData": {
+                        "address": "Vittal Mallya Road, Richmond Town, Bengaluru, Karnataka",
+                        "coordinates": {
+                            "lat": 12.9716,
+                            "lng": 77.5946
+                        },
+                        "timestamp": "2025-10-23T09:42:25.634Z"
+                    },
+                    "overdue": false,
+                    "type": "unpaid"
+                },
+                {
+                    "address": {
+                        "street": "Maple Street",
+                        "wardNo": "Ward 3",
+                        "zoneNo": "2",
+                        "blockNo": "Block A",
+                        "pincode": "560001",
+                        "locality": "Central Park",
+                        "electionWard": "EW-17",
+                        "secretariatWard": "SW-14",
+                        "isCorrespondenceAddressDifferent": false
+                    },
+                    "amount": 1250,
+                    "billName": "water",
+                    "locationData": {
+                        "address": "Vittal Mallya Road, Richmond Town, Bengaluru, Karnataka",
+                        "coordinates": {
+                            "lat": 12.9716,
+                            "lng": 77.5946
+                        },
+                        "timestamp": "2025-10-23T09:42:25.634Z"
+                    },
+                    "type": "paid",
+                    "paidDate": "2025-09-14"
+                }
+            ]
+        },
+        "properties": [
+            {
+                "address": {
+                    "street": "Maple Street",
+                    "wardNo": "Ward 3",
+                    "zoneNo": "2",
+                    "blockNo": "Block A",
+                    "pincode": "560001",
+                    "locality": "Central Park",
+                    "electionWard": "EW-17",
+                    "secretariatWard": "SW-14",
+                    "isCorrespondenceAddressDifferent": false
+                },
+                "id": "PROP-001",
+                "locationData": {
+                    "address": "Vittal Mallya Road, Richmond Town, Bengaluru, Karnataka",
+                    "coordinates": {
+                        "lat": 12.9716,
+                        "lng": 77.5946
+                    },
+                    "timestamp": "2025-10-23T09:42:25.634Z"
+                },
+                "name": "Apartment"
+            }
+        ]
+    },
+    "bill_history": {
+        "paidBillsHistory": [
+            {
+                "bills": [
+                    {
+                        "amount": 2500,
+                        "date": "2024-09-25",
+                        "name": "Water Bill"
+                    },
+                    {
+                        "amount": 1300,
+                        "date": "2024-09-10",
+                        "name": "Electricity Bill"
+                    }
+                ],
+                "month": "September 2024"
+            }
+        ],
+        "totalUnpaidAmount": 8200,
+        "unpaidBills": [
+            {
+                "actions": [
+                    "view_location",
+                    "view",
+                    "download",
+                    "pay_now"
+                ],
+                "amount": 8200,
+                "billNo": "PROP-TAX-2024-002",
+                "billType": "Property Tax",
+                "dueDate": "2024-11-15",
+                "id": "BILL-2024-003",
+                "overdue": true,
+                "status": "unpaid"
+            }
+        ]
+    }
+}

@@ -173,6 +173,7 @@ export function readJsonFile(file: File): Promise<any> {
       try {
         resolve(JSON.parse(String(reader.result)));
       } catch (e) {
+        console.error('Failed to parse JSON from file', e);
         reject(new Error('Invalid JSON'));
       }
     };

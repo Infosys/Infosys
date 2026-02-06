@@ -138,7 +138,8 @@ export const filterProperties = (properties: PropertyItem[], filterType: 'all' |
     case 'new':
       return properties
         .filter(property => !property.isDraft)
-        .sort((a, b) => new Date(b.createdDate || '').getTime() - new Date(a.createdDate || '').getTime());
+        .sort((a, b) => new Date(b.createdDate || '').getTime() - new Date(a.createdDate || '').getTime())
+        .slice(0, 5); // Return only the 5 most recent new properties
     case 'reviewed':
       return properties.filter(property => property.isVerified && !property.isDraft);
     case 'draft':

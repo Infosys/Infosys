@@ -41,7 +41,11 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   <Dialog
     open={open}
     onClose={onClose || onReject} // Close dialog on backdrop click or close button
-    PaperProps={{ sx: confirmDialogPaperStyle }}
+    slotProps={{
+      paper: {
+        sx: confirmDialogPaperStyle
+      }
+    }}
     maxWidth="xs"
     fullWidth
     hideBackdrop={false}

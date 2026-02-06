@@ -2,12 +2,12 @@
   background: #f5f5f5;
   min-height: 100vh;
   padding: 0;
-  font-family: 'Roboto', Arial, sans-serif;
+  font-family: "Roboto", Arial, sans-serif;
   position: relative;
 }
 
 .form-subtitle {
-   font-size: 16px;
+  font-size: 16px;
   color: black;
   margin: 4px 0 0 0;
   font-weight: 300;
@@ -24,7 +24,7 @@
 }
 
 .language-btn {
-  background-color: #2196F3;
+  background-color: #2196f3;
   color: white;
   border: none;
   padding: 8px 16px;
@@ -36,24 +36,26 @@
 }
 
 .language-btn:hover {
-  background-color: #1976D2;
+  background-color: #1976d2;
 }
 
-span.back-text{
+span.back-text {
   color: #c84c03;
   font-weight: 700; /* make back-text bold */
 }
 
 /* c84c03 */
 .verification-top-header {
-  background: #F7E4DB;
+  background: #f7e4db;
   padding: 18px 24px 12px 24px;
   /* border-radius: 0 0 18px 18px; */
   /* margin: 0 auto 12px;  */
   position: relative;
-  width: 412px; /* fixed width as requested */
+  /* width: 412px;  */
+  /* fixed width as requested */
   height: 153px; /* fixed height as requested */
   box-sizing: border-box;
+  width: "100%";
 }
 
 /* Hide Leaflet zoom controls for the Property Location view (citizen) to match design */
@@ -129,14 +131,12 @@ span.back-text{
   padding: 8px;
 }
 
-
 /* Card styles */
 .card {
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 0 6px #e0e0e0;
   border: 1px solid rgb(168, 165, 165);
-
 }
 
 /* Address Progress Section */
@@ -455,23 +455,17 @@ span.back-text{
   box-shadow: 0 0 2px #efefef;
 }
 
-/* Continue Button */
-.action-section {
-  margin-top: 18px;
-  text-align: end;
-  margin-right: 3%;
-}
 .continue-button.orange-btn {
   /* margin-left: 30%; */
   margin-bottom: 2%;
-  max-width: 40%;
+  max-width: 48%;
   height: 40px;
   align-content: center !important;
   background: #c84c03;
   color: #fff;
   border: none;
   border-radius: 10px;
-  padding: 13px 0;
+  padding: 12px 8px;
   font-size: 16px;
   font-weight: 550;
   width: 100%;
@@ -513,7 +507,7 @@ span.back-text{
   align-items: center;
   justify-content: center;
   padding: 8px 6px;
-  background: #EEEEEE; /* requested color */
+  background: #eeeeee; /* requested color */
   border: 1px solid #dee2e6;
   border-radius: 8px;
   font-size: 0.875rem;
@@ -552,25 +546,19 @@ span.back-text{
   top: 24px; /* slightly below top of map */
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(255,255,255,0.95);
+  background: rgba(255, 255, 255, 0.95);
   padding: 8px 12px;
   border-radius: 8px;
   font-weight: 600;
   color: #222;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
   max-width: 300px;
   text-align: center;
   z-index: 2050;
 }
 
-@media (max-width: 480px){
-  .map-provider-buttons{
-    padding: 0 4% 0 4% !important;
-  }
-  .map-container-main{
-    padding: 0 4% 0 4% !important;
-  }
-  .map-container-main .leaflet-container{
+@media (max-width: 480px) {
+  .map-container-main .leaflet-container {
     border-radius: 12px;
   }
 }

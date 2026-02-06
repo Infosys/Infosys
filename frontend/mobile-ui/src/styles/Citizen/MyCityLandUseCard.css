@@ -1,0 +1,130 @@
+/* Prefix "luc-" to avoid collisions and increase specificity */
+
+.luc-card {
+  border-radius: 10px;
+  background: #f5f5f5;
+  border: 1.5px solid #e2e2e2;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-sizing: border-box;
+  font-family: Roboto, Arial, sans-serif;
+  color: #222;
+  overflow: visible;
+  width: 360px;
+  height: 100px;
+}
+
+/* Top row: name + chip */
+.luc-card .luc-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.luc-card .luc-name {
+  font-weight: 500;
+  font-size: 16px;
+  color: #222;
+  margin: -10px 0 0 0;
+  margin-left: 2px;
+  font-family: 'Roboto';
+}
+
+.luc-card .luc-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 0 8px;
+  font-size: 12px;
+  background: #ffffff;
+  border: 1px solid #cccccc;
+  border-radius: 6px;
+  color: #000000;
+  box-sizing: border-box;
+  margin-top: -10px;
+}
+
+/* Info text */
+.luc-card .luc-info {
+  font-size: 14px;
+  color: #666;
+  margin-top: 8px;
+  margin-bottom: 4px;
+}
+
+/* Type row: colored tag + info icon */
+.luc-card .luc-type-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.luc-card .luc-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.luc-card .luc-tag-text {
+  color: #fff;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 1.2;
+  text-transform: capitalize;
+}
+
+/* Type-specific colors */
+.luc-card .luc-tag.residential { background: #C84C0E; height: 20px; width: 91px; border-radius: 10px; margin-top: -2px; }
+.luc-card .luc-tag.commercial  { background: #92731C; height: 20px; width: 91px; border-radius: 10px; margin-top: -2px;}
+.luc-card .luc-tag.other       { background: #888888; }
+
+/* info icon */
+.luc-card .luc-info-icon {
+  color: #bbb;
+  font-size: 16px;
+}
+
+/* Registration date row */
+.luc-card .luc-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.luc-card .luc-meta-label {
+  color: #000000;
+  font-size: 14px;
+  margin-top: -4px;
+}
+
+.luc-card .luc-meta-value {
+  color: #222;
+  font-size: 14px;
+  font-style: italic;
+  margin-top: -4px;
+}
+
+/* Description */
+.luc-card .luc-desc {
+  color: #888;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+/* Defensive specificity to reduce accidental overrides by other files */
+body .luc-card,
+body .luc-card .luc-name,
+body .luc-card .luc-chip,
+body .luc-card .luc-tag,
+body .luc-card .luc-info-icon {
+  -webkit-font-smoothing: antialiased;
+}

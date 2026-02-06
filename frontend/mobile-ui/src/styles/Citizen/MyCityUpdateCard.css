@@ -1,0 +1,143 @@
+/* Prefix "muc-" (Metro Update Card) to avoid collisions and increase specificity */
+
+.muc-card {
+  width: 100%;
+  max-width: 380px;
+  border-radius: 12px;
+  padding: 16px;
+  box-sizing: border-box;
+  background: #FBEEE8 !important; /* Light orange/yellow background */
+  border: 1px solid rgba(255, 193, 7, 0.12);
+  font-family: 'Roboto', Arial, sans-serif;
+  color: #222;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+/* Header section */
+.muc-card .muc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.muc-card .muc-icon-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.muc-card .muc-main-icon {
+  /* For inline SVG MUI icons fallback (kept for compatibility) */
+  color: #F57C00;
+  font-size: 20px;
+}
+
+/* When using custom SVGs via <img>, remove any white background box and size appropriately */
+.muc-card img.muc-main-icon {
+  background: transparent !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+}
+
+.muc-card .muc-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #000000;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.muc-card .muc-info-icon {
+  color: #000000;
+  font-size: 18px;
+  margin-top: 2px;
+}
+
+/* Description */
+.muc-card .muc-description {
+  font-size: 0.875rem;
+  color: #333333;
+  line-height: 1.4;
+  margin: 0 0 14px 0;
+}
+
+/* Date section */
+.muc-card .muc-date-section {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.muc-card .muc-date-icon {
+  color: #666666;
+  font-size: 16px;
+   margin-left: 30px;
+}
+
+.muc-card .muc-date {
+  font-size: 0.875rem;
+  color: #666666;
+  font-weight: 400;
+}
+
+/* Responsive design */
+@media (max-width: 420px) {
+  .muc-card {
+    padding: 14px;
+    max-width: 100%;
+  }
+  
+  .muc-card .muc-title {
+    font-size: 1rem;
+  }
+  
+  .muc-card .muc-description {
+    font-size: 0.8125rem;
+  }
+  
+  .muc-card .muc-date {
+    font-size: 0.8125rem;
+    
+  }
+}
+
+/* Defensive specificity to prevent external CSS overrides */
+.muc-card,
+.muc-card .muc-title,
+.muc-card .muc-description,
+.muc-card .muc-date {
+  -webkit-font-smoothing: antialiased;
+}
+
+/* High specificity selectors to override MUI Typography if needed */
+.muc-card .MuiTypography-root.muc-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #000000;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.muc-card .MuiTypography-root.muc-description {
+  font-size: 0.875rem;
+  color: #000000;
+  line-height: 1.4;
+  margin: 0 0 14px 0;
+  margin-left: 30px;
+}
+
+.muc-card .MuiTypography-root.muc-date {
+  font-size: 0.875rem;
+  color: #000000;
+  /* font-weight: 00; */
+   /* margin-left: 30px; */
+   font-style: italic;
+}

@@ -1,5 +1,6 @@
 // Utility functions for fetching login page localization messages
 import axios from 'axios';
+import env from '../../../config/env';
 
 // Single localization message structure
 export type LocalizationMessage = {
@@ -19,7 +20,7 @@ export type LocalizationMap = {
 };
 
 // API base URL, supported locales, and headers
-const BASE_URL = `${import.meta.env.VITE_LOCALIZATION_HOST}/localization/v1/messages`;
+const BASE_URL = `${env.LOCALIZATION_HOST}/localization/v1/messages`;
 const LOCALES = ['en', 'hi', 'kn'];
 const HEADERS = {
   'Content-Type': 'application/json',

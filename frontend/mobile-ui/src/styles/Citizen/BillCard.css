@@ -1,0 +1,71 @@
+.water-card {
+  width: 355px;
+  height: 94px;
+  border-radius: 20px;
+  padding: 16px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  font-family: Roboto, Arial, sans-serif;
+  border: 1px solid rgba(200, 76, 3, 0.06);
+}
+
+.water-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.water-title {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: Roboto, Arial, sans-serif;
+  margin: 0;
+  color: #000;
+}
+
+.water-address {
+  margin-top: 2px;
+}
+
+.water-address-line {
+  font-size: 12px;
+  color: #000000;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.water-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.water-receipt-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: none;
+  border-radius: 8px;
+  border: 1px solid #C84C0E;
+  color: #C84C0E;
+  background: transparent;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.water-receipt-btn svg {
+  font-size: 18px;
+}
+
+.water-paid-date {
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.40);
+  font-weight: 700;
+  border-radius: 20px;
+}

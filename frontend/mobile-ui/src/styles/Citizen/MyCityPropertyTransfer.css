@@ -1,0 +1,177 @@
+/* Prefix "pft-" (Property Transfer) to avoid collisions */
+
+.pft-card {
+  width: 100%;
+  max-width: 380px;
+  border-radius: 14px !important;
+  padding: 16px;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.20);
+  font-family: 'Roboto Condensed';
+  color: rgb(0, 0, 0.04);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  line-height: 114%;
+}
+
+/* Header section */
+.pft-card .pft-header {
+  margin-bottom: 16px;
+}
+
+.pft-card .pft-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.4);
+  margin: 0 0 6px 0;
+  line-height: 1.2;
+  font-family: 'Roboto Condensed';
+  letter-spacing: -0.7px;
+    transform: scaleY(1.2);
+}
+
+.pft-card .pft-department {
+  font-size: 0.95rem;
+  color: #000000;
+  margin: 0;
+  line-height: 1.3;
+  font-family: 'Roboto Condensed';
+  font-weight: 500;
+}
+
+/* Meta information row */
+.pft-card .pft-meta-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+
+.pft-card .pft-meta-col {
+  flex: 1;
+  min-width: 0;
+}
+
+.pft-card .pft-meta-label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: 4px;
+  line-height: 1.2;
+}
+
+.pft-card .pft-meta-value {
+  font-size: 0.875rem;
+  color: #000000;
+  line-height: 1.3;
+}
+
+/* Info row with documents and contact */
+.pft-card .pft-info-row {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.pft-card .pft-left-info {
+  display: flex;
+  align-items: center;
+}
+
+.pft-card .pft-documents-badge {
+  display: inline-block;
+  background: #F7E4DB;
+  color: #000000;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  font-family: 'Roboto Condensed';
+  width: 115px;
+  height: 15px;
+}
+
+.pft-card .pft-contact-info {
+  text-align: left;
+  margin-left: 30px;
+}
+
+.pft-card .pft-contact-label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: rgb(0, 0, 0, 0.20);
+  margin-bottom: 2px;
+  line-height: 1.2;
+  text-align: left;
+}
+
+.pft-card .pft-contact-value {
+  font-size: 0.875rem;
+  color: rgb(0, 0, 0, 0.20);
+  line-height: 1.2;
+  text-align: left;
+  font-weight: 700;
+}
+
+/* Apply button section */
+.pft-card .pft-action-row {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.pft-card .pft-apply-btn.MuiButton-root {
+  background: #C84C04;
+  color: #ffffff;
+  border-radius: 5px;
+  font-weight: 520;
+  text-transform: none;
+  padding: 10px 20px;
+  font-size: 0.95rem;
+  box-shadow: none;
+  width: 140px;
+  height: 35px;
+  border: none;
+}
+
+.pft-card .pft-apply-btn.MuiButton-root:hover {
+  background: #a63f03;
+  box-shadow: 0 2px 4px rgba(200, 76, 4, 0.2);
+}
+
+.pft-card .pft-apply-btn.MuiButton-contained {
+  box-shadow: none;
+}
+
+/* Responsive design */
+@media (max-width: 420px) {
+  .pft-card {
+    padding: 14px;
+  }
+  
+  .pft-card .pft-meta-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .pft-card .pft-info-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .pft-card .pft-contact-info {
+    text-align: left;
+  }
+}
+
+/* Defensive specificity - prevents external CSS from easily overriding */
+.pft-card,
+.pft-card .pft-title,
+.pft-card .pft-department,
+.pft-card .pft-meta-label,
+.pft-card .pft-apply-btn {
+  -webkit-font-smoothing: antialiased;
+}

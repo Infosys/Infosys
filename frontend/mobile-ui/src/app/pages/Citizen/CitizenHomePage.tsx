@@ -46,22 +46,26 @@ const LOCALE_MISMATCH_POPUP_FLAG = 'citizenLocaleMismatchChecked';
 // Main component for citizen home page
 const CitizenHomePage: React.FC = () => {
   // Use RTK Query to get citizen applications (main state)
+  const SEARCH_INPUT_PROPS = {
+    disableUnderline: true,
+    endAdornment: <SearchIcon sx={{ color: '#888', fontSize: 23 }} />,
+  };
 
   // Get assesseeId from localStorage
   const assesseeId = localStorage.getItem('user_id')!;
 
-
   // Fetch citizen applications (non-draft)
-  const { data, isLoading, isError } = useGetCitizenApplicationsQuery({ assesseeId, isDraft: false });
-  console.log("Application data from API", data);
-  
+  const { data, isLoading, isError } = useGetCitizenApplicationsQuery({
+    assesseeId,
+    isDraft: false,
+  });
   // List of citizen applications
   const applications: CitizenApplicationSummary[] = data?.data ?? [];
   // Number of properties for the user
   const noOfProperties = applications.length;
 
   // Placeholder for active licenses and urgent attention (to be replaced with backend data)
-  const fakeActiveLicenses = 0;  
+  const fakeActiveLicenses = 0;
   const fakeUrgentAttention: any[] = [];
 
   // State for selected tab and map marker
@@ -123,7 +127,7 @@ const CitizenHomePage: React.FC = () => {
   const handleAddNewProperty = () => {
     resetForm();
     setMode('new');
-    navigate('/property-form/property-information');
+    navigate('/property-form/preliminary-information');
   };
 
   // Locale mismatch popup logic, should trigger only once per user/session
@@ -172,11 +176,11 @@ const CitizenHomePage: React.FC = () => {
       localStorage.removeItem('propertyNo');
       localStorage.removeItem('showSuccessPropCreation');
     }
-  }, [localStorage.getItem('showSuccessPropCreation')]);
+  }, []);
 
   // Show loader until messages AND home data are ready
   if (loading || !messages || isLoading) {
-    return <LoadingPage message='Brewing up your content...' />;
+    return <LoadingPage message="Brewing up your content..." />;
   }
 
   // Handle error state from RTK Query
@@ -219,7 +223,7 @@ const CitizenHomePage: React.FC = () => {
         sx={{ backgroundColor: '#fff', minHeight: '100vh', pb: 8 }}
       >
         <Box pt={2}>
-          {noOfProperties !== 0 ? (
+          {noOfProperties > 0 ? (
             /* Existing user content */
             <Box>
               <Box display="flex" justifyContent="flex-end" gap={0.2} mb={2}>
@@ -234,12 +238,16 @@ const CitizenHomePage: React.FC = () => {
                       p: 0.5,
                     }}
                   >
-                    <img
+                    <Box
+                      component="img"
                       src={translateIndicSvg}
                       alt="Language"
-                      width={35}
-                      height={35}
-                      style={{ display: 'block', margin: '0 auto' }}
+                      sx={{
+                        width: 35,
+                        height: 35,
+                        display: 'block',
+                        margin: '0 auto',
+                      }}
                     />
                     <Typography variant="body2" sx={{ mt: 0.5, fontSize: '10px' }}>
                       {languageLabel}
@@ -310,7 +318,11 @@ const CitizenHomePage: React.FC = () => {
                 {/* Profile Section */}
                 <Box textAlign="center" sx={{ paddingRight: 2 }}>
                   <IconButton
-                     onClick={() => navigate('/profile', { state: { noOfProperties, fakeActiveLicenses} })}
+                    onClick={() =>
+                      navigate('/profile', {
+                        state: { noOfProperties, fakeActiveLicenses },
+                      })
+                    }
                     sx={{
                       display: 'flex',
                       flexDirection: 'column',
@@ -358,9 +370,7 @@ const CitizenHomePage: React.FC = () => {
                   <Box px={3} mb={2}>
                     <Box display="flex" alignItems="center" gap={1}>
                       <NotificationsActiveIcon sx={{ color: '#000', fontSize: 22 }} />
-                      <Typography fontWeight={700}>
-                        {urgentAttentionLabel}
-                      </Typography>
+                      <Typography fontWeight={700}>{urgentAttentionLabel}</Typography>
                     </Box>
                     {fakeUrgentAttention.map((item) => (
                       <UrgentCard key={item.id} item={item} />
@@ -417,14 +427,11 @@ const CitizenHomePage: React.FC = () => {
               </Container>
               {/* Urgent Attention Section again (dummy, implement logic if required) */}
               {Array.isArray(fakeUrgentAttention) &&
-                (fakeUrgentAttention.length === 0 ||
-                  fakeUrgentAttention.length > 3) && (
+                (fakeUrgentAttention.length === 0 || fakeUrgentAttention.length > 3) && (
                   <Box px={3} mb={2}>
                     <Box display="flex" alignItems="center" gap={1}>
                       <NotificationsActiveIcon sx={{ color: '#000', fontSize: 22 }} />
-                      <Typography fontWeight={700}>
-                        {urgentAttentionLabel}
-                      </Typography>
+                      <Typography fontWeight={700}>{urgentAttentionLabel}</Typography>
                     </Box>
                     {fakeUrgentAttention.map((item) => (
                       <UrgentCard key={item.id} item={item} />
@@ -599,12 +606,20 @@ const CitizenHomePage: React.FC = () => {
                       placeholder="Search"
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      InputProps={{
-                        disableUnderline: true,
-                        style: { fontWeight: 500, fontSize: 18, color: '#222' },
-                        endAdornment: <SearchIcon sx={{ color: '#888', fontSize: 23 }} />,
+                      slotProps={{
+                        input: SEARCH_INPUT_PROPS,
                       }}
                       sx={{
+                        // Input text styles
+                        '& .MuiInputBase-input': {
+                          fontWeight: 500,
+                          fontSize: 18,
+                          color: '#222',
+                          border: 'none !important',
+                          boxShadow: 'none',
+                          outline: 'none',
+                          background: 'transparent',
+                        },
                         // Remove any border from root
                         '& .MuiInputBase-root': {
                           border: 'none !important',
@@ -612,14 +627,7 @@ const CitizenHomePage: React.FC = () => {
                           outline: 'none',
                           background: 'transparent',
                         },
-                        // Remove any border from input itself
-                        '& .MuiInput-input': {
-                          border: 'none !important',
-                          boxShadow: 'none',
-                          outline: 'none',
-                          background: 'transparent',
-                        },
-                        // Remove underline from standard variant (extra safety)
+                        // Remove underline from standard variant
                         '& .MuiInput-underline:before, & .MuiInput-underline:after': {
                           borderBottom: 'none !important',
                         },
@@ -689,7 +697,6 @@ const CitizenHomePage: React.FC = () => {
     </>
   );
 };
-
 
 // Export the CitizenHomePage component as default
 export default CitizenHomePage;

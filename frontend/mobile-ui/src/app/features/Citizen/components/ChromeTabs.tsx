@@ -14,20 +14,18 @@ import { useAppSelector } from '../../../../redux/Hooks';
 import { getMessagesFromSession, useLocalization } from '../../../../services/Citizen/Localization/LocalizationContext';
 import LoadingPage from '../../../components/Loader';
 // Props for ChromeTabs: selected tab index, change handler, style overrides
+
 interface ChromeTabsProps {
   selected: number;
   onTabChange: (idx: number) => void;
-  selectedColor?: string;
   height?: number;
   customWidth?: string | number;
 }
-
 const SELECTED_BG = "#DFDFDF";
 const UNSELECTED_BG = "#fff";
 const SELECTED_COLOR = "#222";
 const UNSELECTED_COLOR = "#222";
 const BORDER_COLOR = "#222";
-
 // ChromeTabs component: renders two tabs (Map, List) with selection and localization
 const ChromeTabs: React.FC<ChromeTabsProps> = ({
   selected,
@@ -38,12 +36,10 @@ const ChromeTabs: React.FC<ChromeTabsProps> = ({
   const lang = useAppSelector(state => state.lang.citizenLang); // Current language
   const { loading } = useLocalization(); // Global loading state
   const messages = getMessagesFromSession("CITIZEN")!; // Localized messages
-
   // Show loader if localization is loading
   if (loading) {
     return <LoadingPage />;
   }
-
   // Render tab switcher UI
   return (
     <Box
@@ -81,12 +77,11 @@ const ChromeTabs: React.FC<ChromeTabsProps> = ({
     </Box>
   );
 };
-
 // TabButton: styled MUI Button for tab appearance and selection
 const TabButton = styled(Button, {
   shouldForwardProp: (prop) => (
-    prop !== '$isSelected' && 
-    prop !== '$height' && 
+    prop !== '$isSelected' &&
+    prop !== '$height' &&
     prop !== '$selectedTab' &&
     prop !== '$borderRadius'
   )
@@ -123,6 +118,5 @@ const TabButton = styled(Button, {
     }
   })
 );
-
 // Export ChromeTabs for use in Citizen homepage
 export default ChromeTabs;

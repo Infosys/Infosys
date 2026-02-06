@@ -22,6 +22,7 @@
   border-radius: 30px;
   padding: 8px 20px;
   display: flex;
+  border: none;
   flex-direction: column;
   width: 240px;
   margin-bottom: 20px;
@@ -54,7 +55,6 @@
 .location-ward {
   color: #222;
   font-size: 14px;
-  font-weight: lighter;
 }
 
 
@@ -365,7 +365,7 @@ button.back-btn {
 
 .action-label {
   font-size: 11px;
-  color: #0B4B66;
+  color: #000000;
   font-weight: 400;
   text-align: center;
 }

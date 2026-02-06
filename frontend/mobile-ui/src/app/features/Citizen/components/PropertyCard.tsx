@@ -32,7 +32,7 @@ interface PropertyCardProps {
 
 // Color mapping for property status badges
 const statusColors: Record<string, { bg: string; color: string }> = {
-  Enumerated: { bg: '#85B9A1', color: '#fff' },
+  Enumerated: { bg: '#85B9A1', color: '#000' },
   'Under Enumeration': { bg: '#FFCDB6', color: '#000' },
   Draft: { bg: '#FFC107', color: '#000' },
 };
@@ -143,7 +143,7 @@ const PropertyCard: FC<PropertyCardProps> = ({ property, propertyId }) => {
     // Set form mode to draft
     setMode('draft');
     // Navigate to property form
-    navigate('/property-form/property-information');
+    navigate('/property-form/preliminary-information');
   };
 
   // Show loader while localization is loading
@@ -168,7 +168,7 @@ const PropertyCard: FC<PropertyCardProps> = ({ property, propertyId }) => {
           boxShadow: status === 'Draft' ? '0 1px 6px #0002' : '0 4px 16px #0003',
         },
       }}
-      onClick={status !== 'Draft' ? handleCardClick : undefined}
+      onClick={status === 'Draft' ? undefined: handleCardClick}
     >
       {/* Header: Property type and status badge */}
       <Box

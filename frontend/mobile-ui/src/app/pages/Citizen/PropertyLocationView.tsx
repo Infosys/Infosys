@@ -17,7 +17,7 @@ import { useEffect } from 'react';
 const PropertyLocationView: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const property = location.state?.property as any;
+  const property = location.state?.property;
   const address = property
     ? [
         property.Address?.Street,

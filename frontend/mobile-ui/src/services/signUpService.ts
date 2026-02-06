@@ -1,4 +1,5 @@
 // Service for handling user sign-up API requests
+import { env } from "../config/env";
 import type { SignUpFormValues, SignUpResponse } from "../models/signUpFormModel";
 
 // SignUpService provides static methods for user registration
@@ -22,7 +23,7 @@ export class SignUpService {
       };
 
       // Make POST request to sign-up endpoint
-      const response = await fetch(`${import.meta.env.VITE_ONBOARDING_HOST}/api/v1/users`, {
+      const response = await fetch(`${env.ONBOARDING_HOST}/api/v1/users`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json" 
@@ -38,6 +39,7 @@ export class SignUpService {
       return { success: false, message: data?.message || "Signup failed", data: data.data };
     } catch (err) {
       // Handle network or unexpected errors
+      console.error("Sign-up error:", err);
       return { success: false, message: "Network error", data: null as any };
     }
   }

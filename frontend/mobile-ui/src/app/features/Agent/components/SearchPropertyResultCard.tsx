@@ -25,7 +25,6 @@ export interface SearchPropertyResultCardProps {
   id: string;
   address: string;
   isVerified: boolean;
-  highlight?: boolean;
   latlng: { lat: number; lng: number };
   onViewLocation?: () => void;
 }

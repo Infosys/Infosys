@@ -6,7 +6,7 @@ export interface Owner {
     ID: string;
     PropertyID: string;
     Name: string;
-    AdhaarNo: Number;
+    AdhaarNo: number;
     ContactNo: string;
     Email: string;
     Gender: string;
@@ -32,7 +32,10 @@ export interface UpdateOwnerRequest {
 }
 
 // Add owner request omits fields not required on creation
-export interface AddOwnerRequest extends Omit<Owner, 'ID' | 'CreatedAt' | 'UpdatedAt'> { }
+export interface AddOwnerRequest extends Omit<Owner, 'ID' | 'CreatedAt' | 'UpdatedAt'> {
+    applicationId: string;
+    isVerifying: boolean;
+}
 
 // Add owner response uses Owner interface
 export interface AddOwnerResponse {
@@ -63,8 +66,8 @@ export const ownerApi = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         // Add a new property owner
         addOwner: builder.mutation<AddOwnerResponse, AddOwnerRequest>({
-            query: (data) => ({
-                url: '/v1/property-owners',
+            query: ({ applicationId, isVerifying, ...data }) => ({
+                url: `/v1/property-owners/${applicationId}?isVerifying=${isVerifying}`,
                 method: 'POST',
                 body: data,
             }),
@@ -81,9 +84,9 @@ export const ownerApi = apiSlice.injectEndpoints({
         }),
 
         // Update an existing property owner by ID
-        updateOwner: builder.mutation<UpdateOwnerResponse, { id: string; data: UpdateOwnerRequest }>({
-            query: ({ id, data }) => ({
-                url: `/v1/property-owners/${id}`,
+        updateOwner: builder.mutation<UpdateOwnerResponse, { id: string; data: UpdateOwnerRequest; applicationId: string; isVerifying: boolean }>({
+            query: ({ id, data, applicationId, isVerifying }) => ({
+                url: `/v1/property-owners/${id}/${applicationId}?isVerifying=${isVerifying}`,
                 method: 'PUT',
                 body: data,
             }),
@@ -91,9 +94,9 @@ export const ownerApi = apiSlice.injectEndpoints({
         }),
 
         // Delete a property owner by ID
-        deleteOwner: builder.mutation<DeleteOwnerResponse, string>({
-            query: (id) => ({
-                url: `/v1/property-owners/${id}`,
+        deleteOwner: builder.mutation<DeleteOwnerResponse, { id: string; applicationId: string; isVerifying: boolean }>({
+            query: ({ id, applicationId, isVerifying }) => ({
+                url: `/v1/property-owners/${id}/${applicationId}?isVerifying=${isVerifying}`,
                 method: 'DELETE',
             }),
             invalidatesTags: [TAG_TYPES.OWNER],

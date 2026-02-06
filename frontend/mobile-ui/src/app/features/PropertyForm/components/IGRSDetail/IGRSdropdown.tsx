@@ -1,4 +1,3 @@
-
 // Custom dropdown for IGRS details in property forms. Supports validation, placeholder, error display, and controlled open/close.
 
 import React, { useRef } from 'react';
@@ -8,7 +7,6 @@ import Select from '@mui/material/Select';
 import type { SelectChangeEvent } from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import Typography from '@mui/material/Typography';
-import type {SxProps, Theme} from '@mui/material/styles';
 
 export type DropdownOption = { id: string | number; label: string };
 
@@ -25,14 +23,13 @@ interface CustomDropdownProps {
   required?: boolean;
   error?: string;
   touched?: boolean;
-  sx?: SxProps<Theme>;
   onBlur?: () => void;
 }
 
 // Style objects for dropdown and label
 const containerSx = {
   width: '100%',
-  marginBottom: "2px",
+  marginBottom: '2px',
 };
 
 const labelSx = {
@@ -45,7 +42,7 @@ const labelSx = {
 
 const formControlSx = {
   width: '100%',
-  Height: "14px",
+  Height: '14px',
   '& .MuiOutlinedInput-root': {
     borderRadius: 2,
   },
@@ -94,7 +91,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
 
   // Handle selection change
   const handleChange = (event: SelectChangeEvent<string>) => {
-    const selected = event.target.value as string;
+    const selected = event.target.value;
     isSelectingRef.current = true; // Mark that selection is happening
     onSelect(name, selected);
     setShowDropdown(false);
@@ -105,7 +102,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
 
   // Render dropdown UI
   return (
-    <Box sx={containerSx} className="form-field">
+    <Box sx={ containerSx } className="form-field">
       {/* Field label with required indicator */}
       <Typography component="label" sx={labelSx} className="field-label">
         {label}
@@ -123,12 +120,29 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
           onClose={handleClose}
           value={safeValue}
           onChange={handleChange}
-          renderValue={(selected) =>
-            selected ? (selected as string) : <span style={placeholderStyle}>{selectText}</span>
-          }
+          renderValue={(selected) => {
+            if (!selected) {
+              return <span style={placeholderStyle}>{selectText}</span>;
+            }
+            return (
+              <Box
+                component="span"
+                title={selected}
+                sx={{
+                  display: 'block',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  maxWidth: '100%',
+                }}
+              >
+                {selected}
+              </Box>
+            );
+          }}
           inputProps={{ 'aria-label': label }}
           sx={{
-             height: 48,
+            height: 48,
             '& .MuiSelect-select': {
               display: 'flex',
               alignItems: 'center',
@@ -136,7 +150,9 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
               paddingTop: 0,
               paddingBottom: 0,
             },
-            ...(touched && error ? { '& .MuiOutlinedInput-notchedOutline': { borderColor: '#d32f2f' } } : {}),
+            ...(touched && error
+              ? { '& .MuiOutlinedInput-notchedOutline': { borderColor: '#d32f2f' } }
+              : {}),
           }}
         >
           {/* Placeholder option */}
@@ -145,7 +161,19 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
           </MenuItem>
           {/* Render dropdown options */}
           {options.map((opt) => (
-            <MenuItem key={opt.id} value={opt.label}>
+            <MenuItem 
+              key={opt.id} 
+              value={opt.label} 
+              sx={{
+                '&.Mui-selected': {
+                  backgroundColor: '#c84c0e',
+                  color: '#fff',
+                  '&:hover': {
+                    backgroundColor: '#c84c0e',
+                  },
+                },
+              }}
+            >
               {opt.label}
             </MenuItem>
           ))}

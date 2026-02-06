@@ -16,7 +16,6 @@ import { useNavigate } from 'react-router-dom';
 import { useFormMode } from '../../../context/FormModeContext';
 import { usePropertyForm } from '../../../context/PropertyFormContext';
 import { useDocumentsLocalization } from '../../../services/AgentLocalisation/localisation-documents';
-import JsonService from '../../../services/jsonServerApiCalls';
 import StepHeader from '../../features/Agent/components/StepHeader';
 import { useLocalization } from '../../../services/AgentLocalisation/formLocalisation';
 import CustomDropdown, {
@@ -31,6 +30,7 @@ import {
   useUpdateDocumentInfoMutation,
 } from '../../features/PropertyForm/api/documentInfo.api';
 import { NotificationPopup } from '../../components/Popup/NotificationPopup';
+import JsonService from '../../../services/jsonServerApiCalls';
 
 // ApiError: interface for API error responses
 interface ApiError {
@@ -66,19 +66,37 @@ const formContentSx = {
 
 const formSubmitSx = { padding: '16px 0', backgroundColor: '#FFFFFF' };
 
+
+const getEmptyFieldError = (field: string): string => {
+  switch (field) {
+    case 'documentType':
+      return 'Select Document Type to proceed';
+    case 'serialNoLabel':
+      return 'Serial Number is mandatory';
+    case 'revenueDocumentNumber':
+      return 'Revenue Document Number is mandatory';
+    default:
+      return '';
+  }
+};
+
 const DocumentsInformation: React.FC = () => {
   // Contexts and hooks for form mode, navigation, and property form data
   const { mode } = useFormMode();
   const navigate = useNavigate();
   const { formData, updateForm } = usePropertyForm();
+  const [hasModified, setHasModified] = useState(false);
+
+  const markModified = () => {
+    if (mode === "verify") setHasModified(true);
+  };
 
   const PROPERTY_ID = formData.id ?? (localStorage.getItem('propertyId') || '');
 
   // Fetch existing document info
-  const { data: existingDocInfo, isLoading: isFetchingDocInfo } =
-    mode === 'verify' || mode === 'draft'
-      ? useGetDocumentInfoByPropertyIdQuery(PROPERTY_ID)
-      : { data: null, isLoading: false };
+  const { data: existingDocInfo, isLoading: isFetchingDocInfo } = useGetDocumentInfoByPropertyIdQuery(PROPERTY_ID, {
+    skip: mode !== 'verify' && mode !== 'draft'
+  });
 
   const {
     propertyFormTitle,
@@ -87,7 +105,6 @@ const DocumentsInformation: React.FC = () => {
     documentTypeLabel,
     enterNumberPlaceholder,
     // saveDraftSuccessMsg,
-    documentTypeOptions,
     selectPlaceholder,
     saveDraftText,
     previousText,
@@ -95,9 +112,7 @@ const DocumentsInformation: React.FC = () => {
 
   const {
     nextButtonText,
-    ThisFieldIsRequiredMSG,
     SerialNoText,
-    RevenueDocumentNumberText,
     onlyNumbersAreAllowedMSG,
   } = useLocalization();
 
@@ -105,8 +120,15 @@ const DocumentsInformation: React.FC = () => {
   const [updateDocumentInfo, { isLoading: isUpdating }] = useUpdateDocumentInfoMutation();
 
   const isSubmitting = isCreating || isUpdating;
+  const [documentTypeOptions, setDocumentTypeOptions] = useState<DropdownOption[]>([]);
 
   const [documentInfoId, setDocumentInfoId] = useState<string | null>(null);
+
+  const getSubmitButtonText = () => {
+    if (isSubmitting) return 'Submitting...';
+    if (mode === 'verify') return 'Verify';
+    return nextButtonText;
+  };
 
   const [localData, setLocalData] = useState({
     documentType: formData.documents?.[0]?.documentType || '',
@@ -134,37 +156,16 @@ const DocumentsInformation: React.FC = () => {
   // dropdown open state
   const [showDocumentTypeDropdown, setShowDocumentTypeDropdown] = useState(false);
 
-  // API-provided options (raw)
-  const [apiOptions, setApiOptions] = useState<{ id: string | number; name: string }[]>(
-    []
-  );
-
-  // normalize into DropdownOption[] for CustomDropdown
-  const dropdownOptions: DropdownOption[] = React.useMemo(
-    () =>
-      (documentTypeOptions && documentTypeOptions.length
-        ? documentTypeOptions.map((label, idx) => ({ id: idx + 1, label: label ?? '' }))
-        : apiOptions.map((o) => ({ id: o.id, label: o.name ?? '' }))) as DropdownOption[],
-    [documentTypeOptions, apiOptions]
-  );
-
-  // Effect: Fetch document types from API and set dropdown options
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const data = await JsonService.getDocumentTypes();
-        if (!mounted) return;
-        if (Array.isArray(data) && data.length) {
-          setApiOptions(data as { id: string | number; name: string }[]);
-        }
-      } catch {
-        // ignore, we will rely on localization options
+    JsonService.getDocumentTypes().then((data) => {
+      if (Array.isArray(data)) {
+        setDocumentTypeOptions(
+          data
+            .filter((item) => item.name !== 'select')
+            .map((item, index) => ({ id: index, label: item.name }))
+        );
       }
-    })();
-    return () => {
-      mounted = false;
-    };
+    });
   }, []);
 
   // Effect: Prepopulate form when existing document info is fetched
@@ -183,18 +184,22 @@ const DocumentsInformation: React.FC = () => {
           const latestDate = new Date(latest.UpdatedAt);
           const currentDate = new Date(current.UpdatedAt);
           return currentDate > latestDate ? current : latest;
-        });
+        }, documentInfoEntries[0]);
 
         setDocumentInfoId(latestEntry.ID);
 
         let docTypeOption;
-        if (dropdownOptions && dropdownOptions.length > 0 && latestEntry.fieldValue) {
+        if (
+          documentTypeOptions &&
+          documentTypeOptions.length > 0 &&
+          latestEntry.fieldValue
+        ) {
           if (typeof latestEntry.fieldValue.DocumentType === 'number') {
-            docTypeOption = dropdownOptions.find(
+            docTypeOption = documentTypeOptions.find(
               (opt) => Number(opt.id) === Number(latestEntry.fieldValue.DocumentType)
             );
           } else {
-            docTypeOption = dropdownOptions.find(
+            docTypeOption = documentTypeOptions.find(
               (opt) => opt.label === latestEntry.fieldValue.DocumentType
             );
           }
@@ -217,18 +222,18 @@ const DocumentsInformation: React.FC = () => {
         showErrorPopup('No DocumentInfo entries found');
       }
     }
-  }, [existingDocInfo, dropdownOptions]);
+  }, [existingDocInfo, documentTypeOptions]);
 
   // ===============
   // Numeric Validation and Input Handling
   // ===============
   const validateField = (name: keyof typeof localData, value: string) => {
-    if (!value || value.trim() === '') return ThisFieldIsRequiredMSG;
+    if (!value || value.trim() === '') return getEmptyFieldError(name);
     if (['serialNoLabel', 'revenueDocumentNumber'].includes(name)) {
       // Only allow whole numbers (no decimals)
       if (!/^\d+$/.test(value)) return onlyNumbersAreAllowedMSG;
       const num = Number(value);
-      if (isNaN(num) || num <= 0) return 'Must be a positive number';
+      if (Number.isNaN(num) || num <= 0) return 'Must be a positive number';
     }
     return '';
   };
@@ -263,11 +268,12 @@ const DocumentsInformation: React.FC = () => {
   };
 
   const handleFieldChange = (field: keyof typeof localData) => (value: string) => {
+    markModified();
     let sanitized = value;
     if (field === 'serialNoLabel' || field === 'revenueDocumentNumber') {
       // Only allow digits and one dot for float
       // const isValid = /^\d*\.?\d*$/.test(value);
-      sanitized = value.replace(/[^0-9]/g, '');
+      sanitized = value.replaceAll(/\D/g, '');
 
       const isValid = /^\d*$/.test(value);
       if (!isValid && value !== '') {
@@ -287,6 +293,7 @@ const DocumentsInformation: React.FC = () => {
 
   // handleDocumentTypeSelect: Handles selection from document type dropdown
   const handleDocumentTypeSelect = (_field: string, value: string) => {
+    markModified();
     setLocalData((prev) => ({ ...prev, documentType: value }));
     setErrors((prev) => ({ ...prev, documentType: '' }));
     setTouched((prev) => ({ ...prev, documentType: true }));
@@ -348,16 +355,14 @@ const DocumentsInformation: React.FC = () => {
 
     if (Object.values(submitErrors).some(Boolean)) return;
 
-    try {
-      const selectedOption = dropdownOptions.find(
-        (opt) => opt.label === localData.documentType
-      );
-      const documentTypeId = selectedOption?.id || 0;
+    const applicationId = localStorage.getItem("applicationLogId") || "";
+    const isVerifying = mode === "verify" && hasModified;
 
+    try {
       const payload = {
         fieldName: 'DocumentInfo',
         fieldValue: {
-          DocumentType: Number(documentTypeId),
+          DocumentType: localData.documentType,
           serialNo: Number(localData.serialNoLabel),
           revenueDocumentNo: Number(localData.revenueDocumentNumber),
         },
@@ -370,6 +375,8 @@ const DocumentsInformation: React.FC = () => {
         response = await updateDocumentInfo({
           documentId: documentInfoId,
           body: payload,
+          applicationId,
+          isVerifying,
         }).unwrap();
       } else {
         response = await createDocumentInfo(payload).unwrap();
@@ -459,7 +466,7 @@ const DocumentsInformation: React.FC = () => {
                 label={documentTypeLabel}
                 name="documentType"
                 value={localData.documentType}
-                options={dropdownOptions}
+                options={documentTypeOptions}
                 showDropdown={showDocumentTypeDropdown}
                 setShowDropdown={setShowDocumentTypeDropdown}
                 onSelect={handleDocumentTypeSelect}
@@ -494,7 +501,7 @@ const DocumentsInformation: React.FC = () => {
 
                 <FormTextField
                   sx={uniformInputSx}
-                  label={RevenueDocumentNumberText}
+                  label="Revenue Document No."
                   value={localData.revenueDocumentNumber}
                   onChange={handleFieldChange('revenueDocumentNumber')}
                   onBlur={() => handleBlur('revenueDocumentNumber')}
@@ -526,11 +533,7 @@ const DocumentsInformation: React.FC = () => {
                   variant="contained"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting
-                    ? 'Submitting...'
-                    : mode === 'verify'
-                    ? 'Verify'
-                    : nextButtonText}
+                  {getSubmitButtonText()}
                 </Button>
               </Box>
             </Stack>

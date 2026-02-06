@@ -1,0 +1,172 @@
+/* Unique classnames prefixed with lcert- to avoid collisions */
+
+
+.lcert-card {
+  width: 360px;
+  border-radius: 10px;
+  padding: 12px;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.06);
+  font-family: Roboto, Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  /* remove external margins so card sits flush with surrounding layout */
+  margin-left: 0;
+  margin-right: 0;
+  margin-bottom: 0;
+}
+
+.lcert-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.lcert-top-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.lcert-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #000000;
+  margin: 0;
+  text-align: left;
+}
+
+.lcert-sub {
+  font-size: 13px;
+  color: rgba(0,0,0,0.8);
+  margin-top: 6px;
+}
+
+.lcert-top-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.lcert-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lcert-status-text {
+  font-size: 10px;
+  color: #00703C;
+}
+
+.lcert-status-icon {
+  color: #00703C;
+  font-size: 18px;
+}
+
+/* QR */
+.lcert-qr-wrap {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: transparent;
+}
+
+.lcert-qr-image,
+.lcert-qr-placeholder {
+  width: 62px;
+  height: 62px;
+  object-fit: contain;
+  display: block;
+  border-radius: 4px;
+  margin-top: 4px;
+}
+
+/* separator */
+.lcert-separator {
+  height: 2px;
+  background: transparent;
+}
+
+/* Bottom strip */
+.lcert-bottom-strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background: #efefef; 
+  padding: 10px;
+  border-radius: 0 0 10px 10px;
+  width: 360px; 
+  height: 52px;
+  box-sizing: border-box;
+  align-self: stretch;
+  margin-top: auto;
+  margin-bottom: -12px;
+  margin-left: -12px;
+}
+
+/* Amount area on left */
+.lcert-amount-area {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.lcert-amount-value {
+  font-size: 18px;
+  font-weight: 400;
+  color: #000;
+  margin: 0;
+}
+
+/* Actions on right: stacked boxed icons with labels */
+.lcert-right-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.lcert-action-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 56px;
+}
+
+/* icon button styles */
+.lcert-action-iconbtn {
+  background: transparent;
+  padding: 6px;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.lcert-action-icon {
+  color: #C84C04;
+  font-size: 22px;
+}
+
+/* labels below icons */
+.lcert-action-label {
+  font-size: 10px !important;
+  color: #C84C04;
+  font-weight: 500;
+  margin-top: -11px;
+}
+
+/* ensure specificity so these styles win */
+
+.lcert-card
+.lcert-card .lcert-action-icon {
+  font-weight: 700;
+}
+

@@ -4,18 +4,20 @@ import langReducer from './redux/LangSlice';
 import agentApiSlice from './app/features/Agent/api/agentApiSlice';
 import apiSlice from './redux/apiSlice';
 import filestoreApiSlice from './redux/fileStoreApiSlice';
+import { taxCalculatorApiSlice } from './redux/taxCalculatorApiSlice';
 
-// Combine all reducers (language, API, agent, file store)
+// Combine all reducers (language, API, agent, file store, tax calculator)
 const appReducer = combineReducers({
   lang: langReducer,
   [apiSlice.reducerPath]: apiSlice.reducer,
   [agentApiSlice.reducerPath]: agentApiSlice.reducer,
   [filestoreApiSlice.reducerPath]: filestoreApiSlice.reducer,
+  [taxCalculatorApiSlice.reducerPath]: taxCalculatorApiSlice.reducer,
 });
 
 // Root reducer: resets state on logout
 const rootReducer = (state: ReturnType<typeof appReducer> | undefined, action: any) => {
-  if (action && action.type === 'auth/logout') {
+  if (action?.type === 'auth/logout') {
     state = undefined;
   }
   return appReducer(state, action);
@@ -28,7 +30,8 @@ export const store = configureStore({
     getDefaultMiddleware().concat(
       apiSlice.middleware, 
       agentApiSlice.middleware,
-      filestoreApiSlice.middleware
+      filestoreApiSlice.middleware,
+      taxCalculatorApiSlice.middleware
     ),
 });
 

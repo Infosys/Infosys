@@ -13,6 +13,7 @@ import { useAuth } from '../../context/AuthProvider';
 import NotFoundPage from '../components/NotFoundPage';
 import PublicRoute from '../../components/PublicRoute';
 import LoginScreen from '../../app/pages/LoginPage';
+import PropertyLocationView from '../pages/Citizen/PropertyLocationView';
 
 /**
  * CommonRoutes component
@@ -82,6 +83,14 @@ const CommonRoutes: FC = () => {
         element={
           <ProtectedRoute allowedRoles={['AGENT', 'CITIZEN']}>
             <UnderConstructionPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="property-location"
+        element={
+          <ProtectedRoute allowedRoles={['AGENT']}>
+            <PropertyLocationView />
           </ProtectedRoute>
         }
       />

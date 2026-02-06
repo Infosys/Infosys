@@ -1,0 +1,243 @@
+{
+    "properties": [
+        {
+            "apartmentName": "Greenwood Heights",
+            "approvedUse": "Residential",
+            "assessmentDetails": {
+                "reason": "Self-Assessment",
+                "extentOfSite": 1200.5,
+                "landUnderBuilding": 950.75,
+                "isUnspecifiedShare": false,
+                "occupancyCertificateDate": "2025-10-01",
+                "occupancyCertificateNumber": "OC12345"
+            },
+            "bills": [
+                {
+                    "id": "BILL-001",
+                    "propertyId": "PROP-001",
+                    "billNo": "PT-2025-001",
+                    "billType": "property_tax",
+                    "amount": 15000,
+                    "status": "unpaid",
+                    "dueDate": "2025-12-31T00:00:00Z",
+                    "createdAt": "2025-10-24T15:05:25.637981Z",
+                    "updatedAt": "2025-10-24T15:05:25.637981Z"
+                },
+                {
+                    "id": "BILL-002",
+                    "propertyId": "PROP-001",
+                    "billNo": "WB-2025-001",
+                    "billType": "water",
+                    "amount": 1250,
+                    "status": "paid",
+                    "dueDate": "2025-11-15T00:00:00Z",
+                    "createdAt": "2025-10-24T15:05:25.637981Z",
+                    "updatedAt": "2025-10-24T15:05:25.637981Z"
+                }
+            ],
+            "billsAmount": 0,
+            "billsDue": 0,
+            "builtUpArea": "1200 sq ft",
+            "categoryOfOwnership": "Private",
+            "constructionDetails": {
+                "roofType": "Concrete",
+                "wallType": "Brick",
+                "woodType": "Teak",
+                "floorType": "Marble"
+            },
+            "constructionYear": 2020,
+            "coverage": "65%",
+            "currentUse": "Residential",
+            "district": "Bengaluru Urban",
+            "documents": [
+                {
+                    "no": "DOC123",
+                    "files": [
+                        {
+                            "fileName": "will_document.pdf",
+                            "fileSize": 24567.5,
+                            "fileType": "application/pdf",
+                            "fileStoreId": "abc123xyz",
+                            "dateOfUpload": "2025-10-15"
+                        },
+                        {
+                            "fileName": "will_document_2.pdf",
+                            "fileSize": 51234.2,
+                            "fileType": "application/pdf",
+                            "fileStoreId": "def456uvw",
+                            "dateOfUpload": "2025-10-15"
+                        }
+                    ],
+                    "courtName": "District Court",
+                    "documentType": "Will",
+                    "constructionDate": "2025-10-01",
+                    "mroProceedingDate": "2025-10-10",
+                    "mroProceedingNumber": "MRO456",
+                    "testatorAndTwoWitnessesSigned": true
+                },
+                {
+                    "no": "DOC124",
+                    "files": [
+                        {
+                            "fileName": "sale_agreement.png",
+                            "fileSize": 35000.75,
+                            "fileType": "image/png",
+                            "fileStoreId": "ghi789rst",
+                            "dateOfUpload": "2025-10-15"
+                        }
+                    ],
+                    "courtName": "High Court",
+                    "documentType": "Sale Agreement",
+                    "constructionDate": "2025-09-01",
+                    "mroProceedingDate": "2025-09-10",
+                    "mroProceedingNumber": "MRO457",
+                    "testatorAndTwoWitnessesSigned": false
+                }
+            ],
+            "enumerationProgress": 20,
+            "floors": [
+                {
+                    "length": 40.5,
+                    "breadth": 30.25,
+                    "firmName": "",
+                    "occupancy": "Owner",
+                    "plinthArea": 1200.75,
+                    "floorNumber": "Ground",
+                    "occupantName": "John Doe",
+                    "natureOfUsage": "Owner Occupied",
+                    "constructionDate": "2020-01-01",
+                    "unstructuredLand": "No",
+                    "effectiveFromDate": "2020-02-01",
+                    "igrsClassification": "Type A",
+                    "buildingPermissionNo": "BP-001",
+                    "floorsDetailsEntered": true,
+                    "buildingClassification": "Residential"
+                },
+                {
+                    "length": 40.0,
+                    "breadth": 30.0,
+                    "firmName": "Acme Corp",
+                    "occupancy": "Tenant",
+                    "plinthArea": 1200.0,
+                    "floorNumber": "First",
+                    "occupantName": "Jane Smith",
+                    "natureOfUsage": "Rented",
+                    "constructionDate": "2020-01-01",
+                    "unstructuredLand": "No",
+                    "effectiveFromDate": "2021-03-01",
+                    "igrsClassification": "Type A",
+                    "buildingPermissionNo": "BP-002",
+                    "floorsDetailsEntered": true,
+                    "buildingClassification": "Residential"
+                }
+            ],
+            "frontSetback": "10 ft",
+            "fsi": "1.75",
+            "history": [
+                {
+                    "id": "HIST-001",
+                    "propertyId": "PROP-001",
+                    "ownerName": "John Doe",
+                    "ownershipType": "Owner",
+                    "description": "Initial ownership",
+                    "periodStart": "2020-01-01T00:00:00Z",
+                    "transactionDate": "2020-01-01T00:00:00Z",
+                    "createdAt": "2025-10-24T15:05:26.730773Z"
+                }
+            ],
+            "hobli": "Bengaluru South",
+            "id": "PROP-001",
+            "isgrAdditionalDetails": {
+                "lifts": true,
+                "toilet": true,
+                "watertap": false,
+                "electricity": true,
+                "cableConnection": false,
+                "waterHarvesting": false,
+                "attachedBathroom": true
+            },
+            "isgrDetails": {
+                "doorNoTo": "110",
+                "igrsWard": "Ward A",
+                "igrsBlock": "Block Z",
+                "doorNoFrom": "101",
+                "habitation": "Habitation 1",
+                "igrsLocality": "Locality X"
+            },
+            "issuedLicenses": 0,
+            "licenses": [
+                {
+                    "id": "LIC-001",
+                    "propertyId": "PROP-001",
+                    "licenseNo": "TL-2025-001",
+                    "licenseType": "Trade License",
+                    "status": "active",
+                    "issuedDate": "2025-01-01T00:00:00Z",
+                    "expiryDate": "2025-12-31T00:00:00Z",
+                    "createdAt": "2025-10-24T15:05:25.673889Z"
+                },
+                {
+                    "id": "LIC-002",
+                    "propertyId": "PROP-001",
+                    "licenseNo": "BL-2025-001",
+                    "licenseType": "Building License",
+                    "status": "active",
+                    "issuedDate": "2025-02-01T00:00:00Z",
+                    "expiryDate": "2026-01-31T00:00:00Z",
+                    "createdAt": "2025-10-24T15:05:25.673889Z"
+                }
+            ],
+            "locationData": {
+                "address": "Vittal Mallya Road, Richmond Town, Bengaluru, Karnataka",
+                "coordinates": {
+                    "lat": 12.9716,
+                    "lng": 77.5946
+                },
+                "timestamp": "2025-10-23T09:42:25.634Z"
+            },
+            "owners": [
+                {
+                    "email": "john.doe@example.com",
+                    "gender": "Male",
+                    "mobile": "9876543210",
+                    "aadhaar": "123456789012",
+                    "guardian": "Robert Doe",
+                    "ownerName": "John Doe",
+                    "guardianRelationship": "Father"
+                },
+                {
+                    "email": "jane.smith@example.com",
+                    "gender": "Female",
+                    "mobile": "1123456789",
+                    "aadhaar": "987654321098",
+                    "guardian": "Alice Smith",
+                    "ownerName": "Jane Smith",
+                    "guardianRelationship": "Mother"
+                }
+            ],
+            "plotArea": "1500 sq ft",
+            "propertyAddress": {
+                "street": "Maple Street",
+                "wardNo": "Ward 3",
+                "zoneNo": "2",
+                "blockNo": "Block A",
+                "pincode": "560001",
+                "locality": "Central Park",
+                "electionWard": "EW-17",
+                "secretariatWard": "SW-14",
+                "isCorrespondenceAddressDifferent": false
+            },
+            "propertyType": "Apartment",
+            "propertyValue": "5000000",
+            "rearSetback": "8 ft",
+            "sideSetback": "5 ft",
+            "subdivision": "Subdivision A",
+            "surveyNumber": "SY-123/456",
+            "taluk": "Bengaluru South Taluk",
+            "utilities": null,
+            "village": "Richmond Town",
+            "ward": "Ward 3",
+            "zoning": "R1"
+        }
+    ]
+}

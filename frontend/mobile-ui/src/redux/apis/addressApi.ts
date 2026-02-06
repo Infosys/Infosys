@@ -14,8 +14,8 @@ export interface Address {
     PinCode: number;
     DifferentCorrespondenceAddress: boolean;
     PropertyId: string;
-    CororespondenceAddress1?: string;
-    CororespondenceAddress2?: string;
+    CorrespondenceAddress1?: string;
+    CorrespondenceAddress2?: string;
     CorrespondencePincode?: number;
 }
 
@@ -40,9 +40,9 @@ export const addressApi = apiSlice.injectEndpoints({
         }),
 
         // Mutation for updating an existing address
-        updateAddress: builder.mutation<AddAddressResponse, { id: string; address: Address }>({
-            query: ({ id, address }) => ({
-                url: `/v1/property-addresses/${id}`,
+        updateAddress: builder.mutation<AddAddressResponse, { id: string; address: Address, applicationId: string, isVerifying: boolean }>({
+            query: ({ id, address ,applicationId, isVerifying}) => ({
+                url: `/v1/property-addresses/${id}/${applicationId}?isVerifying=${isVerifying}`,
                 method: 'PUT',
                 body: address,
             }),

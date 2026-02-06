@@ -1,0 +1,11 @@
+declare module '@mui/icons-material/WeekendOutlined';
+declare module '@mui/icons-material/CottageOutlined';
+declare module '@mui/icons-material/DomainAddOutlined';
+declare module '@mui/icons-material/CasinoOutlined';
+declare module '@mui/icons-material/VisibilityOutlined'
+declare module '@mui/icons-material/TaskAltOutlined'
+declare module '@mui/icons-material/WarningAmber'
+declare module '@mui/icons-material/Upload'
+declare module '@mui/icons-material/VisibilityOffOutlined'
+declare module '@mui/icons-material/Visibility'
+declare module '@mui/icons-material/TaskOutlined'

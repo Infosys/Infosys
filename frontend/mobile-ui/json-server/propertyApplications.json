@@ -1,0 +1,405 @@
+{
+  "applications": [
+    {
+      "id": "08d5a030-1344-4c6b-96a4-25af9ac06b57",
+      "applicationNo": "PROP-20251023-0008-KG",
+      "propertyId": "a2cdabe5-70af-4762-a36a-dee0e1e9841c",
+      "property": {
+        "id": "a2cdabe5-70af-4762-a36a-dee0e1e9841c",
+        "categoryOfOwnership": "Private",
+        "propertyType": "Non- Residential",
+        "apartmentName": "aav",
+        "owners": [
+          {
+            "id": 1761212599556,
+            "email": "sam@gmail.com",
+            "gender": "FEMALE",
+            "mobile": "6123456789",
+            "aadhaar": "123456789009",
+            "guardian": "dfasfa",
+            "ownerName": "adfa",
+            "guardianRelationship": "Mother"
+          }
+        ],
+        "propertyAddress": {
+          "street": "First Street",
+          "wardNo": "Ward 3",
+          "zoneNo": "123",
+          "blockNo": "Block B",
+          "pincode": "123456",
+          "locality": "dfas",
+          "electionWard": "svfg",
+          "secretariatWard": "asg",
+          "isCorrespondenceAddressDifferent": false
+        },
+        "assessmentDetails": {
+          "reason": "Renovation",
+          "extentOfSite": 1234,
+          "landUnderBuilding": 46465,
+          "isUnspecifiedShare": false,
+          "occupancyCertificateDate": "2025-10-28",
+          "occupancyCertificateNumber": "2325"
+        },
+        "isgrDetails": {
+          "doorNoTo": "110",
+          "igrsWard": "Ward C",
+          "igrsBlock": "Block 7",
+          "doorNoFrom": "101",
+          "habitation": "Sunrise Apartments",
+          "igrsLocality": "Lakeview"
+        },
+        "isgrAdditionalDetails": {
+          "lifts": true,
+          "toilet": false,
+          "watertap": false,
+          "electricity": false,
+          "cableConnection": false,
+          "waterHarvesting": false,
+          "attachedBathroom": false
+        },
+        "constructionDetails": {
+          "roofType": "Metal",
+          "wallType": "Brick",
+          "woodType": "Teak",
+          "floorType": "Granite"
+        },
+        "floors": [
+          {
+            "length": 18,
+            "breadth": 18,
+            "firmName": "af",
+            "occupancy": "Owner",
+            "plinthArea": 504,
+            "floorNumber": "First Floor",
+            "occupantName": "Anita Sharma",
+            "natureOfUsage": "Rental",
+            "constructionDate": "2025-10-24",
+            "unstructuredLand": "No",
+            "effectiveFromDate": "2025-10-31",
+            "igrsClassification": "B",
+            "buildingPermissionNo": "BP-2019-021",
+            "floorsDetailsEntered": true,
+            "buildingClassification": "ACC Sheet"
+          }
+        ],
+        "documents": [
+          {
+            "no": "123",
+            "files": [],
+            "courtName": "abd",
+            "documentType": "Registered Will Document",
+            "constructionDate": "4567-12-31",
+            "mroProceedingDate": "3333-12-23",
+            "mroProceedingNumber": "12345",
+            "testatorAndTwoWitnessesSigned": false
+          }
+        ],
+        "locationData": {
+          "address": "Vittal Mallya Road, Richmond Town, Bengaluru, Karnataka",
+          "timestamp": "2025-10-23T09:42:25.634Z",
+          "coordinates": {
+            "lat": 10.9716,
+            "lng": 60.5946
+          }
+        }
+      },
+      "currentState": "ASSIGNED",
+      "processInstanceId": "ea6577fc-c1da-4482-a7b5-227f1e79e69c",
+      "createdTime": "2025-10-23T15:17:55.242047Z",
+      "updatedTime": "2025-10-23T15:23:57.722443Z",
+      "citizenId": "agent-001",
+      "tenantId": "pb.amritsar"
+    },
+    {
+      "id": "15e6b142-2455-5d7c-a7b5-36bg0bd17c68",
+      "applicationNo": "PROP-20251023-0009-KG",
+      "propertyId": "b3deabc6-81bg-5873-b47b-eff1f2fa952d",
+      "property": {
+        "id": "b3deabc6-81bg-5873-b47b-eff1f2fa952d",
+        "categoryOfOwnership": "Private",
+        "propertyType": "Residential",
+        "apartmentName": "Green Valley Heights",
+        "owners": [
+          {
+            "id": 1761212599557,
+            "email": "rajesh.kumar@gmail.com",
+            "gender": "MALE",
+            "mobile": "9876543210",
+            "aadhaar": "987654321098",
+            "guardian": "Ram Kumar",
+            "ownerName": "Rajesh Kumar",
+            "guardianRelationship": "Father"
+          }
+        ],
+        "propertyAddress": {
+          "street": "Main Street",
+          "wardNo": "Ward 1",
+          "zoneNo": "456",
+          "blockNo": "Block A",
+          "pincode": "560001",
+          "locality": "Jayanagar",
+          "electionWard": "Ward-15",
+          "secretariatWard": "Sec-A",
+          "isCorrespondenceAddressDifferent": false
+        },
+        "assessmentDetails": {
+          "reason": "New Construction",
+          "extentOfSite": 2400,
+          "landUnderBuilding": 1800,
+          "isUnspecifiedShare": false,
+          "occupancyCertificateDate": "2025-11-15",
+          "occupancyCertificateNumber": "OC-2025-456"
+        },
+        "isgrDetails": {
+          "doorNoTo": "15",
+          "igrsWard": "Ward A",
+          "igrsBlock": "Block 12",
+          "doorNoFrom": "10",
+          "habitation": "Central Park Colony",
+          "igrsLocality": "Green Meadows"
+        },
+        "isgrAdditionalDetails": {
+          "lifts": false,
+          "toilet": true,
+          "watertap": true,
+          "electricity": true,
+          "cableConnection": true,
+          "waterHarvesting": true,
+          "attachedBathroom": true
+        },
+        "constructionDetails": {
+          "roofType": "Concrete",
+          "wallType": "Brick",
+          "woodType": "Sal",
+          "floorType": "Tiles"
+        },
+        "floors": [
+          {
+            "length": 30,
+            "breadth": 20,
+            "firmName": "Kumar Constructions",
+            "occupancy": "Owner",
+            "plinthArea": 600,
+            "floorNumber": "Ground Floor",
+            "occupantName": "Rajesh Kumar",
+            "natureOfUsage": "Self Use",
+            "constructionDate": "2025-10-15",
+            "unstructuredLand": "No",
+            "effectiveFromDate": "2025-11-01",
+            "igrsClassification": "A",
+            "buildingPermissionNo": "BP-2023-001",
+            "floorsDetailsEntered": true,
+            "buildingClassification": "RCC"
+          },
+          {
+            "length": 28,
+            "breadth": 18,
+            "firmName": "Kumar Constructions",
+            "occupancy": "Owner",
+            "plinthArea": 504,
+            "floorNumber": "First Floor",
+            "occupantName": "Priya Singh",
+            "natureOfUsage": "Rental",
+            "constructionDate": "2025-10-20",
+            "unstructuredLand": "No",
+            "effectiveFromDate": "2025-11-15",
+            "igrsClassification": "A",
+            "buildingPermissionNo": "BP-2023-001",
+            "floorsDetailsEntered": true,
+            "buildingClassification": "RCC"
+          }
+        ],
+        "documents": [
+          {
+            "no": "DOC-001",
+            "files": [],
+            "courtName": "City Civil Court",
+            "documentType": "Patta Certificate (Issued by Revenue Department)",
+            "constructionDate": "2025-10-15",
+            "mroProceedingDate": "2025-10-10",
+            "mroProceedingNumber": "MRO-2025-001",
+            "testatorAndTwoWitnessesSigned": true
+          }
+        ],
+        "locationData": {
+          "address": "123 Main Street, Jayanagar, Bengaluru, Karnataka",
+          "timestamp": "2025-10-23T10:30:15.845Z",
+          "coordinates": {
+            "lat": 12.9279,
+            "lng": 77.5796
+          }
+        }
+      },
+      "currentState": "APPROVED",
+      "processInstanceId": "fb7688gd-d2eb-5593-b8c6-338g2f80f70d",
+      "createdTime": "2025-10-23T16:30:22.456789Z",
+      "updatedTime": "2025-10-23T17:45:33.123456Z",
+      "citizenId": "citizen-002",
+      "tenantId": "ka.bangalore"
+    },
+    {
+      "id": "26f7c253-3566-6e8d-c8d6-47ch1ce28d79",
+      "applicationNo": "PROP-20251023-0010-KG",
+      "propertyId": "c4efbcd7-92ch-6984-c58c-f002g3gb063e",
+      "property": {
+        "id": "c4efbcd7-92ch-6984-c58c-f002g3gb063e",
+        "categoryOfOwnership": "State Government",
+        "propertyType": "Mixed",
+        "apartmentName": "Riverfront Commercial Complex",
+        "owners": [
+          {
+            "id": 1761212599558,
+            "email": "meera.joshi@yahoo.com",
+            "gender": "FEMALE",
+            "mobile": "8765432109",
+            "aadhaar": "876543210987",
+            "guardian": "Suresh Joshi",
+            "ownerName": "Meera Joshi",
+            "guardianRelationship": "Husband"
+          },
+          {
+            "id": 1761212599559,
+            "email": "suresh.joshi@gmail.com",
+            "gender": "MALE",
+            "mobile": "7654321098",
+            "aadhaar": "765432109876",
+            "guardian": "Late Ramesh Joshi",
+            "ownerName": "Suresh Joshi",
+            "guardianRelationship": "Father"
+          }
+        ],
+        "propertyAddress": {
+          "street": "Second Street",
+          "wardNo": "Ward 2",
+          "zoneNo": "789",
+          "blockNo": "Block C",
+          "pincode": "500001",
+          "locality": "Banjara Hills",
+          "electionWard": "Ward-25",
+          "secretariatWard": "Sec-B",
+          "isCorrespondenceAddressDifferent": true
+        },
+        "assessmentDetails": {
+          "reason": "Extension",
+          "extentOfSite": 5000,
+          "landUnderBuilding": 3500,
+          "isUnspecifiedShare": true,
+          "occupancyCertificateDate": "2025-12-01",
+          "occupancyCertificateNumber": "OC-2025-789"
+        },
+        "isgrDetails": {
+          "doorNoTo": "210",
+          "igrsWard": "Ward B",
+          "igrsBlock": "Block 3",
+          "doorNoFrom": "201",
+          "habitation": "Riverfront Homes",
+          "igrsLocality": "Riverdale"
+        },
+        "isgrAdditionalDetails": {
+          "lifts": true,
+          "toilet": true,
+          "watertap": true,
+          "electricity": true,
+          "cableConnection": true,
+          "waterHarvesting": false,
+          "attachedBathroom": true
+        },
+        "constructionDetails": {
+          "roofType": "Concrete",
+          "wallType": "Stone",
+          "woodType": "Rosewood",
+          "floorType": "Marble"
+        },
+        "floors": [
+          {
+            "length": 25,
+            "breadth": 15,
+            "firmName": "Elite Constructions",
+            "occupancy": "Tenant",
+            "plinthArea": 375,
+            "floorNumber": "Ground Floor",
+            "occupantName": "Vikas Patel",
+            "natureOfUsage": "Rental",
+            "constructionDate": "2025-09-30",
+            "unstructuredLand": "No",
+            "effectiveFromDate": "2025-10-15",
+            "igrsClassification": "B",
+            "buildingPermissionNo": "BP-2022-015",
+            "floorsDetailsEntered": true,
+            "buildingClassification": "RCC High Rise Structure"
+          },
+          {
+            "length": 22,
+            "breadth": 16,
+            "firmName": "Elite Constructions",
+            "occupancy": "Owner",
+            "plinthArea": 352,
+            "floorNumber": "Second Floor",
+            "occupantName": "Meera Joshi",
+            "natureOfUsage": "Self Use",
+            "constructionDate": "2025-10-05",
+            "unstructuredLand": "No",
+            "effectiveFromDate": "2025-11-01",
+            "igrsClassification": "A",
+            "buildingPermissionNo": "BP-2022-015",
+            "floorsDetailsEntered": true,
+            "buildingClassification": "RCC High Rise Structure"
+          },
+          {
+            "length": 20,
+            "breadth": 14,
+            "firmName": "Elite Constructions",
+            "occupancy": "Tenant",
+            "plinthArea": 280,
+            "floorNumber": "Third Floor",
+            "occupantName": "Ravi Kumar",
+            "natureOfUsage": "Rental",
+            "constructionDate": "2025-10-10",
+            "unstructuredLand": "No",
+            "effectiveFromDate": "2025-11-15",
+            "igrsClassification": "C",
+            "buildingPermissionNo": "BP-2022-015",
+            "floorsDetailsEntered": true,
+            "buildingClassification": "RCC High Rise Structure"
+          }
+        ],
+        "documents": [
+          {
+            "no": "DOC-002",
+            "files": [],
+            "courtName": "High Court",
+            "documentType": "Decree by Civil Court",
+            "constructionDate": "2025-09-30",
+            "mroProceedingDate": "2025-09-25",
+            "mroProceedingNumber": "MRO-2025-002",
+            "testatorAndTwoWitnessesSigned": true
+          },
+          {
+            "no": "DOC-003",
+            "files": [],
+            "courtName": "District Court",
+            "documentType": "Registered Document",
+            "constructionDate": "2025-10-05",
+            "mroProceedingDate": "2025-10-01",
+            "mroProceedingNumber": "MRO-2025-003",
+            "testatorAndTwoWitnessesSigned": false
+          }
+        ],
+        "locationData": {
+          "address": "456 Second Street, Banjara Hills, Hyderabad, Telangana",
+          "timestamp": "2025-10-23T11:15:45.967Z",
+          "coordinates": {
+            "lat": 17.4126,
+            "lng": 78.4455
+          }
+        }
+      },
+      "currentState": "IN_PROGRESS",
+      "processInstanceId": "gc8799he-e3fc-6604-c9d7-449h3g91g81e",
+      "createdTime": "2025-10-23T17:45:11.789123Z",
+      "updatedTime": "2025-10-23T18:20:44.567890Z",
+      "citizenId": "citizen-003",
+      "tenantId": "tg.hyderabad"
+    }
+  ]
+}

@@ -40,9 +40,9 @@ export function BottomBar() {
       path: '/citizen',
     },
     {
-      label: messages['citizen.commons'][lang]['my-city-btn'],
-      icon: <ApartmentOutlinedIcon />,
-      iconFilled: <ApartmentIcon />,
+      label: messages['citizen.commons'][lang]['utility-btn'],
+      icon: <OfflineBoltOutlinedIcon />,
+      iconFilled: <OfflineBoltIcon />,
       path: '/under-construction',
     },
     {
@@ -52,9 +52,9 @@ export function BottomBar() {
       path: '/citizen/properties',
     },
     {
-      label: messages['citizen.commons'][lang]['utility-btn'],
-      icon: <OfflineBoltOutlinedIcon />,
-      iconFilled: <OfflineBoltIcon />,
+      label: messages['citizen.commons'][lang]['my-city-btn'],
+      icon: <ApartmentOutlinedIcon />,
+      iconFilled: <ApartmentIcon />,
       path: '/under-construction',
     },
   ];

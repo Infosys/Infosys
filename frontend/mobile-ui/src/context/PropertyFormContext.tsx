@@ -5,17 +5,6 @@ import type { ReactNode } from 'react';
 import type { Owner } from '../redux/apis/ownerApi';
 import type { Address } from '../redux/apis/addressApi';
 
-// export interface Owner {
-//   id: number;
-//   ownerName: string;
-//   aadhaar: string;
-//   mobile: string;
-//   email: string;
-//   gender: string;
-//   guardian: string;
-//   guardianRelationship: string;
-// }
-
 // Address details for a property
 export interface PropertyAddress {
   locality: string;
@@ -69,6 +58,7 @@ export interface ISGRAdditionalDetails {
   electricity: boolean;
   attachedBathroom: boolean;
   waterHarvesting: boolean;
+  amenityId?: string;
 }
 
 // Construction details for a property
@@ -90,6 +80,7 @@ export interface FloorDetails {
   occupancy: string;
   occupantName: string;
   constructionDate: string;
+  mezzanineArea: number;
   effectiveFromDate: string;
   unstructuredLand: string;
   length: number;
@@ -127,6 +118,7 @@ export interface LocationData {
   };
   timestamp?: string;
   drawnShapes?: Array<{
+    id?: number;
     type: 'point' | 'rectangle' | 'polygon';
     coordinates: number[] | number[][];
     area?: number;
@@ -137,6 +129,12 @@ export interface LocationData {
 // Main property form data structure
 export interface PropertyFormData {
   id: any;
+  typeOfLand: string;
+  noOfFloors? : number;
+  noOfBasements? : number;
+  hasMezzanine?: boolean;
+  noOfBuildings? : number;
+  buildingName? :string;
   categoryOfOwnership: string;
   propertyType: string;
   apartmentName: string;
@@ -160,6 +158,10 @@ const defaultFormData: PropertyFormData = {
   categoryOfOwnership: '',
   propertyType: '',
   apartmentName: '',
+  typeOfLand: '',
+  noOfFloors: undefined,
+  noOfBasements: undefined,
+  hasMezzanine: undefined,
   owners: [],
   isgrDetails: {
     id: '',

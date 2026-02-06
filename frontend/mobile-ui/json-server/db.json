@@ -1,0 +1,823 @@
+{
+  "documentTypes": [
+    { "id": 1, "name": "Patta Certificate (Issued by Revenue Department)" },
+    { "id": 2, "name": "Registered Will Document" },
+    { "id": 3, "name": "Un-registered Will Document" },
+    { "id": 4, "name": "Decree by Civil Court" },
+    { "id": 5, "name": "Registered Document" },
+    { "id": 6, "name": "Un-registered Document / Notary document" }
+  ],
+  "ownershipOptions": [
+    {
+      "name": "Vacant Land",
+      "id": "2755"
+    },
+    {
+      "name": "Private",
+      "id": "7db4"
+    },
+    {
+      "name": "Central Government 50%",
+      "id": "6de8"
+    },
+    {
+      "name": "Central Government 75%",
+      "id": "dd6c"
+    },
+    {
+      "name": "State Government",
+      "id": "dc86"
+    }
+    ,
+    {
+      "name": "Central Government 33.33%",
+      "id": "33d3"
+    }
+  ],
+  "propertyTypeOptions": [
+    {
+      "name": "Mixed",
+      "id": "dd67"
+    },
+    {
+      "name": "Residential",
+      "id": "e7a4"
+    },
+    {
+      "name": "Non- Residential",
+      "id": "7f3f"
+    }
+  ],
+  "vacantLandPropertyTypes": [
+    {
+      "name": "Central Government Land",
+      "id": "vlt-1"
+    },
+    {
+      "name": "State Government Land",
+      "id": "vlt-2"
+    },
+    {
+      "name": "Private Land",
+      "id": "vlt-3"
+    }
+  ],
+  "guardianRelationshipOptions": [
+    {
+      "name": "Father",
+      "id": "9531"
+    },
+    {
+      "name": "Mother",
+      "id": "2fa2"
+    },
+    {
+      "name": "Spouse",
+      "id": "d1bd"
+    },
+    {
+      "name": "Husband",
+      "id": "0e1d"
+    },
+    {
+      "name": "Other",
+      "id": "2e47"
+    }
+  ],
+  "genderOptions": [
+    {
+      "name": "MALE",
+      "id": "73d3"
+    },
+    {
+      "name": "FEMALE",
+      "id": "ce22"
+    },
+    {
+      "name": "OTHERS",
+      "id": "8e52"
+    }
+  ],
+  "owners": [],
+  "wardNoOptions": [
+    {
+      "name": "Ward 1",
+      "id": "8508"
+    },
+    {
+      "name": "Ward 2",
+      "id": "a05c"
+    },
+    {
+      "name": "Ward 3",
+      "id": "c0ab"
+    },
+    {
+      "name": "Ward 4",
+      "id": "9fa9"
+    }
+  ],
+  "blockNoOptions": [
+    {
+      "name": "Block A",
+      "id": "1885"
+    },
+    {
+      "name": "Block B",
+      "id": "d9ed"
+    },
+    {
+      "name": "Block C",
+      "id": "a765"
+    },
+    {
+      "name": "Block D",
+      "id": "d600"
+    }
+  ],
+  "streetOptions": [
+    {
+      "name": "Main Street",
+      "id": "c6e7"
+    },
+    {
+      "name": "First Street",
+      "id": "39f1"
+    },
+    {
+      "name": "Second Street",
+      "id": "1dc1"
+    },
+    {
+      "name": "Third Street",
+      "id": "00a9"
+    }
+  ],
+  "electionWardOptions": [
+    {
+      "name": "Election Ward 1",
+      "id": "ew-1"
+    },
+    {
+      "name": "Election Ward 2",
+      "id": "ew-2"
+    },
+    {
+      "name": "Election Ward 3",
+      "id": "ew-3"
+    },
+    {
+      "name": "Election Ward 4",
+      "id": "ew-4"
+    }
+  ],
+  "secretariatWardOptions": [
+    {
+      "name": "Brundhavan Gardens 1",
+      "id": "sw-1"
+    },
+    {
+      "name": "Brundhavan Gardens 2",
+      "id": "sw-2"
+    },
+    {
+      "name": "Brundhavan Gardens 3",
+      "id": "sw-3"
+    },
+    {
+      "name": "Brundhavan Gardens 4",
+      "id": "sw-4"
+    }
+  ],
+  "reason": [
+    {
+      "id": "1",
+      "label": "New Construction"
+    },
+    {
+      "id": "2",
+      "label": "Renovation"
+    },
+    {
+      "id": "3",
+      "label": "Extension"
+    },
+    {
+      "id": "4",
+      "label": "Demolition"
+    },
+    {
+      "id": "5",
+      "label": "Change of Use"
+    }
+  ],
+  "habitation": [
+    {
+      "id": "1",
+      "label": "Central Park Colony"
+    },
+    {
+      "id": "2",
+      "label": "Sunrise Apartments"
+    },
+    {
+      "id": "3",
+      "label": "Hilltop Residency"
+    },
+    {
+      "id": "4",
+      "label": "Riverfront Homes"
+    },
+    {
+      "id": "5",
+      "label": "Maple Street Villas"
+    }
+  ],
+  "igrsWard": [
+    {
+      "id": "1",
+      "label": "Ward A"
+    },
+    {
+      "id": "2",
+      "label": "Ward B"
+    },
+    {
+      "id": "3",
+      "label": "Ward C"
+    },
+    {
+      "id": "4",
+      "label": "Ward D"
+    },
+    {
+      "id": "5",
+      "label": "Ward E"
+    }
+  ],
+  "igrsLocality": [
+    {
+      "id": "1",
+      "label": "Green Meadows"
+    },
+    {
+      "id": "2",
+      "label": "Lakeview"
+    },
+    {
+      "id": "3",
+      "label": "Sunshine Valley"
+    },
+    {
+      "id": "4",
+      "label": "Riverdale"
+    },
+    {
+      "id": "5",
+      "label": "Maple Gardens"
+    }
+  ],
+  "igrsBlock": [
+    {
+      "id": "1",
+      "label": "Block 12"
+    },
+    {
+      "id": "2",
+      "label": "Block 7"
+    },
+    {
+      "id": "3",
+      "label": "Block 3"
+    },
+    {
+      "id": "4",
+      "label": "Block 9"
+    },
+    {
+      "id": "5",
+      "label": "Block 1"
+    }
+  ],
+  "doorNoFrom": [
+    {
+      "id": "1",
+      "label": "10"
+    },
+    {
+      "id": "2",
+      "label": "101"
+    },
+    {
+      "id": "3",
+      "label": "201"
+    },
+    {
+      "id": "4",
+      "label": "301"
+    },
+    {
+      "id": "5",
+      "label": "401"
+    }
+  ],
+  "doorNoTo": [
+    {
+      "id": "1",
+      "label": "15"
+    },
+    {
+      "id": "2",
+      "label": "110"
+    },
+    {
+      "id": "3",
+      "label": "210"
+    },
+    {
+      "id": "4",
+      "label": "310"
+    },
+    {
+      "id": "5",
+      "label": "410"
+    }
+  ],
+  "floorNumber": [
+    {
+      "id": "1",
+      "label": "Ground Floor"
+    },
+    {
+      "id": "2",
+      "label": "First Floor"
+    },
+    {
+      "id": "3",
+      "label": "Second Floor"
+    },
+    {
+      "id": "4",
+      "label": "Third Floor"
+    },
+    {
+      "id": "5",
+      "label": "Fourth Floor"
+    }
+  ],
+  "buildingClassification": [
+    { "id": "bc-0", "label": "select" },
+    { "id": "bc-1", "label": "ACC Sheet" },
+    { "id": "bc-2", "label": "ACC Sheet Exceeding 10 Feet Height" },
+    { "id": "bc-3", "label": "GI Sheet" },
+    { "id": "bc-4", "label": "Huts" },
+    { "id": "bc-5", "label": "Jack Arch" },
+    { "id": "bc-6", "label": "Madras Terrace" },
+    { "id": "bc-7", "label": "Mangalore/Country Tiled" },
+    { "id": "bc-8", "label": "RCC" },
+    { "id": "bc-9", "label": "RCC High Rise Structure" },
+    { "id": "bc-10", "label": "Slates/Stone Roofed" }
+  ],
+  "igrsClassification": [
+    {
+      "id": "1",
+      "label": "A"
+    },
+    {
+      "id": "2",
+      "label": "B"
+    },
+    {
+      "id": "3",
+      "label": "C"
+    }
+  ],
+  "natureOfUsage": [
+    {
+      "id": "1",
+      "label": "Commercial"
+    },
+    {
+      "id": "2",
+      "label": "Mixed Residentials"
+    },
+    {
+      "id": "3",
+      "label": "Others"
+    }
+  ],
+  "occupancy": [
+    {
+      "id": "1",
+      "label": "Owner"
+    },
+    {
+      "id": "2",
+      "label": "Tenant"
+    }
+  ],
+  "occupantName": [
+    {
+      "id": "1",
+      "label": "Ravi Kumar"
+    },
+    {
+      "id": "2",
+      "label": "Anita Sharma"
+    },
+    {
+      "id": "3",
+      "label": "Vikas Patel"
+    },
+    {
+      "id": "4",
+      "label": "Priya Singh"
+    },
+    {
+      "id": "5",
+      "label": "Meera Joshi"
+    }
+  ],
+  "unstructuredLand": [
+    {
+      "id": "1",
+      "label": "Yes"
+    },
+    {
+      "id": "2",
+      "label": "No"
+    }
+  ],
+  "length": [
+    {
+      "id": "1",
+      "label": "30"
+    },
+    {
+      "id": "2",
+      "label": "25"
+    },
+    {
+      "id": "3",
+      "label": "28"
+    },
+    {
+      "id": "4",
+      "label": "18"
+    },
+    {
+      "id": "5",
+      "label": "22"
+    }
+  ],
+  "breadth": [
+    {
+      "id": "1",
+      "label": "20"
+    },
+    {
+      "id": "2",
+      "label": "15"
+    },
+    {
+      "id": "3",
+      "label": "18"
+    },
+    {
+      "id": "4",
+      "label": "15"
+    },
+    {
+      "id": "5",
+      "label": "16"
+    }
+  ],
+  "plinthArea": [
+    {
+      "id": "1",
+      "label": "600"
+    },
+    {
+      "id": "2",
+      "label": "375"
+    },
+    {
+      "id": "3",
+      "label": "504"
+    },
+    {
+      "id": "4",
+      "label": "270"
+    },
+    {
+      "id": "5",
+      "label": "352"
+    }
+  ],
+  "buildingPermissionNo": [
+    {
+      "id": "1",
+      "label": "BP-2023-001"
+    },
+    {
+      "id": "2",
+      "label": "BP-2022-015"
+    },
+    {
+      "id": "3",
+      "label": "BP-2021-032"
+    },
+    {
+      "id": "4",
+      "label": "BP-2020-087"
+    },
+    {
+      "id": "5",
+      "label": "BP-2019-021"
+    }
+  ],
+  "floorType": [
+    {
+      "id": "1",
+      "label": "Marble"
+    },
+    {
+      "id": "2",
+      "label": "Tiles"
+    },
+    {
+      "id": "3",
+      "label": "Granite"
+    },
+    {
+      "id": "4",
+      "label": "Concrete"
+    },
+    {
+      "id": "5",
+      "label": "Other"
+    }
+  ],
+  "roofType": [
+    {
+      "id": "1",
+      "label": "Concrete"
+    },
+    {
+      "id": "2",
+      "label": "Metal"
+    },
+    {
+      "id": "3",
+      "label": "Asbestos"
+    },
+    {
+      "id": "4",
+      "label": "Tiles"
+    },
+    {
+      "id": "5",
+      "label": "Other"
+    }
+  ],
+  "wallType": [
+    {
+      "id": "1",
+      "label": "Brick"
+    },
+    {
+      "id": "2",
+      "label": "Stone"
+    },
+    {
+      "id": "3",
+      "label": "Concrete"
+    },
+    {
+      "id": "4",
+      "label": "Wood"
+    },
+    {
+      "id": "5",
+      "label": "Other"
+    }
+  ],
+  "woodType": [
+    {
+      "id": "1",
+      "label": "Teak"
+    },
+    {
+      "id": "2",
+      "label": "Sal"
+    },
+    {
+      "id": "3",
+      "label": "Rosewood"
+    },
+    {
+      "id": "4",
+      "label": "Mango"
+    },
+    {
+      "id": "5",
+      "label": "Other"
+    }
+  ],
+  "properties": [
+    {
+      "id": "PRP-2024-001",
+      "type": "Survey",
+      "description": "New residential property verification required",
+      "address": "123 Gandhi Nagar, Guntur, Andhra Pradesh",
+      "dueDate": "2025-10-13",
+      "status": "High",
+      "phoneNumber": "+91 98765 43210",
+      "area": "35,400 sqft",
+      "propertyType": "Residential",
+      "isVerified": true,
+      "isDraft": false,
+      "isNew": false,
+      "createdDate": "2025-10-10"
+    },
+    {
+      "id": "PRP-2024-002",
+      "type": "Survey",
+      "description": "Commercial property compliance check required",
+      "address": "456 Brodipet, Guntur, Andhra Pradesh",
+      "dueDate": "2025-10-20",
+      "status": "Medium",
+      "phoneNumber": "+91 98765 43211",
+      "area": "3,43,500 sqft",
+      "propertyType": "Commercial",
+      "isVerified": false,
+      "isDraft": true,
+      "isNew": false,
+      "createdDate": "2025-10-08"
+    },
+    {
+      "id": "PRP-2025-003",
+      "type": "Survey",
+      "description": "Apartment complex verification pending final review",
+      "address": "789 Lakshmipuram, Guntur, Andhra Pradesh",
+      "dueDate": "2025-10-10",
+      "status": "Low",
+      "phoneNumber": "+91 98765 43212",
+      "area": "1,32,400 sqft",
+      "propertyType": "Residential",
+      "isVerified": false,
+      "isDraft": false,
+      "isNew": true,
+      "createdDate": "2025-10-13"
+    },
+    {
+      "id": "PRP-2024-234",
+      "type": "Commercial",
+      "description": "456 Brodipet Main Road, Guntur, Andhra Pradesh 522002",
+      "address": "456 Brodipet Main Road, Guntur, Andhra Pradesh 522002",
+      "dueDate": "2025-10-15",
+      "status": "Medium",
+      "phoneNumber": "+91 98765 43213",
+      "area": "3,43,500 sqft",
+      "propertyType": "Commercial",
+      "isVerified": true,
+      "isDraft": false,
+      "isNew": false,
+      "createdDate": "2025-10-05"
+    },
+    {
+      "id": "PRP-2024-324",
+      "type": "Residential",
+      "description": "231 Brodipet Main Road, Guntur, Andhra Pradesh 522002",
+      "address": "231 Brodipet Main Road, Guntur, Andhra Pradesh 522002",
+      "dueDate": "2025-10-18",
+      "status": "Low",
+      "phoneNumber": "+91 98765 43214",
+      "area": "1,32,400 sqft",
+      "propertyType": "Residential",
+      "isVerified": false,
+      "isDraft": true,
+      "isNew": false,
+      "createdDate": "2025-10-07"
+    },
+    {
+      "id": "PRP-2025-005",
+      "type": "Survey",
+      "description": "New office complex verification required",
+      "address": "567 Ring Road, Guntur, Andhra Pradesh",
+      "dueDate": "2025-10-25",
+      "status": "High",
+      "phoneNumber": "+91 98765 43215",
+      "area": "2,45,000 sqft",
+      "propertyType": "Commercial",
+      "isVerified": false,
+      "isDraft": false,
+      "isNew": true,
+      "createdDate": "2025-10-12"
+    },
+    {
+      "id": "PRP-2024-150",
+      "type": "Survey",
+      "description": "Residential villa verification completed",
+      "address": "890 Kothapet, Guntur, Andhra Pradesh",
+      "dueDate": "2025-10-05",
+      "status": "Low",
+      "phoneNumber": "+91 98765 43216",
+      "area": "5,200 sqft",
+      "propertyType": "Residential",
+      "isVerified": true,
+      "isDraft": false,
+      "isNew": false,
+      "createdDate": "2025-09-28"
+    },
+    {
+      "id": "PRP-2024-403",
+      "type": "Survey",
+      "description": "Commercial property assessment draft",
+      "address": "456 Brodipet, Guntur, Andhra Pradesh, 522402",
+      "dueDate": "2025-10-10",
+      "status": "Medium",
+      "phoneNumber": "+91 98765 43217",
+      "area": "4,20,000 sqft",
+      "propertyType": "Commercial",
+      "isVerified": false,
+      "isDraft": true,
+      "isNew": false,
+      "createdDate": "2025-09-30"
+    }
+  ],
+  "location": {
+    "address": "123 Gandhi Nagar, Guntur, Andhra Pradesh 522003",
+    "coordinates": {
+      "lat": 16.2973,
+      "lng": 80.4364
+    },
+    "phoneNumber": "+91 39243 22342"
+  },
+  "searchResults": [
+    {
+      "id": "PRP-2024-001",
+      "type": "Residential",
+      "description": "123 Gandhi Nagar, Guntur, Andhra Pradesh 522003",
+      "address": "123 Gandhi Nagar, Guntur, Andhra Pradesh 522003",
+      "dueDate": "2025-10-13",
+      "status": "High",
+      "area": "35,400 sqft",
+      "isVerified": true,
+      "propertyType": "Residential"
+    },
+    {
+      "id": "PRP-2024-234",
+      "type": "Commercial",
+      "description": "456 Brodipet Main Road, Guntur, Andhra Pradesh 522002",
+      "address": "456 Brodipet Main Road, Guntur, Andhra Pradesh 522002",
+      "dueDate": "2025-10-15",
+      "status": "Medium",
+      "area": "3,43,500 sqft",
+      "isVerified": true,
+      "propertyType": "Commercial"
+    },
+    {
+      "id": "PRP-2024-324",
+      "type": "Residential",
+      "description": "231 Brodipet Main Road, Guntur, Andhra Pradesh 522002",
+      "address": "231 Brodipet Main Road, Guntur, Andhra Pradesh 522002",
+      "dueDate": "2025-10-18",
+      "status": "Low",
+      "area": "1,32,400 sqft",
+      "isVerified": false,
+      "propertyType": "Residential"
+    }
+  ],
+  "searchFields": [
+    {
+      "value": "",
+      "label": "All",
+      "id": "b5f3"
+    },
+    {
+      "value": "location",
+      "label": "Location",
+      "id": "d9f2"
+    },
+    {
+      "value": "owner",
+      "label": "Owner Name",
+      "id": "a646"
+    },
+    {
+      "value": "phone",
+      "label": "Phone Number",
+      "id": "e8a3"
+    }
+  ],
+  "isgrAdditionalOptions": [
+    { "key": "lifts", "label": "Lifts" },
+    { "key": "toilet", "label": "Toilet" },
+    { "key": "watertap", "label": "Water Tap" },
+    { "key": "cableConnection", "label": "Cable Connection" },
+    { "key": "electricity", "label": "Electricity" },
+    { "key": "attachedBathroom", "label": "Attached Bathroom" },
+    { "key": "waterHarvesting", "label": "Water Harvesting" }
+  ]
+}

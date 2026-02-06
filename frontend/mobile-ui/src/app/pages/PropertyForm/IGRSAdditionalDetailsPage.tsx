@@ -1,25 +1,24 @@
-import React, { useEffect, useState } from 'react';
-import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
-import Checkbox from '@mui/material/Checkbox';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Button from '@mui/material/Button';
-import { useNavigate } from 'react-router-dom';
-import { useFormMode } from '../../../context/FormModeContext';
-import { usePropertyForm } from '../../../context/PropertyFormContext';
+import React, { useEffect, useState } from "react";
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Button from "@mui/material/Button";
+import { useNavigate } from "react-router-dom";
+import { useFormMode } from "../../../context/FormModeContext";
+import { usePropertyForm } from "../../../context/PropertyFormContext";
 // JsonService & getIsgrAdditionalOptions removed if amenity options are static!
-import { useLocalization } from '../../../services/AgentLocalisation/formLocalisation';
-import StepHeader from '../../features/Agent/components/StepHeader';
-import { useAssessmentDetailsLocalization } from '../../../services/AgentLocalisation/localisation-AssessmentDetails';
-import { verifyButtonSx } from './styles/sharedStyles';
-import type { AlertType } from '../../models/AlertType.model';
+import { useLocalization } from "../../../services/AgentLocalisation/formLocalisation";
+import StepHeader from "../../features/Agent/components/StepHeader";
+import { useAssessmentDetailsLocalization } from "../../../services/AgentLocalisation/localisation-AssessmentDetails";
+import { verifyButtonSx } from "./styles/sharedStyles";
+import type { AlertType } from "../../models/AlertType.model";
 import {
-  useGetAmenitiesByPropertyIdQuery,
   useCreateAmenityMutation,
   useUpdateAmenityMutation,
-} from '../../../redux/apis/amenitiesApi';
-import { NotificationPopup } from '../../components/Popup/NotificationPopup';
+} from "../../../redux/apis/amenitiesApi";
+import { NotificationPopup } from "../../components/Popup/NotificationPopup";
 
 type IsgrOption = {
   key: string;
@@ -38,36 +37,55 @@ type LocalData = {
 
 // Amenity options - static mapping. If you need to fetch options, uncomment fetch block below.
 const OPTIONS: IsgrOption[] = [
-  { key: 'lifts', label: 'Lift' },
-  { key: 'toilet', label: 'Toilets' },
-  { key: 'watertap', label: 'Water Tap' },
-  { key: 'cableConnection', label: 'Cable Connection' },
-  { key: 'electricity', label: 'Electricity' },
-  { key: 'attachedBathroom', label: 'Attached Bathroom' },
-  { key: 'waterHarvesting', label: 'Water Harvesting' },
+  { key: "lifts", label: "Lift" },
+  { key: "toilet", label: "Toilets" },
+  { key: "watertap", label: "Water Tap" },
+  { key: "cableConnection", label: "Cable Connection" },
+  { key: "electricity", label: "Electricity" },
+  { key: "attachedBathroom", label: "Attached Bathroom" },
+  { key: "waterHarvesting", label: "Water Harvesting" },
 ];
-  
+
 const AMENITY_TYPE_MAPPING: Record<keyof LocalData, string> = {
-  lifts: 'Lift',
-  toilet: 'Toilets',
-  watertap: 'Water Tap',
-  cableConnection: 'Cable Connection',
-  electricity: 'Electricity',
-  attachedBathroom: 'Attached Bathroom',
-  waterHarvesting: 'Water Harvesting',
+  lifts: "Lift",
+  toilet: "Toilets",
+  watertap: "Water Tap",
+  cableConnection: "Cable Connection",
+  electricity: "Electricity",
+  attachedBathroom: "Attached Bathroom",
+  waterHarvesting: "Water Harvesting",
 };
 
-const containerSx = { width: '100%', margin: '0 auto', minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", bgcolor: '#fff' };
-const headerSx = { backgroundColor: '#F9E6E0', padding: '16px' };
-const formContentSx = { flex: 1, px: '8%', py: 3, backgroundColor: '#FFFFFF' };
-const checkboxWrapperSx = { display: 'flex', flexDirection: 'column', gap: 1 };
-const checkboxLabelSx = { fontSize: 16, color: '#000', fontWeight: 300, textAlign: 'left' };
-const formSubmitSx = { padding: '16px 0', backgroundColor: '#FFFFFF' };
+const containerSx = {
+  width: "100%",
+  margin: "0 auto",
+  minHeight: "100vh",
+  display: "flex",
+  flexDirection: "column",
+  fontFamily:
+    "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+  bgcolor: "#fff",
+};
+
+const formContentSx = { flex: 1, px: "8%", py: 3, backgroundColor: "#FFFFFF" };
+const checkboxWrapperSx = { display: "flex", flexDirection: "column", gap: 1 };
+const checkboxLabelSx = {
+  fontSize: 16,
+  color: "#000",
+  fontWeight: 300,
+  textAlign: "left",
+};
+const formSubmitSx = { padding: "16px 0", backgroundColor: "#FFFFFF" };
 
 const ISGRAdditionalDetailsPage: React.FC = () => {
   const { mode } = useFormMode();
   const navigate = useNavigate();
   const { formData, updateForm } = usePropertyForm();
+  const [hasModified, setHasModified] = useState(false);
+
+  const markModified = () => {
+    if (mode === "verify") setHasModified(true);
+  };
   const {
     nextButtonText,
     translateDropdown,
@@ -75,7 +93,8 @@ const ISGRAdditionalDetailsPage: React.FC = () => {
     newPropertyForm,
     previousText,
   } = useLocalization();
-  const { propertyFormTitle, saveDraftText } = useAssessmentDetailsLocalization();
+  const { propertyFormTitle, saveDraftText } =
+    useAssessmentDetailsLocalization();
 
   const [localData, setLocalData] = useState<LocalData>({
     lifts: formData.isgrAdditionalDetails?.lifts || false,
@@ -87,14 +106,7 @@ const ISGRAdditionalDetailsPage: React.FC = () => {
     waterHarvesting: formData.isgrAdditionalDetails?.waterHarvesting || false,
   });
 
-  console.log(formData);
-  
-
-  const hasLoadedAmenities = React.useRef(false);
-
-  // API hooks
-  const { data: existingAmenities } =
-    useGetAmenitiesByPropertyIdQuery(formData.id || '', { skip: !formData.id });
+  // API hooks - only mutations needed
   const [createAmenity] = useCreateAmenityMutation();
   const [updateAmenity] = useUpdateAmenityMutation();
 
@@ -107,104 +119,114 @@ const ISGRAdditionalDetailsPage: React.FC = () => {
       .filter(([_, isSelected]) => isSelected)
       .map(([fieldName]) => AMENITY_TYPE_MAPPING[fieldName as keyof LocalData]);
 
-  // Convert API amenity types to local form data
-  const convertApiDataToLocalData = (amenityTypes: string[]): LocalData => {
-    const result: LocalData = {
-      lifts: false,
-      toilet: false,
-      watertap: false,
-      cableConnection: false,
-      electricity: false,
-      attachedBathroom: false,
-      waterHarvesting: false,
-    };
-    const reverseMapping: Record<string, keyof LocalData> = {};
-    Object.entries(AMENITY_TYPE_MAPPING).forEach(([field, apiType]) => {
-      reverseMapping[apiType.toLowerCase()] = field as keyof LocalData;
-    });
-    amenityTypes.forEach((apiType) => {
-      const fieldName = reverseMapping[apiType.toLowerCase()];
-      if (fieldName && fieldName in result) result[fieldName] = true;
-    });
-    return result;
-  };
-
   // Centralized handler for all checkboxes
   const handleCheckboxChange =
     (name: keyof LocalData) =>
     (_event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => {
+      markModified();
       setLocalData((prev) => ({ ...prev, [name]: checked }));
     };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.id) {
-      showErrorPopup('Property ID is missing');
+      showErrorPopup("Property ID is missing");
       return;
     }
 
     const selectedTypes = getSelectedAmenityTypes(localData);
+    const applicationId = localStorage.getItem("applicationLogId") || "";
+    const isVerifying = hasModified;
 
     try {
-      // Use already loaded amenities, no refetch!
-      const existingAmenity = existingAmenities?.data;
-      if (existingAmenity && existingAmenity.ID) {
+      // Check context for amenity ID
+      if (formData.isgrAdditionalDetails?.amenityId) {
+        // UPDATE - amenity already exists
         await updateAmenity({
-          amenityId: existingAmenity.ID,
+          amenityId: formData.isgrAdditionalDetails.amenityId,
           property_id: formData.id,
           type: selectedTypes,
+          applicationId,
+          isVerifying,
         }).unwrap();
+
+        updateForm({
+          isgrAdditionalDetails: {
+            ...localData,
+            amenityId: formData.isgrAdditionalDetails.amenityId,
+          },
+        });
       } else {
-        await createAmenity({
+        // CREATE - new amenity
+        const result = await createAmenity({
           property_id: formData.id,
           type: selectedTypes,
         }).unwrap();
+
+        // Store the amenity ID in context for future updates
+        updateForm({
+          isgrAdditionalDetails: {
+            ...localData,
+            amenityId: result.data.ID,
+          },
+        });
       }
 
-      updateForm({ isgrAdditionalDetails: { ...localData } });
-      navigate('/property-form/construction-details');
+      navigate("/property-form/construction-details");
     } catch (err: any) {
-      showErrorPopup(err?.data?.message || 'Failed to save amenities');
+      showErrorPopup(err?.data?.message || "Failed to save amenities");
     }
   };
 
   const handleGoBack = () => navigate(-1);
 
   // Popup state
-  const [popup, setPopup] = useState<{ type: AlertType; open: boolean; title: string; message: string; duration: number; }>({
-    type: 'warning',
+  const [popup, setPopup] = useState<{
+    type: AlertType;
+    open: boolean;
+    title: string;
+    message: string;
+    duration: number;
+  }>({
+    type: "warning",
     open: false,
-    title: '',
-    message: '',
+    title: "",
+    message: "",
     duration: 3000,
   });
 
   function showErrorPopup(message: string, duration = 3000) {
     setPopup((prev) => ({ ...prev, open: false }));
-    setTimeout(() =>
-      setPopup({
-        type: 'warning',
-        open: true,
-        title: 'Warning!',
-        message,
-        duration,
-      }), 10
+    setTimeout(
+      () =>
+        setPopup({
+          type: "warning",
+          open: true,
+          title: "Warning!",
+          message,
+          duration,
+        }),
+      10
     );
   }
 
-  // Load existing amenities once when API data is first available (no formData dependency needed)
+  // Load data from formData context on mount
   useEffect(() => {
-    if (
-      existingAmenities?.data.type &&
-      existingAmenities.data.type.length > 0 &&
-      !hasLoadedAmenities.current
-    ) {
-      const convertedData = convertApiDataToLocalData(existingAmenities.data.type);
-      setLocalData(convertedData);
-      updateForm({ isgrAdditionalDetails: convertedData });
-      hasLoadedAmenities.current = true;
+    if (formData.isgrAdditionalDetails) {
+      setLocalData({
+        lifts: formData.isgrAdditionalDetails.lifts || false,
+        toilet: formData.isgrAdditionalDetails.toilet || false,
+        watertap: formData.isgrAdditionalDetails.watertap || false,
+        cableConnection:
+          formData.isgrAdditionalDetails.cableConnection || false,
+        electricity: formData.isgrAdditionalDetails.electricity || false,
+        attachedBathroom:
+          formData.isgrAdditionalDetails.attachedBathroom || false,
+        waterHarvesting:
+          formData.isgrAdditionalDetails.waterHarvesting || false,
+      });
     }
-  }, [existingAmenities, updateForm]);
+  }, [formData.isgrAdditionalDetails]);
 
   return (
     <>
@@ -216,18 +238,16 @@ const ISGRAdditionalDetailsPage: React.FC = () => {
         onClose={() => setPopup((p) => ({ ...p, open: false }))}
       />
       <Box sx={containerSx}>
-        <Box sx={headerSx}>
-          <StepHeader
-            title={mode === 'new' ? newPropertyForm : propertyFormTitle}
-            subtitle={"IGRS Details"}
-            steps={10}
-            activeStep={5}
-            onPrevious={handleGoBack}
-            // Removed unused SaveDraft handler
-            previousText={previousText}
-            saveDraftText={saveDraftText}
-          />
-        </Box>
+        <StepHeader
+          title={mode === "new" ? newPropertyForm : propertyFormTitle}
+          subtitle={"IGRS Details"}
+          steps={10}
+          activeStep={5}
+          onPrevious={handleGoBack}
+          // Removed unused SaveDraft handler
+          previousText={previousText}
+          saveDraftText={saveDraftText}
+        />
         <Box component="main" sx={formContentSx}>
           <form onSubmit={handleSubmit}>
             <Stack spacing={2} sx={checkboxWrapperSx}>
@@ -237,9 +257,11 @@ const ISGRAdditionalDetailsPage: React.FC = () => {
                   control={
                     <Checkbox
                       checked={localData[option.key as keyof LocalData]}
-                      onChange={handleCheckboxChange(option.key as keyof LocalData)}
+                      onChange={handleCheckboxChange(
+                        option.key as keyof LocalData
+                      )}
                       name={option.key}
-                      sx={{ padding: 0, marginRight: 1 }}
+                      sx={{ padding: 0, marginRight: 1, color: "#C84C0E" }}
                       color="default"
                     />
                   }
@@ -248,7 +270,7 @@ const ISGRAdditionalDetailsPage: React.FC = () => {
                       {translateDropdown(option.label)}
                     </Typography>
                   }
-                  sx={{ alignItems: 'center', gap: 1 }}
+                  sx={{ alignItems: "center", gap: 1 }}
                 />
               ))}
             </Stack>
@@ -257,13 +279,13 @@ const ISGRAdditionalDetailsPage: React.FC = () => {
                 type="submit"
                 sx={{
                   ...verifyButtonSx,
-                  display: 'block',
-                  marginLeft: 'auto',
-                  marginTop: '200px',
+                  display: "block",
+                  marginLeft: "auto",
+                  marginTop: "200px",
                 }}
                 variant="contained"
               >
-                {mode === 'verify' ? 'Verify' : nextButtonText}
+                {mode === "verify" ? "Verify" : nextButtonText}
               </Button>
             </Box>
           </form>

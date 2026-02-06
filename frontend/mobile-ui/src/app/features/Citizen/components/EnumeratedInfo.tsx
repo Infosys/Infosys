@@ -15,8 +15,6 @@ import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import { useAppSelector } from "../../../../redux/Hooks";
 import { getMessagesFromSession, useLocalization } from "../../../../services/Citizen/Localization/LocalizationContext";
 import LoadingPage from "../../../components/Loader";
-
-
 // Props for EnumeratedInfo: bills/amount/licenses and navigation handlers
 interface EnumeratedInfoProps {
   billsDue: number;
@@ -25,7 +23,6 @@ interface EnumeratedInfoProps {
   onViewBills?: () => void;
   onViewLicenses?: () => void;
 }
-
 // EnumeratedInfo component: renders summary cards for bills and licenses
 const EnumeratedInfo: React.FC<EnumeratedInfoProps> = ({
   billsAmount,
@@ -36,12 +33,10 @@ const EnumeratedInfo: React.FC<EnumeratedInfoProps> = ({
   const lang = useAppSelector(state => state.lang.citizenLang); // Current language
   const { loading } = useLocalization(); // Global loading state
   const messages = getMessagesFromSession("CITIZEN")!; // Localized messages
-
   // Show loader if localization is loading
   if (loading) {
     return <LoadingPage />;
   }
-
   // Render summary cards for bills and licenses
   return (
     <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
@@ -134,6 +129,5 @@ const EnumeratedInfo: React.FC<EnumeratedInfoProps> = ({
     </Box>
   );
 };
-
 // Export EnumeratedInfo for use in Citizen dashboard
 export default EnumeratedInfo;

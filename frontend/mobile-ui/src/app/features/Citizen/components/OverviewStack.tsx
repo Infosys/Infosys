@@ -161,11 +161,10 @@ const OverviewStack: FC<OverviewStackProps> = ({ property }) => {
       {/* Property Value */}
       <Box mt={0.5} paddingLeft={4}>
         <Typography fontSize={13} color="#888">
-          {/* {messages['citizen.my-properties'][lang]['property-value']}
-           */}
+          {}
         </Typography>
         <Typography fontWeight={700} color="#222" fontSize={17}>
-          {/* {propertyValue} */}
+          {}
         </Typography>
       </Box>
     </Stack>

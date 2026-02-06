@@ -13,7 +13,7 @@
 import { Box, Button, IconButton, Paper, Stack, Typography, CircularProgress } from '@mui/material';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
-// import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { AddAPhotoOutlined, TaskOutlined } from '@mui/icons-material';
 import type { FC } from 'react';
@@ -45,7 +45,7 @@ interface DocumentDisplay {
 
 // Converts property.Documents from API format to DocumentDisplay[] for UI rendering
 function buildDocumentDisplayList(property: CitizenPropertyData): DocumentDisplay[] {
-  if (!property || !property.Documents || property.Documents.length === 0) {
+  if (!property?.Documents || property.Documents.length === 0) {
     return [];
   }
 
@@ -211,7 +211,7 @@ const Documents: FC<DocumentsProps> = ({ property }) => {
       a.download = filename || 'document';
       document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
+      a.remove();
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error downloading document:', error);
@@ -219,9 +219,7 @@ const Documents: FC<DocumentsProps> = ({ property }) => {
     }
   };
 
-  // const handleEditDocument = (fileStoreId: string) => {
-  //   console.log('Edit document:', fileStoreId);
-  // };
+  
 
   // Choose file handler for upload (stub)
   const handleChooseFile = (documentType: string) => {
@@ -245,17 +243,39 @@ const Documents: FC<DocumentsProps> = ({ property }) => {
 
       {sortedDocuments && sortedDocuments.length > 0 ? (
         <Stack gap={2}>
-          {sortedDocuments.map((doc, idx) => {
+          {sortedDocuments.map((doc) => {
             const isChooseFile = doc.isUpload || doc.isChooseFile;
             const borderColor = isChooseFile ? '#C84C0E' : '#e0e0e0';
             const isFileLoading = loadingFiles[doc.fileStoreId || ''];
             const hasError = Boolean(fileErrors[doc.fileStoreId || '']);
 
+            // Helper function to render document icon
+            const renderDocumentIcon = () => {
+              if (isFileLoading) {
+                return <CircularProgress size={32} sx={{ color: iconColor }} />;
+              }
+              if (hasError) {
+                return <ErrorOutlineIcon sx={{ fontSize: 32, color: '#f44336' }} />;
+              }
+              return <TaskOutlined sx={{ fontSize: 32, color: '#222' }} />;
+            };
+
+            // Helper function to render document status text
+            const renderDocumentStatus = () => {
+              if (hasError) {
+                return <span style={{ color: '#c62828' }}>{fileErrors[doc.fileStoreId || '']}</span>;
+              }
+              if (isFileLoading) {
+                return 'Loading file...';
+              }
+              return <>{doc.size && `${doc.size} • `}{doc.date}</>;
+            };
+
             // Upload-needed document card
             if (isChooseFile) {
               return (
                 <Paper
-                  key={idx}
+                  key={doc.fileStoreId}
                   elevation={0}
                   sx={{
                     borderRadius: 2,
@@ -318,7 +338,7 @@ const Documents: FC<DocumentsProps> = ({ property }) => {
             // Normal document card: view, download, edit, error, loading
             return (
               <Paper
-                key={idx}
+                key={doc.fileStoreId}
                 elevation={0}
                 sx={{
                   borderRadius: 2,
@@ -332,13 +352,7 @@ const Documents: FC<DocumentsProps> = ({ property }) => {
                 }}
               >
                 <Box display="flex" alignItems="center" justifyContent="center" marginRight={2}>
-                  {isFileLoading ? (
-                    <CircularProgress size={32} sx={{ color: iconColor }} />
-                  ) : hasError ? (
-                    <ErrorOutlineIcon sx={{ fontSize: 32, color: '#f44336' }} />
-                  ) : (
-                    <TaskOutlined sx={{ fontSize: 32, color: '#222' }} />
-                  )}
+                  {renderDocumentIcon()}
                 </Box>
                 <Box flex={1} minWidth={0}>
                   <Box display="flex" alignItems="center" width="100%">
@@ -350,22 +364,6 @@ const Documents: FC<DocumentsProps> = ({ property }) => {
                     >
                       {doc.title}
                     </Typography>
-                    {doc.action === 'PENDING' && !hasError && (
-                      <Box
-                        sx={{
-                          bgcolor: '#FFF3E0',
-                          color: '#E65100',
-                          px: 1,
-                          py: 0.3,
-                          borderRadius: 1,
-                          fontSize: 10,
-                          fontWeight: 600,
-                          mr: 1,
-                        }}
-                      >
-                        PENDING APPROVAL
-                      </Box>
-                    )}
                     {hasError && (
                       <Box
                         sx={{
@@ -400,13 +398,7 @@ const Documents: FC<DocumentsProps> = ({ property }) => {
                   </Typography>
                   <Box display="flex" alignItems="center">
                     <Typography fontSize={10} color="#888" sx={{ flex: 1 }}>
-                      {hasError ? (
-                        <span style={{ color: '#c62828' }}>{fileErrors[doc.fileStoreId || '']}</span>
-                      ) : isFileLoading ? (
-                        'Loading file...'
-                      ) : (
-                        <>{doc.size && `${doc.size} • `}{doc.date}</>
-                      )}
+                      {renderDocumentStatus()}
                     </Typography>
                     <IconButton 
                       size="small" 

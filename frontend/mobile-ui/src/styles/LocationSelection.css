@@ -320,6 +320,22 @@
   border-color: #C84C0E;
 }
 
+/* Disabled state for finish button when less than 3 points */
+.polygon-control-btn.finish:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #ffffff;
+  /* color: #999; */
+  border-color: #e0e0e0;
+  box-shadow: none;
+}
+
+.polygon-control-btn.finish:disabled:hover {
+  background: #ffffff;
+  transform: none;
+  box-shadow: none;
+}
+
 /* Legacy search bar styles for backward compatibility */
 .search-bar {
   position: relative;

@@ -70,7 +70,7 @@ const PropertyList: React.FC<{ properties: CitizenApplicationSummary[] }> = ({ p
               key={property.id}
               applicationId={property.applicationId}
               property={property}
-              bgcolor={bgcolor}
+              bgcolor={property.status === "APPROVED" ? "#f5f5f5" : bgcolor }
               // propertyDetails={property.propertyDetails}
             />
           );

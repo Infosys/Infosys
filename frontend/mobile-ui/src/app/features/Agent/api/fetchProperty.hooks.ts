@@ -20,7 +20,6 @@ export const fetchPropertyDetails = async (
   try {
     const applicationData = await getApplicationById(applicationId).unwrap();
     const ownersData = await getOwnerByPropertyId(propID).unwrap();
-    console.log(ownersData);
     
     updateForm({
       id: propID,
@@ -28,7 +27,13 @@ export const fetchPropertyDetails = async (
       propertyType: applicationData.data.Property.PropertyType || '',
       apartmentName: applicationData.data.Property.ComplexName || '',
       propertyNo: applicationData.data.Property.PropertyNo || '',
-      propertyAddress: (applicationData.data.Property.Address as any) || undefined,
+      propertyAddress: (applicationData.data.Property.Address) || undefined,
+      typeOfLand: applicationData.data.Property.typeOfLand || '',
+      noOfFloors: applicationData.data.Property.noOfFloors || undefined,
+      noOfBasements: applicationData.data.Property.noOfBasements || undefined,
+      noOfBuildings: applicationData.data.Property.noOfBuildings || undefined,
+      buildingName: applicationData.data.Property.buildingName || undefined,
+      hasMezzanine: applicationData.data.Property.hasMezzanine || undefined,
       locationData: applicationData.data.Property.GISData
         ? {
           gisDataId: applicationData.data.Property.GISData.ID,
@@ -51,9 +56,31 @@ export const fetchPropertyDetails = async (
         }
         : undefined,
       owners: ownersData.data || [],
-      isgrDetails: (applicationData.data.Property.IGRS as any) || undefined,
-      assessmentDetails: (applicationData.data.Property.AssessmentDetails as any) || undefined,
+      isgrDetails: (applicationData.data.Property.IGRS) || undefined,
+      assessmentDetails: (applicationData.data.Property.AssessmentDetails) || undefined,
+      isgrAdditionalDetails: applicationData.data.Property.Amenities
+        ? {
+            lifts: applicationData.data.Property.Amenities.type?.includes('Lift') || false,
+            toilet: applicationData.data.Property.Amenities.type?.includes('Toilets') || false,
+            watertap: applicationData.data.Property.Amenities.type?.includes('Water Tap') || false,
+            cableConnection: applicationData.data.Property.Amenities.type?.includes('Cable Connection') || false,
+            electricity: applicationData.data.Property.Amenities.type?.includes('Electricity') || false,
+            attachedBathroom: applicationData.data.Property.Amenities.type?.includes('Attached Bathroom') || false,
+            waterHarvesting: applicationData.data.Property.Amenities.type?.includes('Water Harvesting') || false,
+            amenityId: applicationData.data.Property.Amenities.ID,
+          }
+        : undefined,
       importantNotes: applicationData.data.ImportantNote || '',
+      documents: applicationData.data.Property.Documents?.map((doc: any) => ({
+        id: doc.ID,
+        name: doc.DocumentName,
+        type: doc.DocumentType,
+        fileStoreId: doc.FileStoreID,
+        uploadDate: doc.UploadDate,
+        action: doc.action,
+        uploadedBy: doc.uploadedBy,
+        size: doc.size,
+      })) || [],
     });
 
   } catch (error) {

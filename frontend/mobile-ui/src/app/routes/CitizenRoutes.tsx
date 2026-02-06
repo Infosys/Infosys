@@ -7,6 +7,7 @@ import Properties from '../pages/Citizen/Properties';
 import PropertyDetails from '../pages/Citizen/PropertyDetails';
 import PropertyLocationView from '../pages/Citizen/PropertyLocationView';
 import { ApplicationLog } from '../pages/Agent';
+import PropertyTaxCalculator from '../pages/Citizen/PropertyTaxCalculator';
 
 const CitizenRoutes: FC = () => {
   return (
@@ -75,6 +76,14 @@ const CitizenRoutes: FC = () => {
         element={
           <ProtectedRoute allowedRoles={['CITIZEN']}>
             <ApplicationLog />
+          </ProtectedRoute>
+        }
+      />
+      <Route 
+      path="property-tax-calculator"
+        element={
+          <ProtectedRoute allowedRoles={['CITIZEN']}>
+            <PropertyTaxCalculator />
           </ProtectedRoute>
         }
       />

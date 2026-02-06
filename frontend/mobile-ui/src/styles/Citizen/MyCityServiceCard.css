@@ -1,0 +1,130 @@
+/* Styles matched to inline sx used in MyCityServices.tsx */
+/* mcs- prefix to avoid collisions */
+
+.mcs-card {
+  width: 100%;
+  max-width: 430px;
+  min-width: 260px;
+  margin: 0 auto 16px;
+  border-radius: 12px;                  /* matches borderRadius:3 visual */
+  padding: 16px;                        /* p:2 */
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid #cccccc;            /* same as inline border: "1px solid #ccc" */
+  box-shadow: none;
+  font-family: Roboto, Arial, sans-serif;
+  color: #222;
+  display: flex;
+  flex-direction: column;
+}
+
+/* header */
+.mcs-card-header {
+  margin-bottom: 8px;
+}
+.mcs-title {
+  margin: 0 0 6px 0;
+  font-size: 1.15rem;                   /* 1.15rem */
+  font-weight: 700;
+  color: #aaaaaa;                       /* title colour from inline: "#aaa" */
+  line-height: 1.1;
+}
+.mcs-department {
+  font-size: 1rem;
+  color: #232323;                       /* department colour from inline */
+}
+
+/* meta row */
+.mcs-card-body .mcs-meta-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.mcs-meta {
+  min-width: 130px;
+}
+.mcs-meta-label {
+  font-size: 0.97rem;                   /* 0.97rem */
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: rgba(0,0,0,0.87);
+}
+.mcs-meta-value {
+  font-size: 0.98rem;                   /* 0.98rem */
+  color: #222;
+}
+
+/* bottom row */
+.mcs-bottom-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.mcs-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* badge */
+.mcs-badge {
+  display: inline-block;
+  background: #FCE6D6;                  /* same as inline */
+  color: #624A2B;
+  padding: 6px 12px;                    /* px:2, py:0.5 -> approx 12/6 */
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1rem;
+  box-shadow: none;
+  border: none;
+}
+
+/* contact */
+.mcs-contact {
+  color: #bfbfbf;                       /* lighter text color similar to inline "#ccc" */
+  font-size: 1rem;
+}
+.mcs-contact-label {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: rgba(0,0,0,0.6);
+}
+.mcs-contact-value {
+  font-weight: 700;
+  color: #222;
+}
+
+/* apply button - match inline sx */
+.mcs-apply-btn {
+  background: #C95722 !important;      /* inline bgcolor */
+  color: #ffffff !important;
+  border-radius: 8px !important;       /* borderRadius:2 visual */
+  font-weight: 700 !important;
+  text-transform: none !important;
+  padding: 8px 24px !important;        /* px:3 py:1 */
+  box-shadow: none !important;
+  font-size: 1.05rem !important;
+  min-width: 0 !important;
+  width: auto !important;
+}
+
+/* ensure contained variant doesn't add unwanted shadows/borders */
+.mcs-apply-btn.MuiButton-contained {
+  box-shadow: none !important;
+}
+
+/* small responsive tweak */
+@media (max-width: 420px) {
+  .mcs-card { padding: 12px; }
+  .mcs-title { font-size: 1.05rem; }
+  .mcs-apply-btn { padding: 8px 16px !important; font-size: 1rem !important; }
+}
+
+/* Prevent accidental global overrides */
+.mcs-card,
+.mcs-card * {
+  -webkit-font-smoothing: antialiased;
+}

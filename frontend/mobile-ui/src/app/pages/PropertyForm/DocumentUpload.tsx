@@ -14,7 +14,6 @@ import {
   useDeleteDocumentUploadDetailsMutation,
 } from '../../features/PropertyForm/api/documentUpload.api';
 
-import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import AddAPhotoOutlinedIcon from '@mui/icons-material/AddAPhotoOutlined';
 import TaskAltOutlinedIcon from '@mui/icons-material/TaskAltOutlined';
@@ -23,7 +22,7 @@ import TaskOutlinedIcon from '@mui/icons-material/TaskOutlined';
 import StepHeader from '../../features/Agent/components/StepHeader';
 import type { AlertType } from '../../models/AlertType.model';
 import { NotificationPopup } from '../../components/Popup/NotificationPopup';
-
+import DownloadIcon from '../../assets/download.svg';
 // Type for uploaded document state
 interface UploadedDocument {
   id: string;
@@ -128,6 +127,38 @@ export const DocumentUpload: React.FC = () => {
     }, 10);
   }
 
+  // Helper function to get file type from filename
+  const getFileType = (fileName: string): string => {
+    if (fileName.endsWith('.pdf')) return 'application/pdf';
+    if (fileName.endsWith('.png')) return 'image/png';
+    if (fileName.endsWith('.jpg') || fileName.endsWith('.jpeg')) return 'image/jpeg';
+    return '';
+  };
+
+  // Helper function to format date as "Oct 2, 2025"
+  const formatDate = (date: Date): string => {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+
+    const month = months[date.getMonth()];
+    const day = date.getDate();
+    const year = date.getFullYear();
+
+    return `${month} ${day}, ${year}`;
+  };
+
   // Populate uploadedDocs from API or form data on mount/update
   useEffect(() => {
     if (
@@ -139,16 +170,10 @@ export const DocumentUpload: React.FC = () => {
         id: doc.ID,
         name: doc.DocumentName,
         size: doc.size || 'N/A',
-        date: new Date(doc.UploadDate).toLocaleDateString(),
+        date: formatDate(new Date(doc.UploadDate)),
         status: 'uploaded' as const,
         fileStoreId: doc.FileStoreID,
-        fileType: doc.DocumentName.endsWith('.pdf')
-          ? 'application/pdf'
-          : doc.DocumentName.endsWith('.png')
-          ? 'image/png'
-          : doc.DocumentName.endsWith('.jpg') || doc.DocumentName.endsWith('.jpeg')
-          ? 'image/jpeg'
-          : '',
+        fileType: getFileType(doc.DocumentName),
         documentType: doc.DocumentType,
         isNewlyAdded: false,
       }));
@@ -205,7 +230,6 @@ export const DocumentUpload: React.FC = () => {
     updateForm({
       documents: [
         {
-          ...(formData.documents?.[0] || {}),
           documentType: formData.documents?.[0]?.documentType || '',
           serialNoLabel: formData.documents?.[0]?.serialNoLabel || '',
           revenueDocumentNumber: formData.documents?.[0]?.revenueDocumentNumber || '',
@@ -215,15 +239,7 @@ export const DocumentUpload: React.FC = () => {
             fileSize:
               Number(doc.size.replace(' MB', '').replace('N/A', '0')) * 1024 * 1024,
             dateOfUpload: doc.date,
-            fileType:
-              doc.fileType ||
-              (doc.name.endsWith('.pdf')
-                ? 'application/pdf'
-                : doc.name.endsWith('.png')
-                ? 'image/png'
-                : doc.name.endsWith('.jpg')
-                ? 'image/jpeg'
-                : ''),
+            fileType: doc.fileType || getFileType(doc.name),
             documentType: doc.documentType,
           })),
         },
@@ -236,6 +252,7 @@ export const DocumentUpload: React.FC = () => {
     setCurrentUploadType(documentType);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+      fileInputRef.current.accept = '.pdf,.jpg,.jpeg,.png'; // Reset to file selection
       fileInputRef.current.removeAttribute('capture');
       fileInputRef.current.click();
     }
@@ -246,6 +263,7 @@ export const DocumentUpload: React.FC = () => {
     setCurrentUploadType(documentType);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+      fileInputRef.current.accept = 'image/*';
       fileInputRef.current.setAttribute('capture', 'environment');
       fileInputRef.current.click();
     }
@@ -271,6 +289,17 @@ export const DocumentUpload: React.FC = () => {
       return;
     }
 
+    // Add file size validation (5MB limit)
+    const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSizeInBytes) {
+      showErrorPopup('File size exceeds 5MB limit. Please upload a smaller file.');
+      setCurrentUploadType(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return;
+    }
+
     try {
       const result = await uploadFileToFilestore(file);
 
@@ -278,14 +307,14 @@ export const DocumentUpload: React.FC = () => {
       const fileSizeInKB = file.size / 1024;
       const formattedSize =
         fileSizeInKB >= 1024
-          ? `${(fileSizeInKB / 1024).toFixed(2)} MB`
-          : `${fileSizeInKB.toFixed(2)} KB`;
+          ? `${(fileSizeInKB / 1024).toFixed(1)} MB`
+          : `${fileSizeInKB.toFixed(1)} KB`;
 
       const uploadedDoc: UploadedDocument = {
         id: result.files[0].fileStoreId,
         name: file.name,
         size: formattedSize,
-        date: new Date().toLocaleDateString(),
+        date: formatDate(new Date()),
         status: 'uploaded',
         fileStoreId: result.files[0].fileStoreId,
         fileType: file.type,
@@ -305,19 +334,19 @@ export const DocumentUpload: React.FC = () => {
   // Download a document from filestore
   const handleDownloadDocument = async (docId: string) => {
     const doc = uploadedDocs.find((d) => d.id === docId);
-    if (!doc || !doc.fileStoreId) {
+    if (!doc?.fileStoreId) {
       showErrorPopup(fileNotFoundText);
       return;
     }
     try {
       const blob = await getFileFromFilestore(doc.fileStoreId);
-      const url = window.URL.createObjectURL(blob);
+      const url = globalThis.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = doc.name;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
+      globalThis.URL.revokeObjectURL(url);
       a.remove();
     } catch (err) {
       console.error('Error downloading document:', err);
@@ -328,14 +357,14 @@ export const DocumentUpload: React.FC = () => {
   // View a document in a new tab
   const handleViewDocument = async (docId: string) => {
     const doc = uploadedDocs.find((d) => d.id === docId);
-    if (!doc || !doc.fileStoreId) {
+    if (!doc?.fileStoreId) {
       showErrorPopup(fileNotFoundText);
       return;
     }
     try {
       const blob = await getFileFromFilestore(doc.fileStoreId);
-      const url = window.URL.createObjectURL(blob);
-      window.open(url, '_blank');
+      const url = globalThis.URL.createObjectURL(blob);
+      globalThis.open(url, '_blank');
     } catch (err) {
       console.error('Error viewing document:', err);
       showErrorPopup(unableToOpenFileText);
@@ -351,7 +380,7 @@ export const DocumentUpload: React.FC = () => {
       return;
     }
 
-    if (!window.confirm('Are you sure you want to delete this document?')) {
+    if (!globalThis.confirm('Are you sure you want to delete this document?')) {
       return;
     }
 
@@ -361,7 +390,9 @@ export const DocumentUpload: React.FC = () => {
     } catch (err) {
       const error = err as ApiError;
       console.error('Failed to delete document:', err);
-      showErrorPopup(error?.data?.message || 'Failed to delete document. Please try again.');
+      showErrorPopup(
+        error?.data?.message || 'Failed to delete document. Please try again.'
+      );
     }
   };
 
@@ -384,15 +415,7 @@ export const DocumentUpload: React.FC = () => {
               fileSize:
                 Number(doc.size.replace(' MB', '').replace('N/A', '0')) * 1024 * 1024,
               dateOfUpload: doc.date,
-              fileType:
-                doc.fileType ||
-                (doc.name.endsWith('.pdf')
-                  ? 'application/pdf'
-                  : doc.name.endsWith('.png')
-                  ? 'image/png'
-                  : doc.name.endsWith('.jpg')
-                  ? 'image/jpeg'
-                  : ''),
+              fileType: doc.fileType || getFileType(doc.name),
               documentType: doc.documentType,
             })),
           },
@@ -428,15 +451,7 @@ export const DocumentUpload: React.FC = () => {
               fileSize:
                 Number(doc.size.replace(' MB', '').replace('N/A', '0')) * 1024 * 1024,
               dateOfUpload: doc.date,
-              fileType:
-                doc.fileType ||
-                (doc.name.endsWith('.pdf')
-                  ? 'application/pdf'
-                  : doc.name.endsWith('.png')
-                  ? 'image/png'
-                  : doc.name.endsWith('.jpg')
-                  ? 'image/jpeg'
-                  : ''),
+              fileType: doc.fileType || getFileType(doc.name),
               documentType: doc.documentType,
             })),
           },
@@ -465,9 +480,15 @@ export const DocumentUpload: React.FC = () => {
     photoOfPropertyText,
   ];
 
-  // Limit for max uploads and list of uploaded document types
+  // Limit for max uploads and set of uploaded document types
   const canUploadMore = uploadedDocs.length < 12;
-  const uploadedDocTypes = uploadedDocs.map((d) => d.documentType);
+  const uploadedDocTypes = new Set(uploadedDocs.map((d) => d.documentType));
+
+  const getSubmitButtonText = () => {
+    if (isSubmitting) return 'Submitting...';
+    if (mode === 'verify') return 'Verify';
+    return confirmText;
+  };
 
   // Main render: upload controls, uploaded docs, pending docs, and confirm button
   return (
@@ -479,7 +500,7 @@ export const DocumentUpload: React.FC = () => {
         message={popup.message}
         onClose={() => setPopup((p) => ({ ...p, open: false }))}
       />
-      
+
       <div className="property-form-container">
         <input
           type="file"
@@ -490,8 +511,8 @@ export const DocumentUpload: React.FC = () => {
         />
 
         <StepHeader
-          title={`${mode === 'new' ? `${newPropertyFormText}` : `${propertyFormText}`}`}
-          subtitle={`${documentUploadText}`}
+          title={mode === 'new' ? newPropertyFormText : propertyFormText}
+          subtitle={documentUploadText}
           steps={10}
           activeStep={9}
           onPrevious={() => handleBack()}
@@ -503,7 +524,7 @@ export const DocumentUpload: React.FC = () => {
         <div className="form-content">
           <div className="upload-status">
             <span className="upload-count">
-              {uploadedDocs.length}/12 {documentsUploadedText}
+              {uploadedDocs.length}/{pendingDocuments.length} {documentsUploadedText}
             </span>
           </div>
           {error && (
@@ -605,7 +626,11 @@ export const DocumentUpload: React.FC = () => {
                       onClick={() => handleDownloadDocument(doc.id)}
                       type="button"
                     >
-                      <DownloadOutlinedIcon style={{ color: '#C84C0E', fontSize: 30 }} />
+                      <img
+                        src={DownloadIcon}
+                        alt="Download"
+                        style={{ width: 20, height: 20 }}
+                      />
                     </button>
                   </div>
                 </div>
@@ -615,9 +640,9 @@ export const DocumentUpload: React.FC = () => {
 
           <div className="pending-section">
             {pendingDocuments.map(
-              (docType, index) =>
-                !uploadedDocTypes.includes(docType) && (
-                  <div key={index} className="document-item pending">
+              (docType) =>
+                !uploadedDocTypes.has(docType) && (
+                  <div key={docType} className="document-item pending">
                     <div className="document-details">
                       <div className="document-name">{docType}</div>
                     </div>
@@ -644,7 +669,13 @@ export const DocumentUpload: React.FC = () => {
                         type="button"
                         title={takePhotoText}
                       >
-                        <AddAPhotoOutlinedIcon style={{ fontWeight: 30, fontSize: 20 }} />
+                        <AddAPhotoOutlinedIcon
+                          style={{
+                            fontWeight: 30,
+                            fontSize: 20,
+                            transform: 'scaleX(-1)',
+                          }}
+                        />
                       </button>
                     </div>
                   </div>
@@ -659,11 +690,7 @@ export const DocumentUpload: React.FC = () => {
               onClick={handleConfirm}
               disabled={isSubmitting}
             >
-              {isSubmitting
-                ? 'Submitting...'
-                : mode === 'verify'
-                ? 'Verify'
-                : confirmText}
+              {getSubmitButtonText()}
             </button>
           </div>
         </div>

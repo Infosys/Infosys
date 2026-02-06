@@ -1,31 +1,31 @@
-import React, { useEffect, useState } from 'react';
-import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import Checkbox from '@mui/material/Checkbox';
-import { useNavigate, useLocation } from 'react-router-dom';
-import OwnerCard from '../../features/PropertyForm/components/OwnerDetail/OwnerCard';
-import { useFormMode } from '../../../context/FormModeContext';
-import { useOwnerDetailsLocalization } from '../../../services/AgentLocalisation/localisation-owner-details';
+import React, { useEffect, useState } from "react";
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
+import Checkbox from "@mui/material/Checkbox";
+import { useNavigate, useLocation } from "react-router-dom";
+import OwnerCard from "../../features/PropertyForm/components/OwnerDetail/OwnerCard";
+import { useFormMode } from "../../../context/FormModeContext";
+import { useOwnerDetailsLocalization } from "../../../services/AgentLocalisation/localisation-owner-details";
 import {
   validateAadhar,
   validateMobile,
   validateEmail,
-} from '../../../validations/formValidations';
-import { usePropertyForm } from '../../../context/PropertyFormContext';
-import StepHeader from '../../features/Agent/components/StepHeader';
-import { useValidationLocalization } from '../../../services/AgentLocalisation/localisation-FormValidations';
-import { useLocalization } from '../../../services/AgentLocalisation/formLocalisation';
-import CustomDropdown from '../../features/PropertyForm/components/IGRSDetail/IGRSdropdown';
-import FormTextField from '../../features/PropertyForm/components/IGRSDetail/IGRSFormTextFiled';
-import { uniformInputSx, verifyButtonSx } from './styles/sharedStyles';
+} from "../../../validations/formValidations";
+import { usePropertyForm } from "../../../context/PropertyFormContext";
+import StepHeader from "../../features/Agent/components/StepHeader";
+import { useValidationLocalization } from "../../../services/AgentLocalisation/localisation-FormValidations";
+import { useLocalization } from "../../../services/AgentLocalisation/formLocalisation";
+import CustomDropdown from "../../features/PropertyForm/components/IGRSDetail/IGRSdropdown";
+import FormTextField from "../../features/PropertyForm/components/IGRSDetail/IGRSFormTextFiled";
+import { uniformInputSx, verifyButtonSx } from "./styles/sharedStyles";
 import {
   useAddOwnerMutation,
   useDeleteOwnerMutation,
   useGetOwnersByPropertyIdQuery,
   useUpdateOwnerMutation,
-} from '../../../redux/apis/ownerApi';
+} from "../../../redux/apis/ownerApi";
 import type {
   AddOwnerResponse,
   Owner,
@@ -33,27 +33,193 @@ import type {
 } from '../../../redux/apis/ownerApi';
 import type { AlertType } from '../../models/AlertType.model';
 import { NotificationPopup } from '../../components/Popup/NotificationPopup';
+import type { DropdownOption } from '../../features/PropertyForm/components/ConstructionDetail/ConstructionDropdown';
+import JsonService from '../../../services/jsonServerApiCalls';
+import CountIncrementor from '../../features/PropertyForm/components/CountIncrementors';
 
 // Allow only alphabetic input (for names, etc.)
-const onlyAlphabetInput = (value: string) => value.replace(/[^a-zA-Z\s]/g, '');
+const onlyAlphabetInput = (value: string) =>
+  value.replaceAll(/[^a-zA-Z\s]/g, "");
 
 // Sanitizer AND keyboard handler for mobile number input
 const onlyMobileInput = (value: string, maxLen: number = 10) => {
-  let digits = value.replace(/[^0-9]/g, '');
-  digits = digits.replace(/^0+/, '');
+  let digits = value.replaceAll(/\D/g, "");
+  digits = digits.replace(/^0+/, "");
   if (digits.length > maxLen) digits = digits.slice(0, maxLen);
   if (digits.length > 0 && !/^[6-9]/.test(digits)) {
-    digits = '';
+    digits = "";
   }
   return digits;
 };
 
 // Block forbidden characters for number input (same as igrs-details-page)
 const handleNumberKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-  const forbidden = ['-', 'e', 'E', '+', '.', ' '];
+  const forbidden = ["-", "e", "E", "+", ".", " "];
   if (forbidden.includes(e.key)) {
     e.preventDefault();
   }
+};
+
+const getEmptyFieldError = (
+  field: string,
+  showGuardianFields: boolean,
+  
+): string => {
+  switch (field) {
+    case 'AdhaarNo':
+      return 'Aadhaar number is mandatory';
+    case 'ContactNo':
+      return 'Mobile number is mandatory';
+    case 'Email':
+      return 'Email is mandatory';
+    case 'Name':
+      return 'Owner name is mandatory';
+    case 'Gender':
+      return 'Select Gender to proceed';
+    case 'Guardian':
+      return showGuardianFields ? 'Guardian is mandatory' : '';
+    case 'GuardianType':
+      return showGuardianFields ? 'Select Guardian relationship to proceed' : '';
+    default:
+      return '';
+  }
+};
+
+const validateAadhaarField = (
+  value: string,
+  messages: {
+    length: string;
+    numeric: string;
+  },
+  validationMessages: any
+): string => {
+  if (!value) return '';
+  if (value.length !== 12) return messages.length;
+  if (/\D/.test(value)) return messages.numeric;
+  if (/^\d{12}$/.test(value)) {
+    return validateAadhar(value, validationMessages) || '';
+  }
+  return '';
+};
+
+const validateContactField = (
+  value: string,
+  messages: {
+    length: string;
+    numeric: string;
+    startsWith: string;
+  },
+  validationMessages: any
+): string => {
+  if (!value) return '';
+  if (value.length !== 10) return messages.length;
+  if (/\D/.test(value)) return messages.numeric;
+  if (!/^[6-9]/.test(value)) return messages.startsWith;
+  if (/^\d{10}$/.test(value)) {
+    return validateMobile(value, validationMessages) || '';
+  }
+  return '';
+};
+
+const validateEmailFieldBlur = (
+  value: string,
+  messages: {
+    required: string;
+    invalid: string;
+  },
+  validationMessages: any
+): string => {
+  if (!value.trim()) return messages.required;
+  if (/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(value)) {
+    return validateEmail(value, validationMessages) || '';
+  }
+  return messages.invalid;
+};
+
+const validateAlphabeticName = (value: string, errorMsg: string): string => {
+  if (value && /[^a-zA-Z\s]/.test(value)) return errorMsg;
+  return '';
+};
+
+const getErrorFieldKey = (field: string): string => {
+  if (field === 'GuardianType') return 'guardianRelationship';
+  if (field === 'Guardian') return 'guardian';
+  if (field === 'AdhaarNo') return 'aadhaar';  
+  if (field === 'ContactNo') return 'mobile';   
+  if (field === 'Name') return 'ownerName';     
+  if (field === 'Email') return 'email';       
+  if (field === 'Gender') return 'gender';
+  return field.toLowerCase();
+};
+
+const validateOwnerName = (name: string, messages: { required: string; alphabetsOnly: string }): string => {
+  if (!name) return messages.required;
+  if (/[^a-zA-Z\s]/.test(name)) return messages.alphabetsOnly;
+  return '';
+};
+
+const validateOwnerAadhaar = (
+  aadhaarNo: number,
+  messages: { required: string; length: string; numeric: string },
+  validationMessages: any
+): string => {
+  if (!aadhaarNo) return messages.required;
+  
+  const aadhaarStr = aadhaarNo.toString();
+  if (aadhaarStr.length !== 12) return messages.length;
+  if (!/^\d{12}$/.test(aadhaarStr)) return messages.numeric;
+  
+  return validateAadhar(aadhaarStr, validationMessages) || '';
+};
+
+const validateOwnerMobile = (
+  contactNo: string,
+  messages: { required: string; length: string; numeric: string; startsWith: string },
+  validationMessages: any
+): string => {
+  if (!contactNo) return messages.required;
+  if (contactNo.length !== 10) return messages.length;
+  if (!/^\d{10}$/.test(contactNo)) return messages.numeric;
+  if (!/^[6-9]/.test(contactNo)) return messages.startsWith;
+  
+  return validateMobile(contactNo, validationMessages) || '';
+};
+
+const validateOwnerEmail = (
+  email: string,
+  messages: { required: string; invalid: string },
+  validationMessages: any
+): string => {
+  if (!email?.trim()) return messages.required;
+  
+  const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+  if (!emailRegex.test(email)) return messages.invalid;
+  
+  return validateEmail(email, validationMessages) || '';
+};
+
+const validateOwnerGender = (gender: string, errorMsg: string): string => {
+  return gender ? '' : errorMsg;
+};
+
+const validateOwnerGuardian = (
+  guardian: string,
+  showGuardianFields: boolean,
+  messages: { required: string; alphabetsOnly: string }
+): string => {
+  if (!showGuardianFields) return '';
+  if (!guardian) return messages.required;
+  if (/[^a-zA-Z\s]/.test(guardian)) return messages.alphabetsOnly;
+  return '';
+};
+
+const validateOwnerGuardianRelationship = (
+  guardianType: string,
+  showGuardianFields: boolean,
+  errorMsg: string
+): string => {
+  if (!showGuardianFields) return '';
+  return guardianType ? '' : errorMsg;
 };
 
 // Main component for entering and managing property owner details
@@ -65,12 +231,23 @@ const OwnerDetails: React.FC = () => {
 
   const { formData, updateForm } = usePropertyForm();
   const propertyId = formData.id;
+  const applicationId = localStorage.getItem('applicationId') || localStorage.getItem('applicationLogId') || '';
 
   const [addOwner] = useAddOwnerMutation();
   const [updateOwner] = useUpdateOwnerMutation();
-  const { data: ownersData, refetch } = useGetOwnersByPropertyIdQuery(propertyId, {
-    skip: !propertyId,
-  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasModified, setHasModified] = useState(false);
+
+  const markModified = () => {
+    if (mode === "verify") setHasModified(true);
+  };
+
+  const { data: ownersData, refetch } = useGetOwnersByPropertyIdQuery(
+    propertyId,
+    {
+      skip: !propertyId,
+    }
+  );
 
   const {
     aadhaarLabel,
@@ -81,16 +258,9 @@ const OwnerDetails: React.FC = () => {
     guardianLabel,
     guardianRelationshipLabel,
     addOwnerValidationMsg,
-    ownerNameRequiredError,
-    genderRequiredError,
-    guardianRequiredError,
-    guardianRelationshipRequiredError,
     primaryOwnerText,
-    ownerText,
     nameText,
     viewOwnersText,
-    genderOptions,
-    guardianRelationshipOptions,
     propertyFormTitle,
     newPropertyFormTitle,
     ownerDetailsSubtitle,
@@ -107,7 +277,6 @@ const OwnerDetails: React.FC = () => {
     Onlynumbersareallowedupto10digitsMSG,
     InvalidemailaddressMSG,
     AddGuardianMSG,
-    ThisFieldIsRequiredMSG,
   } = useLocalization();
 
   // State for notification popup
@@ -118,10 +287,10 @@ const OwnerDetails: React.FC = () => {
     message: string;
     duration: number;
   }>({
-    type: 'warning',
+    type: "warning",
     open: false,
-    title: '',
-    message: '',
+    title: "",
+    message: "",
     duration: 3000,
   });
 
@@ -130,53 +299,85 @@ const OwnerDetails: React.FC = () => {
     setPopup((prev) => ({ ...prev, open: false }));
     setTimeout(() => {
       setPopup({
-        type: 'warning',
+        type: "warning",
         open: true,
-        title: 'Warning!',
+        title: "Warning!",
         message,
         duration,
       });
     }, 10);
   }
 
+  const [genderOptions, setGenderOptions] = useState<DropdownOption[]>([]);
+  const [guardianRelationshipOptions, setGuardianRelationshipOptions] =
+    useState<DropdownOption[]>([]);
+
+  useEffect(() => {
+    JsonService.getGenderOptions().then((data) => {
+      if (Array.isArray(data)) {
+        setGenderOptions(
+          data
+            .filter((item) => item.name !== "select")
+            .map((item, index) => ({ id: index, label: item.name }))
+        );
+      }
+    });
+
+    JsonService.getGuardianRelationshipOptions().then((data) => {
+      if (Array.isArray(data)) {
+        setGuardianRelationshipOptions(
+          data
+            .filter((item) => item.name !== "select")
+            .map((item, index) => ({ id: index, label: item.name }))
+        );
+      }
+    });
+  }, []);
+
   const { messages: validationMessages } = useValidationLocalization();
 
   // List of owners fetched from API
   const owners = ownersData?.data ?? [];
 
-  useEffect(()=>{
-    if(owners){
-      updateForm({owners: owners});
+  useEffect(() => {
+    if (owners) {
+      updateForm({ owners: owners });
     }
-  }, [owners]);
+  }, [owners.length]);
 
-  
-  console.log(formData);
-  
   // State for editing, dropdowns, and guardian fields
   const [isEditing, setIsEditing] = useState(false);
   const [showGuardianFields, setShowGuardianFields] = useState(false);
-  const [showGuardianRelationshipDropdown, setShowGuardianRelationshipDropdown] =
-    useState(false);
+  const [
+    showGuardianRelationshipDropdown,
+    setShowGuardianRelationshipDropdown,
+  ] = useState(false);
   const [showGenderDropdown, setShowGenderDropdown] = useState(false);
   const [deleteOwner] = useDeleteOwnerMutation();
 
-  // Initial state for owner form
+  // Calculate remaining ownership percentage
+  const totalOwnership = owners.reduce(
+    (sum, owner) => sum + (owner.OwnershipShare || 0),
+    0
+  );
+  const remainingOwnership = 100 - totalOwnership;
+
+  // Initial state for owner form - use remaining ownership if owners exist
   const initialOwnerForm: Owner = {
-    ID: '',
-    PropertyID: propertyId ?? '',
-    Name: '',
+    ID: "",
+    PropertyID: propertyId ?? "",
+    Name: "",
     AdhaarNo: 0,
-    ContactNo: '',
-    Email: '',
-    Gender: '',
-    Guardian: '',
-    GuardianType: '',
-    RelationshipToProperty: '',
-    OwnershipShare: 100,
+    ContactNo: "",
+    Email: "",
+    Gender: "",
+    Guardian: "",
+    GuardianType: "",
+    RelationshipToProperty: "",
+    OwnershipShare: owners.length > 0 ? remainingOwnership : 100,
     IsPrimaryOwner: false,
-    CreatedAt: '',
-    UpdatedAt: '',
+    CreatedAt: "",
+    UpdatedAt: "",
   };
 
   // State for owner form fields
@@ -184,173 +385,192 @@ const OwnerDetails: React.FC = () => {
 
   // State for form field errors
   const [errors, setErrors] = useState<Record<string, string>>({
-    ownerName: '',
-    aadhaar: '',
-    mobile: '',
-    email: '',
-    gender: '',
-    guardian: '',
-    guardianRelationship: '',
+    ownerName: "",
+    aadhaar: "",
+    mobile: "",
+    email: "",
+    gender: "",
+    guardian: "",
+    guardianRelationship: "",
   });
+
+  const [touched, setTouched] = useState<Record<string, boolean>>({
+  ownerName: false,
+  aadhaar: false,
+  mobile: false,
+  email: false,
+  gender: false,
+  guardian: false,
+  guardianRelationship: false,
+});
 
   // Handle guardian name input change
   const handleGuardianChange = (val: string) => {
+    markModified();
     if (val && /[^a-zA-Z\s]/.test(val)) {
       setErrors((e) => ({ ...e, guardian: OnlyalphabetsareallowedMSG }));
     } else if (!val && showGuardianFields) {
-      setErrors((e) => ({ ...e, guardian: guardianRequiredError }));
+      setErrors((e) => ({ ...e, guardian: 'Guardian is mandatory' }));
     } else {
-      setErrors((e) => ({ ...e, guardian: '' }));
+      setErrors((e) => ({ ...e, guardian: "" }));
     }
     setOwnerForm((f) => ({ ...f, Guardian: onlyAlphabetInput(val) }));
   };
 
   // Handle blur event for form fields (validation)
   const handleBlur = (field: string, value: string) => {
+    markModified();
     const v = value ?? '';
+    const fieldKey = getErrorFieldKey(field);
     let error: string = '';
 
-    if (!v.trim()) {
-      switch (field) {
-        case 'AdhaarNo':
-          error = ThisFieldIsRequiredMSG ?? '';
-          break;
-        case 'Name':
-          error = ownerNameRequiredError;
-          break;
-        case 'ContactNo':
-          error = ThisFieldIsRequiredMSG ?? '';
-          break;
-        case 'Email':
-          error = ThisFieldIsRequiredMSG ?? '';
-          break;
-        case 'Gender':
-          error = genderRequiredError;
-          break;
-        case 'Guardian':
-          if (showGuardianFields) error = guardianRequiredError;
-          break;
-        case 'GuardianType':
-          if (showGuardianFields) error = guardianRelationshipRequiredError;
-          break;
-      }
-    }
+     // Check for empty value first
+  if (!v.trim()) {
+    error = getEmptyFieldError(field, showGuardianFields);
+  }
 
-    if (field === 'AdhaarNo') {
-      if (v && v.length !== 12) error = Aadhaarnumbermustbe12digitsMSG;
-      else if (v && /[^0-9]/.test(v)) error = Onlynumbersareallowedupto12digitsMSG;
-      else if (v && /^\d{12}$/.test(v)) {
-        const out = validateAadhar(v, validationMessages);
-        if (out) error = out;
-      }
-    }
+  // Validate Aadhaar
+  if (field === 'AdhaarNo') {
+    const aadhaarError = validateAadhaarField(
+      v,
+      {
+        length: Aadhaarnumbermustbe12digitsMSG,
+        numeric: Onlynumbersareallowedupto12digitsMSG,
+      },
+      validationMessages
+    );
+    if (aadhaarError) error = aadhaarError;
+  }
 
-    if (field === 'ContactNo') {
-      if (v && v.length !== 10) error = Mobilenumbermustbe10digitsMSG;
-      else if (v && /[^0-9]/.test(v)) error = Onlynumbersareallowedupto10digitsMSG;
-      else if (v && !/^[6-9]/.test(v))
-        error = 'Mobile number should start with 6, 7, 8, or 9';
-      else if (v && /^\d{10}$/.test(v)) {
-        const out = validateMobile(v, validationMessages);
-        if (out) error = out;
-      }
-    }
+  // Validate Contact
+  if (field === 'ContactNo') {
+    const contactError = validateContactField(
+      v,
+      {
+        length: Mobilenumbermustbe10digitsMSG,
+        numeric: Onlynumbersareallowedupto10digitsMSG,
+        startsWith: 'Mobile number should start with 6, 7, 8, or 9',
+      },
+      validationMessages
+    );
+    if (contactError) error = contactError;
+  }
 
-    if (field === 'Email') {
-      if (v && !/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(v))
-        error = InvalidemailaddressMSG;
-      else if (v) {
-        const out = validateEmail(v, validationMessages);
-        if (out) error = out;
-      }
-    }
+  // Validate Email
+  if (field === 'Email') {
+    error = validateEmailFieldBlur(
+      value,
+      {
+        required: 'Email is mandatory',
+        invalid: InvalidemailaddressMSG,
+      },
+      validationMessages
+    );
+  }
 
-    if (field === 'Name' && v && /[^a-zA-Z\s]/.test(v))
-      error = OnlyalphabetsareallowedMSG;
-    if (field === 'Guardian' && v && /[^a-zA-Z\s]/.test(v))
-      error = OnlyalphabetsareallowedMSG;
+  // Validate alphabetic fields
+  if (field === 'Name') {
+    const nameError = validateAlphabeticName(v, OnlyalphabetsareallowedMSG);
+    if (nameError) error = nameError;
+  }
 
-    setErrors((s) => ({
-      ...s,
-      [field === 'GuardianType'
-        ? 'guardianRelationship'
-        : field === 'Guardian'
-        ? 'guardian'
-        : field.toLowerCase()]: error,
-    }));
+  if (field === 'Guardian') {
+    const guardianError = validateAlphabeticName(v, OnlyalphabetsareallowedMSG);
+    if (guardianError) error = guardianError;
+  }
+
+    setTouched((prev) => ({ ...prev, [fieldKey]: true }));
+    setErrors((prev) => ({ ...prev, [fieldKey]: error }));
+
   };
 
   // Handle gender dropdown selection
   const handleGenderSelect = (option: string) => {
+    markModified();
     setOwnerForm((prev) => ({ ...prev, Gender: option }));
     setShowGenderDropdown(false);
     setErrors((e) => ({
       ...e,
-      gender: option ? '' : genderRequiredError,
+      gender: option ? "" : 'Select Gender to proceed',
     }));
   };
 
   // Handle guardian relationship dropdown selection
   const handleGuardianRelationshipSelect = (_f: string, option: string) => {
+    markModified();
     setOwnerForm((prev) => ({ ...prev, GuardianType: option }));
     setShowGuardianRelationshipDropdown(false);
     setErrors((e) => ({
       ...e,
-      guardianRelationship: option ? '' : guardianRelationshipRequiredError,
+      guardianRelationship: option ? "" : 'Select Guardian relationship to proceed',
     }));
   };
 
   // Validate all owner fields and return error messages
   function validateOwner(owner: Owner) {
-    return {
-      ownerName: owner.Name
-        ? /[^a-zA-Z\s]/.test(owner.Name)
-          ? OnlyalphabetsareallowedMSG
-          : ''
-        : ownerNameRequiredError,
-      aadhaar: owner.AdhaarNo
-        ? owner.AdhaarNo.toString().length === 12
-          ? /^\d{12}$/.test(owner.AdhaarNo.toString())
-            ? validateAadhar(owner.AdhaarNo.toString(), validationMessages) || ''
-            : Onlynumbersareallowedupto12digitsMSG
-          : Aadhaarnumbermustbe12digitsMSG
-        : Aadhaarnumbermustbe12digitsMSG,
-      mobile: owner.ContactNo
-        ? owner.ContactNo.length === 10
-          ? /^\d{10}$/.test(owner.ContactNo)
-            ? /^[6-9]/.test(owner.ContactNo)
-              ? validateMobile(owner.ContactNo, validationMessages) || ''
-              : 'Mobile number should start with 6, 7, 8, or 9'
-            : Onlynumbersareallowedupto10digitsMSG
-          : Mobilenumbermustbe10digitsMSG
-        : Mobilenumbermustbe10digitsMSG,
-      email: owner.Email
-        ? /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(owner.Email)
-          ? validateEmail(owner.Email, validationMessages) || ''
-          : InvalidemailaddressMSG
-        : InvalidemailaddressMSG,
-      gender: owner.Gender ? '' : genderRequiredError,
-      guardian: showGuardianFields
-        ? owner.Guardian
-          ? /[^a-zA-Z\s]/.test(owner.Guardian)
-            ? OnlyalphabetsareallowedMSG
-            : ''
-          : guardianRequiredError
-        : '',
-      guardianRelationship: showGuardianFields
-        ? owner.GuardianType
-          ? ''
-          : guardianRelationshipRequiredError
-        : '',
-    };
-  }
+  return {
+    ownerName: validateOwnerName(owner.Name, {
+      required: 'Owner name is mandatory',
+      alphabetsOnly: OnlyalphabetsareallowedMSG,
+    }),
+    
+    aadhaar: validateOwnerAadhaar(
+      owner.AdhaarNo,
+      {
+        required: 'Aadhaar number is mandatory',
+        length: Aadhaarnumbermustbe12digitsMSG,
+        numeric: Onlynumbersareallowedupto12digitsMSG,
+      },
+      validationMessages
+    ),
+    
+    mobile: validateOwnerMobile(
+      owner.ContactNo,
+      {
+        required: 'Mobile number is mandatory',
+        length: Mobilenumbermustbe10digitsMSG,
+        numeric: Onlynumbersareallowedupto10digitsMSG,
+        startsWith: 'Mobile number should start with 6, 7, 8, or 9',
+      },
+      validationMessages
+    ),
+    
+    email: validateOwnerEmail(
+      owner.Email,
+      {
+        required: 'Email is mandatory',
+        invalid: InvalidemailaddressMSG,
+      },
+      validationMessages
+    ),
+    
+    gender: validateOwnerGender(owner.Gender, 'Select Gender to proceed'),
+    
+    guardian: validateOwnerGuardian(
+      owner.Guardian ?? '',
+      showGuardianFields,
+      {
+        required: 'Guardian is mandatory',
+        alphabetsOnly: OnlyalphabetsareallowedMSG,
+      }
+    ),
+    
+    guardianRelationship: validateOwnerGuardianRelationship(
+      owner.GuardianType ?? '',
+      showGuardianFields,
+      'Select Guardian relationship to proceed'
+    ),
+  };
+}
 
   // Handle add owner button click (save and go to next step)
   const handleAddOwner = async () => {
     try {
+      setIsSubmitting(true);
       await handleSaveDraft();
-      navigate('/property-form/owner-details-two');
+      navigate(-1);
     } catch (e) {
+      setIsSubmitting(false);
       console.error(e);
     }
   };
@@ -358,40 +578,63 @@ const OwnerDetails: React.FC = () => {
   // Handle delete owner action
   const handleDeleteOwner = async (id: string) => {
     try {
-      await deleteOwner(id).unwrap();
+      setIsSubmitting(true);
+      await deleteOwner({
+        id,
+        applicationId,
+        isVerifying: hasModified,
+      }).unwrap();
 
       // Wait for refetch to get fresh data
       const { data: freshOwnersData } = await refetch();
       const freshOwners = freshOwnersData?.data ?? [];
 
       // Update form with fresh data from server
-      updateForm({ owners: freshOwners as Owner[] });
+      updateForm({ owners: freshOwners });
+      setIsSubmitting(false);
     } catch (error) {
-      showErrorPopup('Failed to delete owner');
-      console.error('Delete owner error:', error);
+      setIsSubmitting(false);
+      showErrorPopup("Failed to delete owner");
+      console.error("Delete owner error:", error);
     }
   };
-  
+
   // Handle back navigation
-  const handleGoBack = () => navigate(-1);
+  const handleGoBack = () => {
+    navigate(-1);
+  };
 
   // Handle save draft action (validate and save owner)
   const handleSaveDraft = async () => {
     if (!formData.id) {
-      showErrorPopup('Property ID is missing. Please complete previous steps.');
+      showErrorPopup("Property ID is missing. Please complete previous steps.");
       return;
     }
+
+    const touchedState = {
+    ownerName: true,
+    aadhaar: true,
+    mobile: true,
+    email: true,
+    gender: true,
+    guardian: showGuardianFields,
+    guardianRelationship: showGuardianFields,
+  };
+
+    setTouched(touchedState);
 
     const validationResults = validateOwner(ownerForm);
     setErrors(validationResults);
 
     const hasError = Object.values(validationResults).some(Boolean);
+    console.log(hasError);
+
     if (hasError) {
       showErrorPopup(addOwnerValidationMsg);
       throw new Error(addOwnerValidationMsg);
     }
 
-    const payload: Omit<Owner, 'ID' | 'CreatedAt' | 'UpdatedAt'> = {
+    const payload: Omit<Owner, "ID" | "CreatedAt" | "UpdatedAt"> = {
       PropertyID: formData.id,
       Name: ownerForm.Name,
       AdhaarNo: Number(ownerForm.AdhaarNo),
@@ -399,21 +642,30 @@ const OwnerDetails: React.FC = () => {
       Email: ownerForm.Email,
       Gender: ownerForm.Gender.toUpperCase(),
       Guardian: ownerForm.Guardian,
-      GuardianType: ownerForm.GuardianType?.toUpperCase() ?? '',
-      RelationshipToProperty: 'OWNER',
-      OwnershipShare: 100.0,
+      GuardianType: ownerForm.GuardianType?.toUpperCase() ?? "",
+      RelationshipToProperty: "OWNER",
+      OwnershipShare: ownerForm.OwnershipShare,
       IsPrimaryOwner: owners.length === 0,
     };
 
     let response: UpdateOwnerResponse | AddOwnerResponse | undefined;
 
     try {
+      setIsSubmitting(true);
+
       if (ownerForm.ID) {
-        // Update owner (PUT)
-        response = await updateOwner({ id: ownerForm.ID, data: payload as any }).unwrap();
+        response = await updateOwner({
+          id: ownerForm.ID,
+          data: payload as any,
+          applicationId,
+          isVerifying: mode === 'verify' && hasModified,
+        }).unwrap();
       } else {
-        // Add owner (POST)
-        response = await addOwner(payload).unwrap();
+        response = await addOwner({
+          ...payload,
+          applicationId,
+          isVerifying: mode === 'verify' && hasModified,
+        }).unwrap();
       }
 
       console.log(response);
@@ -422,27 +674,49 @@ const OwnerDetails: React.FC = () => {
       const { data: freshOwnersData } = await refetch();
       const freshOwners = freshOwnersData?.data ?? [];
 
-      console.log('Fresh owners from refetch:', freshOwners);
-
       // Update context with fresh data from server
-      await updateForm({
-        owners: freshOwners as Owner[],
+      updateForm({
+        owners: freshOwners,
       });
-      // Reset form after successful operation
-      setOwnerForm(initialOwnerForm);
+      
+      // If editing an existing owner, repopulate the form with updated data
+      if (ownerForm.ID) {
+        const updatedOwner = freshOwners.find(o => o.ID === ownerForm.ID);
+        if (updatedOwner) {
+          setOwnerForm(updatedOwner);
+          setShowGuardianFields(
+            !!updatedOwner.Guardian || !!updatedOwner.GuardianType
+          );
+        }
+      } else {
+        setOwnerForm(initialOwnerForm);
+        setShowGuardianFields(false);
+      }
+      
       setErrors({
-        ownerName: '',
-        aadhaar: '',
-        mobile: '',
-        email: '',
-        gender: '',
-        guardian: '',
-        guardianRelationship: '',
+        ownerName: "",
+        aadhaar: "",
+        mobile: "",
+        email: "",
+        gender: "",
+        guardian: "",
+        guardianRelationship: "",
+      });
+      setTouched({
+        ownerName: false,
+        aadhaar: false,
+        mobile: false,
+        email: false,
+        gender: false,
+        guardian: false,
+        guardianRelationship: false,
       });
       setShowGuardianFields(false);
       setIsEditing(false);
+      setIsSubmitting(false);
     } catch (error) {
-      showErrorPopup('Failed to add owner');
+      setIsSubmitting(false);
+      showErrorPopup("Failed to add owner");
       throw error;
     }
   };
@@ -452,40 +726,33 @@ const OwnerDetails: React.FC = () => {
     if (editingOwner) {
       setOwnerForm(editingOwner);
       setIsEditing(true);
-      setShowGuardianFields(!!editingOwner.Guardian || !!editingOwner.GuardianType);
+      setShowGuardianFields(
+        !!editingOwner.Guardian || !!editingOwner.GuardianType
+      );
+    } else {
+      // When not editing, set ownership share to remaining percentage
+      setOwnerForm((prev) => ({
+        ...prev,
+        OwnershipShare: owners.length > 0 ? remainingOwnership : 100,
+      }));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingOwner]);
-
-  // Prepare gender dropdown options
-  const genderDropdownOptions = (genderOptions || []).map((g, i) => ({
-    id: i,
-    label: g ?? '',
-  }));
-  // Prepare guardian relationship dropdown options
-  const guardianRelOptions = (guardianRelationshipOptions || []).map((g, i) => ({
-    id: i,
-    label: g ?? '',
-  }));
 
   // Styles for container and form layout
   const containerSx = {
-    width: '100%',
-    margin: '0 auto',
-    minHeight: '100vh' as const,
-    bgcolor: '#fff',
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-    display: 'flex' as const,
-    flexDirection: 'column' as const,
+    width: "100%",
+    minHeight: "100vh" as const,
+    bgcolor: "#fff",
+    display: "flex" as const,
+    flexDirection: "column" as const,
   };
-  const headerSx = { backgroundColor: '#F9E6E0', padding: '16px' };
   const formContentSx = {
     flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    px: '8%',
+    display: "flex",
+    flexDirection: "column",
+    px: "4%",
     py: 3,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
   };
 
   // Main render: notification popup, step header, owner cards, and owner form
@@ -499,31 +766,31 @@ const OwnerDetails: React.FC = () => {
         onClose={() => setPopup((p) => ({ ...p, open: false }))}
       />
       <Box sx={containerSx}>
-        <Box sx={headerSx}>
-          <StepHeader
-            title={`${mode === 'new' ? newPropertyFormTitle : propertyFormTitle}`}
-            subtitle={ownerDetailsSubtitle}
-            steps={10}
-            activeStep={1}
-            onPrevious={handleGoBack}
-            onSaveDraft={handleSaveDraft}
-            previousText={previousText}
-            saveDraftText={saveDraftText}
-          />
-        </Box>
+        <StepHeader
+          title={`${mode === "new" ? newPropertyFormTitle : propertyFormTitle}`}
+          subtitle={ownerDetailsSubtitle}
+          steps={10}
+          activeStep={1}
+          onPrevious={handleGoBack}
+          onSaveDraft={handleSaveDraft}
+          previousText={previousText}
+          saveDraftText={saveDraftText}
+        />
 
         {/* owner cards */}
         {!isEditing && owners.length > 0 && (
-          <Box sx={{ px: '8%', mt: 2 }}>
+          <Box>
             {owners.map((owner) => (
               <OwnerCard
                 key={owner.ID}
                 name={owner.Name}
                 isPrimary={owner.ID === owners[0].ID}
                 onDelete={() => handleDeleteOwner(owner.ID)}
-                onViewOwners={() => navigate('/property-form/owner-details-two')}
+                onViewOwners={() =>
+                  navigate("/property-form/owner-details-two")
+                }
                 primaryOwnerText={primaryOwnerText}
-                ownerText={ownerText}
+                ownerText={"Secondary Owner"}
                 nameText={nameText}
                 viewOwnersText={viewOwnersText}
               />
@@ -532,8 +799,10 @@ const OwnerDetails: React.FC = () => {
         )}
 
         {owners.length > 0 && (
-          <Typography sx={{ mt: 2, ml: 1, fontWeight: 700 }}>
-            Additional Owner Details:
+          <Typography sx={{ mt: 2, ml: 2, fontWeight: 700 }}>
+            {location.state?.editMode
+              ? "Edit Owner Details"
+              : " Secondary Owner Details:"}
           </Typography>
         )}
 
@@ -548,23 +817,33 @@ const OwnerDetails: React.FC = () => {
             }}
           >
             {/* Aadhaar */}
-            <Box sx={{ width: '100%' }}>
+            <Box sx={{ width: "100%" }}>
               <FormTextField
                 label={aadhaarLabel}
-                value={ownerForm.AdhaarNo === 0 ? '' : ownerForm.AdhaarNo.toString()}
-                onChange={(val) =>
+                value={
+                  ownerForm.AdhaarNo === 0 ? "" : ownerForm.AdhaarNo.toString()
+                }
+                onChange={(val) => {
+                  markModified();
                   setOwnerForm((f) => ({
                     ...f,
-                    AdhaarNo: Number(val.replace(/[^0-9]/g, '').slice(0, 12)),
-                  }))
-                }
-                onBlur={() => handleBlur('AdhaarNo', ownerForm.AdhaarNo.toString())}
+                    AdhaarNo: Number(val.replaceAll(/\D/g, "").slice(0, 12)),
+                  }));
+                  setErrors((e) => ({ ...e, aadhaar: "" }));
+                }}
+                onBlur={() => {
+                  const value =
+                    ownerForm.AdhaarNo === 0
+                      ? ""
+                      : ownerForm.AdhaarNo.toString();
+                  handleBlur("AdhaarNo", value);
+                }}
                 placeholder=""
                 type="number"
                 required
                 error={errors.aadhaar}
-                touched={!!errors.aadhaar}
-                sx={{ width: '100%', ...uniformInputSx }}
+                touched={touched.aadhaar}
+                sx={{ width: "100%", ...uniformInputSx }}
                 inputProps={{ onKeyDown: handleNumberKeyDown }}
               />
             </Box>
@@ -574,16 +853,21 @@ const OwnerDetails: React.FC = () => {
               <FormTextField
                 label={ownerNameLabel}
                 value={ownerForm.Name}
-                onChange={(val) =>
-                  setOwnerForm((f) => ({ ...f, Name: onlyAlphabetInput(val) }))
-                }
-                onBlur={() => handleBlur('Name', ownerForm.Name)}
+                onChange={(val) => {
+                  markModified();
+                  setOwnerForm((f) => ({ ...f, Name: onlyAlphabetInput(val) }));
+                  setErrors((e) => ({ ...e, ownerName: "" }));
+                }}
+                onBlur={() => {
+                  const value = ownerForm.Name || "";
+                  handleBlur("Name", value);
+                }}
                 placeholder=""
                 type="text"
                 required
                 error={errors.ownerName}
-                touched={!!errors.ownerName}
-                sx={{ width: '100%', ...uniformInputSx }}
+                touched={touched.ownerName}
+                sx={{ width: "100%", ...uniformInputSx }}
               />
             </Box>
 
@@ -592,19 +876,24 @@ const OwnerDetails: React.FC = () => {
               <FormTextField
                 label={mobileNumberLabel}
                 value={ownerForm.ContactNo}
-                onChange={(val) =>
+                onChange={(val) => {
+                  markModified();
                   setOwnerForm((f) => ({
                     ...f,
                     ContactNo: onlyMobileInput(val, 10),
-                  }))
-                }
-                onBlur={() => handleBlur('ContactNo', ownerForm.ContactNo)}
+                  }));
+                  setErrors((e) => ({ ...e, mobile: "" }));
+                }}
+                onBlur={() => {
+                  const value = ownerForm.ContactNo || "";
+                  handleBlur("ContactNo", value);
+                }}
                 placeholder=""
                 type="number"
                 required
                 error={errors.mobile}
-                touched={!!errors.mobile}
-                sx={{ width: '100%', ...uniformInputSx }}
+                touched={touched.mobile}
+                sx={{ width: "100%", ...uniformInputSx }}
                 inputProps={{ onKeyDown: handleNumberKeyDown }}
               />
             </Box>
@@ -614,12 +903,12 @@ const OwnerDetails: React.FC = () => {
               label={genderLabel}
               name="Gender"
               value={ownerForm.Gender}
-              options={genderDropdownOptions}
+              options={genderOptions}
               showDropdown={showGenderDropdown}
               setShowDropdown={setShowGenderDropdown}
               onSelect={(_n, v) => handleGenderSelect(v)}
               closeOtherDropdowns={() => setShowGenderDropdown(false)}
-              onBlur={() => handleBlur('Gender', ownerForm.Gender)}
+              onBlur={() => handleBlur("Gender", ownerForm.Gender)}
               required
               error={errors.gender}
               touched={!!errors.gender}
@@ -631,40 +920,64 @@ const OwnerDetails: React.FC = () => {
                 label={emailLabel}
                 value={ownerForm.Email}
                 onChange={(val) => {
+                  markModified();
                   setOwnerForm((prev) => ({ ...prev, Email: val }));
-                  setErrors((e) => ({ ...e, email: '' }));
+                  setErrors((e) => ({ ...e, email: "" }));
                 }}
-                onBlur={() => handleBlur('Email', ownerForm.Email)}
+                onBlur={() => handleBlur("Email", ownerForm.Email)}
                 placeholder=""
                 type="text"
                 required
                 error={errors.email}
-                touched={!!errors.email}
-                sx={{ width: '100%', ...uniformInputSx }}
+                touched={touched.email}
+                sx={{ width: "100%", ...uniformInputSx }}
+              />
+            </Box>
+
+            {/* Ownership Share */}
+            <Box>
+              <CountIncrementor
+                label="Ownership Share (%)"
+                value={ownerForm.OwnershipShare}
+                setValue={(val) => {
+                  markModified();
+                  setOwnerForm((prev) => ({ ...prev, OwnershipShare: val }));
+                }}
+                min={0}
+                max={
+                  ownerForm.ID
+                    ? remainingOwnership + (editingOwner?.OwnershipShare || 0)
+                    : remainingOwnership
+                }
               />
             </Box>
 
             {/* Guardian checkbox */}
-            <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+            <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
               <Checkbox
                 checked={showGuardianFields}
                 onChange={(e) => {
+                  markModified();
                   const checked = e.target.checked;
                   setShowGuardianFields(checked);
                   if (!checked) {
                     setOwnerForm((prev) => ({
                       ...prev,
-                      Guardian: '',
-                      GuardianType: '',
+                      Guardian: "",
+                      GuardianType: "",
                     }));
                     setErrors((prev) => ({
                       ...prev,
-                      guardian: '',
-                      guardianRelationship: '',
+                      guardian: "",
+                      guardianRelationship: "",
                     }));
                   }
                 }}
-                sx={{ mr: 1, color: '#8a4a20', '&.Mui-checked': { color: '#8a4a20' } }}
+                sx={{
+                  mr: 1,
+                  color: "#8a4a20",
+                  "&.Mui-checked": { color: "#8a4a20" },
+                }}
               />
               <Typography sx={{ fontWeight: 600 }}>{AddGuardianMSG}</Typography>
             </Box>
@@ -676,13 +989,15 @@ const OwnerDetails: React.FC = () => {
                     label={guardianLabel}
                     value={ownerForm.Guardian}
                     onChange={(val) => handleGuardianChange(val)}
-                    onBlur={() => handleBlur('Guardian', ownerForm.Guardian ?? '')}
+                    onBlur={() =>
+                      handleBlur("Guardian", ownerForm.Guardian ?? "")
+                    }
                     placeholder=""
                     type="text"
                     required
                     error={errors.guardian}
-                    touched={!!errors.guardian}
-                    sx={{ width: '100%', ...uniformInputSx }}
+                    touched={touched.guardian}
+                    sx={{ width: "100%", ...uniformInputSx }}
                   />
                 </Box>
 
@@ -690,13 +1005,17 @@ const OwnerDetails: React.FC = () => {
                   label={guardianRelationshipLabel}
                   name="GuardianType"
                   value={ownerForm.GuardianType}
-                  options={guardianRelOptions}
+                  options={guardianRelationshipOptions}
                   showDropdown={showGuardianRelationshipDropdown}
                   setShowDropdown={setShowGuardianRelationshipDropdown}
                   onSelect={(_n, v) => handleGuardianRelationshipSelect(_n, v)}
-                  closeOtherDropdowns={() => setShowGuardianRelationshipDropdown(false)}
+                  closeOtherDropdowns={() =>
+                    setShowGuardianRelationshipDropdown(false)
+                  }
                   selectText=""
-                  onBlur={() => handleBlur('GuardianType', ownerForm.GuardianType ?? '')}
+                  onBlur={() =>
+                    handleBlur("GuardianType", ownerForm.GuardianType ?? "")
+                  }
                   required
                   error={errors.guardianRelationship}
                   touched={!!errors.guardianRelationship}
@@ -704,14 +1023,15 @@ const OwnerDetails: React.FC = () => {
               </>
             )}
 
-            <Box sx={{ width: '100%', height: '100%' }}>
+            <Box sx={{ width: "100%", height: "100%" }}>
               <Button
                 type="button"
+                disabled={isSubmitting}
                 onClick={handleAddOwner}
                 variant="contained"
-                sx={{ ...verifyButtonSx, display: 'block', marginLeft: 'auto' }}
+                sx={{ ...verifyButtonSx, display: "block", marginLeft: "auto" }}
               >
-                {nextButtonText}
+                {isSubmitting ? "Submitting" : nextButtonText}
               </Button>
             </Box>
           </Stack>
