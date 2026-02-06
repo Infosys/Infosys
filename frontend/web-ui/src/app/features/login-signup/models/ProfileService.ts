@@ -1,6 +1,7 @@
 
 // Provides user profile types and utility functions for user profile and language management
 import httpClient from "../services/httpClient";
+import env from '../../../../config/env';
 
 
 // Represents a user's address information
@@ -62,7 +63,7 @@ export type User = {
 
 // Fetches a user by their username from the onboarding API
 export const getUserByUsername = async (username: string): Promise<User> => {
-  const response = await fetch(`${import.meta.env.VITE_ONBOARDING_HOST}/api/v1/users?username=${username}`);
+  const response = await fetch(`${env.ONBOARDING_HOST}/api/v1/users?username=${username}`);
   if (response.status !== 200) throw new Error("User not found");
   const data = await response.json();
   

@@ -50,7 +50,6 @@ const EditFloorPopover: React.FC<EditFloorPopoverProps> = ({
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
-    console.log("Incoming floor data from cards.tsx:", fields);
     setLocalFields(fields);
     setErrors({});
   }, [fields, open]);
@@ -73,50 +72,39 @@ const EditFloorPopover: React.FC<EditFloorPopoverProps> = ({
     [key]: value
   });
 
-  if (!result.success) {
-    const fieldErrors = result.error.flatten().fieldErrors;
-    setErrors(
-      Object.fromEntries(
-        Object.entries(fieldErrors).map(([k, v]) => [k, v?.[0] || ""])
-      )
-    );
-  } else {
+  if (result.success) {
     setErrors({});
+  } else {
+    const fieldErrors: { [key: string]: string } = {};
+    result.error.issues.forEach(issue => {
+      if (issue.path.length > 0) {
+        const fieldName = issue.path[0] as string;
+        if (!fieldErrors[fieldName]) {
+          fieldErrors[fieldName] = issue.message;
+        }
+      }
+    });
+    setErrors(fieldErrors);
   }
 };
 
 
-  const handleSave = () => {
+const handleSave = () => {
   const result = schema.safeParse(localFields);
-  if (!result.success) {
-    const fieldErrors = result.error.flatten().fieldErrors;
-    setErrors(
-      Object.fromEntries(
-        Object.entries(fieldErrors).map(([k, v]) => [k, v?.[0] || ""])
-      )
-    );
-    return;
+  if (result.success) {
+    setErrors({});
+    console.log("Loccal Fields of Floor :", localFields);
+    
+    onSave(localFields);
+    onClose();
   }
-  setErrors({});
-  console.log("Loccal Fields of Floor :", localFields);
-  
-  onSave(localFields);
-  onClose();
 };
 
   return (
     <Dialog
       open={open}
       onClose={onClose}
-      PaperProps={{ sx: { p: 4, minWidth: 400, borderRadius: 3, boxShadow: 6 } }}
-      // transformOrigin={{
-      //   vertical: 'center',
-      //   horizontal: 'center',
-      // }}
-      // anchorOrigin={{
-      //   vertical: 'bottom',
-      //   horizontal: 'center',
-      // }}
+      slotProps={{ paper: { sx: { p: 4, minWidth: 400, borderRadius: 3, boxShadow: 6 } } }}
     >
       <Typography variant="h6" sx={{ mb: 2, fontStyle: 'italic' }}>
         Edit Floor Details

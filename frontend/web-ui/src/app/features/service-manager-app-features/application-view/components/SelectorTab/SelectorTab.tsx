@@ -36,7 +36,7 @@ const tabConfig: {
 
 
 // SelectorTab component: renders tab buttons and the corresponding content panel
-export default function SelectorTab({ activeTab, onTabChange , propertyId, assesseeId}: SelectorTabProps) {
+export default function SelectorTab({ activeTab, onTabChange, propertyId,assesseeId }: Readonly<SelectorTabProps>) {  
   // Handles tab button clicks, prevents switching to disabled tabs
   function handleTabClick(tab: TabType) {
     if (!tabConfig.find(t => t.value === tab)?.disabled) {

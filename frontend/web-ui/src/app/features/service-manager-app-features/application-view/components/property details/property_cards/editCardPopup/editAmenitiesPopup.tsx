@@ -81,7 +81,7 @@ const EditAmenitiesPopover: React.FC<EditAmenitiesPopoverProps> = ({
       // BackdropProps={{
       //   sx: { backgroundColor: 'rgba(0,0,0,0.3)' } // Lower opacity for dim effect
       // }}
-      PaperProps={{ sx: { p: 4, minWidth: 300, borderRadius: 3, boxShadow: 6 } }}
+      slotProps={{ paper: { sx: { p: 4, minWidth: 300, borderRadius: 3, boxShadow: 6 } } }}
     >
       {/* Dialog title */}
       <Typography variant="h6" sx={{ mb: 2 }}>

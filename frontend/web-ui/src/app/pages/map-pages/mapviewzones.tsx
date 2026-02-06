@@ -119,8 +119,7 @@ const MapViewZones: React.FC = () => {
       >
         {/* Jurisdiction Dropdown - Fixed at top right */}
         <Box sx={jurisdictionDropdownStyles}>
-          <JurisdictionDropdown backgroundColor="#E3F2FD"
-            hoverBackgroundColor="#BBDEFB" />
+          <JurisdictionDropdown backgroundColor="#F7E4DB" hoverBackgroundColor="#F7E4DB" />
         </Box>
 
         {/* Topbar */}
@@ -160,8 +159,7 @@ const MapViewZones: React.FC = () => {
     >
       {/* Jurisdiction Dropdown - Fixed at top right */}
       <Box sx={jurisdictionDropdownStyles}>
-        <JurisdictionDropdown backgroundColor="#E3F2FD"
-          hoverBackgroundColor="#BBDEFB" />
+        <JurisdictionDropdown backgroundColor="#F7E4DB" hoverBackgroundColor="#F7E4DB" />
       </Box>
 
       {/* Topbar */}

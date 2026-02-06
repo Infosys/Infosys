@@ -2,7 +2,6 @@
 // using RTK Query and onboardingApiSlice.
 
 import { onboardingApiSlice } from '../../../../../store/onboardingApiSlice'
-// import { useGetAgentByIdQuery } from '../../application-inbox/api/getAndReassignAgentApi';
 import type { AgentModel } from "../models/ServiceManagerDashboard/Agent_Model";
 
 // Response structure for fetching all agents

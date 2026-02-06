@@ -7,11 +7,11 @@ import { commissionerPrimaryItems } from '../../components/Sidebar/sidebarConfig
 import { mainContainerStyle, renderingContent } from "../../styles/HomePageStyle/HomePageStyle";
 import ApplicationInbox from '../../features/service-manager-app-features/application-inbox/components/ApplicationInbox';
 import SearchProperty from '../../features/service-manager-app-features/search-property/components/SearchProperty';
-import AllApplications from '../../features/comissioner-app-features/all-applications/components/AllApplications';
+import AllApplications from '../../features/comissioner-app-features/commissioner-all-applications/components/AllApplications';
 import { CommissionerSidebar } from '../../components/Sidebar/CM_Sidebar';
 import { useCommissionerSidebar } from '../../components/Sidebar/provider/CMSideBarProvider';
 import ProfileModal from '../../components/profile-modal/components/ProfileModal';
-import CommissionerDashBoard from '../../features/comissioner-app-features/Com_DashBoard/Components/Coms_DashBoardLayout';
+import CommissionerDashBoard from '../../features/comissioner-app-features/commissioner-dashboard/Components/Coms_DashBoardLayout';
 
 export // Main content component for the Commissioner Home Page
 const CommisionerHomePage: React.FC = () => {
@@ -40,7 +40,7 @@ const CommisionerHomePage: React.FC = () => {
       case 'searchProperty':
         return <SearchProperty />;
       case 'allApplications':
-        return <AllApplications sideBarOpen={sideBarOpen} />;
+        return <AllApplications />;
       default:
         return <div>Dashboard Content</div>;
     }

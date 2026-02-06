@@ -12,6 +12,8 @@ import { onboardingApiSlice } from './onboardingApiSlice';
 import filterReducer from '../app/features/service-manager-app-features/application-inbox/store/filterSlice';
 import userReducer from './userSlice';
 import { mdmsApi } from '../app/features/service-manager-app-features/application-view/api/mdmsService/mdmsApi';
+import propertyTaxCalcApiSlice from './propertyTaxCalcApiSlice';
+import { zoneApi } from '../app/features/comissioner-app-features/commissioner-dashboard/CommissionerDashBoardApi/zoneApi';
 
 // Configuration for persistence of user state
 const userPersistConfig = {
@@ -30,7 +32,9 @@ export const store = configureStore({
     application: applicationReducer,
     [onboardingApiSlice.reducerPath]: onboardingApiSlice.reducer,
     [filestoreApiSlice.reducerPath]: filestoreApiSlice.reducer,
+    [zoneApi.reducerPath]: zoneApi.reducer,
     [mdmsApi.reducerPath]: mdmsApi.reducer,
+    [propertyTaxCalcApiSlice.reducerPath]: propertyTaxCalcApiSlice.reducer,
     filter: filterReducer,
     user: persistedUserReducer,
   },
@@ -43,7 +47,9 @@ export const store = configureStore({
       .concat(apiSlice.middleware)
       .concat(filestoreApiSlice.middleware)
       .concat(onboardingApiSlice.middleware)
+      .concat(zoneApi.middleware)
       .concat(mdmsApi.middleware)
+      .concat(propertyTaxCalcApiSlice.middleware)
 });
 
 // Enable refetchOnFocus/refetchOnReconnect behaviors for RTK Query

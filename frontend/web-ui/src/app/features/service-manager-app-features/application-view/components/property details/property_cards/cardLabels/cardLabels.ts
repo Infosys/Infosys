@@ -1,13 +1,13 @@
-
 // Label mappings for displaying user-friendly field names in property application cards.
-
 // Labels for owner-related fields
 export const ownerLabels: { [key: string]: string } = {
   Name: "Owner Name ",
   ContactNo: "Mobile Number ",
   Email: "Email Address ",
   Gender: "Gender ",
-  AdhaarNo: "Aadhaar No. "
+  AdhaarNo: "Aadhaar No. ",
+  Guardian: "Guardian",
+  GuardianType: "Guardian Type"
 };
 
 
@@ -41,9 +41,10 @@ export const addressLabels: { [key: string]: string } = {
   ElectionWard: "Election Ward ",
   SecretariatWard: "Secretariat Ward ",
   PinCode: "Pin Code ",
-  correspondenceAddress1: "Correspondence Address 1",
-  correspondenceAddress2: "Correspondence Address 2",
-  correspondenceAddress3: "Correspondence Address 3"
+  DifferentCorrespondenceAddress: "Different Correspondence Address",
+  CorrespondenceAddress1: "Correspondence Address 1",
+  CorrespondenceAddress2: "Correspondence Address 2",
+  CorrespondencePincode: "Correspondence Pincode"
 };
 
 
@@ -52,16 +53,22 @@ export const propertyLabels: { [key: string]: string } = {
   PropertyNo: "Property No",
   OwnershipType: "Ownership Type",
   PropertyType: "Property Type",
-  ComplexName: "Complex Name"
+  ComplexName: "Complex Name",
+  typeOfLand: "Type of Land",
+  noOfFloors: "Number of Floors",
+  noOfBasements: "Number of Basements",
+  hasMezzanineFloor: "Has Mezzanine Floor",
+  noOfBuildings: "Number of Buildings",
+  buildingName: "Building Number/Name"
 };
 
 
 // Labels for assessment-related fields
-export const assessmentLabels: { [key: string]: string } = {
+export const assessmentLabels: {  [key: string]: ((unit?: string) => string) | string  } = {
   ReasonOfCreation: "Reason of Creation ",
   OccupancyCertificateNumber: "Occupancy Certificate Number ",
   OccupancyCertificateDate: "Occupancy Certificate Date ",
-  ExtentOfSite: "Extent Of Site (sq ft) "
+  ExtentOfSite: (unit?: string) => unit ? `Extent Of Site (${unit})` : "Extent Of Site"
 };
 
 
@@ -80,7 +87,6 @@ export const igsrLabels: { [key: string]: string } = {
   doorNoTo: "Door No. To",
   igrsLocality: "IGRS Locality"
 };
-
 
 // Labels for construction-related fields
 export const constructionLabels: { [key: string]: string } = {

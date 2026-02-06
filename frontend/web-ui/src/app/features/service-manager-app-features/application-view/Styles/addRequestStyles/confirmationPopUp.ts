@@ -8,19 +8,17 @@ export const confirmDialogPaperStyle: SxProps<Theme> = {
   borderRadius: "20px",
   minWidth: 390,
   maxWidth: 410,
-  p: 0,
-  boxShadow: "0px 6px 36px 0px rgba(36, 66, 117, 0.19)",
 };
 
 // Styles for the title text in the confirmation dialog
 export const confirmTitleStyle: SxProps<Theme> = {
   fontWeight: 700,
-  fontSize: "20px",
-  mt: 3.5,
-  mb: 2,
+  fontSize: "32px",
   textAlign: "center",
   color: "#1C2237",
   letterSpacing: 0.2,
+  px: 4,
+  textAlignLast:"left"
 };
 
 // Styles for the description text in the confirmation dialog
@@ -29,9 +27,8 @@ export const confirmDescStyle: SxProps<Theme> = {
   fontSize: "15.3px",
   fontWeight: 500,
   lineHeight: 1.44,
-  px: 4.6,
-  mb: 2.2,
-  textAlign: "center",
+  px: 4,
+  textAlign: "left",
 };
 
 // Styles for the note or additional information text
@@ -39,7 +36,7 @@ export const confirmNoteStyle: SxProps<Theme> = {
   color: "#77809A",
   fontSize: "14px",
   fontWeight: 400,
-  textAlign: "center",
+  textAlign: "left",
   px: 4,
   mb: 2,
 };
@@ -47,7 +44,7 @@ export const confirmNoteStyle: SxProps<Theme> = {
 // Styles for the button bar containing action buttons
 export const confirmButtonBar: SxProps<Theme> = {
   display: "flex",
-  justifyContent: "center",
+  justifyContent: "space-between",
   gap: 2.3,
   px: 4,
   mb: 4,
@@ -62,7 +59,7 @@ export const rejectBtn: SxProps<Theme> = {
   fontWeight: 700,
   fontSize: "15.2px",
   height: "38px",
-  width: "125px",
+  width:"50%",
   textTransform: "none",
   boxShadow: "none",
   "&:hover": {
@@ -80,7 +77,7 @@ export const confirmBtn: SxProps<Theme> = {
   fontWeight: 700,
   fontSize: "15.2px",
   height: "38px",
-  width: "125px",
+  width:"50%",
   textTransform: "none",
   boxShadow: "none",
   "&:hover": {

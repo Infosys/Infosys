@@ -13,7 +13,6 @@ import { useGetAllAgentsQuery } from "../../api/getAllAgentsApi";
 import { useNavigate } from "react-router-dom";
 import { useGetApplicationsBySearchQuery } from "../../api/searchFilterApi";
 import { FILTER_PARAM_MAP } from "../../utils/constants";
-import { sortProperties } from "../../utils/sortProperties";
 import type { RootState } from "../../../../../../store";
 import { useSelector } from "react-redux";
 
@@ -39,6 +38,10 @@ const PropertyCardList: React.FC<PropertyCardListProps> = ({
   const debouncedSearchValue = useDebouncedValue(searchValue, 500);
   const getSearchValue = debouncedSearchValue;
 
+  // Convert sort option to API parameters
+  const sortBy = selectedSort === "New - Old" ? "DESC" : "ASC";
+  const sortField = "created_at";
+
   // Get the currently selected zone and wards from Redux store
   const selectedZone = useSelector(
     (state: RootState) => state.user.selectedZone
@@ -58,6 +61,8 @@ const PropertyCardList: React.FC<PropertyCardListProps> = ({
     size: PAGE_SIZE,
     zoneNo: selectedZone?.zoneNumber ?? "",
     wardNos: selectedZone?.wards ?? [],
+    sortBy,
+    sortField,
   });
 
   // Extract assigned zone and wards for filtering
@@ -119,6 +124,8 @@ if (selectedFilter === "Agent name" && getSearchValue.trim() !== "" && agentsDat
       wardNos: filteredWardNos,
       page: page - 1, // backend is usually 0-indexed
       size: PAGE_SIZE,
+      sortBy,
+      sortField,
     },
     { skip: !shouldUseSearch }
   );
@@ -160,14 +167,9 @@ if (selectedFilter === "Agent name" && getSearchValue.trim() !== "" && agentsDat
     }));
   }, [data, agentIdToName, agentIdToUsername]);
 
-  // Apply sorting to the enriched properties
-  const sortedProperties = useMemo(() => {
-    return sortProperties(enrichedProperties, selectedSort);
-  }, [enrichedProperties, selectedSort]);
-
   const totalPages = data?.pagination?.totalPages || 1;
   // Get the data for the current page (no slicing for search)
-  const paginatedData = sortedProperties;
+  const paginatedData = enrichedProperties;
 
   // Reset to first page when filter, search, or sort changes
   useEffect(() => {
@@ -241,6 +243,8 @@ if (selectedFilter === "Agent name" && getSearchValue.trim() !== "" && agentsDat
                   EntityType: "",
                   PropertyID: "",
                   Coordinates: [],
+                  Latitude: 0,
+                  Longitude: 0,
                   CreatedAt: "",
                   UpdatedAt: "",
                 }

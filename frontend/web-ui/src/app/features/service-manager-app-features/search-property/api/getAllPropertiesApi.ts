@@ -20,11 +20,11 @@ export const applicationInboxApi = apiSlice.injectEndpoints({
         // }),
 
         // Endpoint to fetch all property applications under a specific jurisdiction (zone and wards)
-        getAllPropertiesUnderJurisdiction: builder.query<GetAllPropertiesResponse, { zoneNo: string, wardNos: string[], page?: number, size?: number }>({
-        query: ({ page = 0, size = 20, zoneNo, wardNos }) => {
+        getAllPropertiesUnderJurisdiction: builder.query<GetAllPropertiesResponse, { zoneNo: string, wardNos: string[], page?: number, size?: number, sortBy?: string, sortField?: string }>({
+        query: ({ page = 0, size = 20, zoneNo, wardNos, sortBy = 'DESC', sortField = 'created_at' }) => {
             const zoneParam = `zoneNo=${encodeURIComponent(zoneNo)}`;
             const wardParams = wardNos.map(w => `wardNo=${encodeURIComponent(w)}`).join('&');
-            const url = `/v1/applications/search?${zoneParam}&${wardParams}&page=${page}&size=${size}`;
+            const url = `/v1/applications/search?${zoneParam}&${wardParams}&page=${page}&size=${size}&sortBy=${sortBy}&sortField=${sortField}`;
             console.log('Built jurisdiction query', url);
             return {
                 url,

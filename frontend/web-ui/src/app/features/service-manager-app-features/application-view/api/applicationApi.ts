@@ -17,7 +17,7 @@ export const viewApplicationApi = apiSlice.injectEndpoints({
         // Get owner details by property ID
         getOwnerByPropertyId: builder.query<ApplicationResponse, string>({
             query: (propertyId) => ({
-                url: `${import.meta.env.VITE_ENUMERATION_HOST}/v1/property-owners/property/${propertyId}`,
+                url: `/v1/property-owners/property/${propertyId}`,
                 method: 'GET',
                 headers: {
                     'X-User-Role': 'SERVICE_MANAGER',
@@ -30,7 +30,7 @@ export const viewApplicationApi = apiSlice.injectEndpoints({
         // get application by Application id
         getApplicationByApplicationId: builder.query<ApplicationResponse, string>({
             query: (applicationId) => ({
-                url: `${import.meta.env.VITE_ENUMERATION_HOST}/v1/applications/${applicationId}`,
+                url: `/v1/applications/${applicationId}`,
                 method: 'GET',
             }),
             providesTags: (_result, _error, applicationId) => [
@@ -43,8 +43,8 @@ export const viewApplicationApi = apiSlice.injectEndpoints({
 
         // Edit application details
         editApplication: builder.mutation<EditApplicationResponse, { property: Property, applicationId: string }>({
-            query: ({ property }) => ({
-                url: `/v1/properties/${property.ID}`,
+            query: ({ property, applicationId }) => ({
+                url: `/v1/properties/${property.ID}/${applicationId}?isVerifying=true`,
                 method: 'PUT',
                 headers: {
                     'X-Tenant-ID': 'pb.amritsar'
@@ -61,17 +61,6 @@ export const viewApplicationApi = apiSlice.injectEndpoints({
     ],
         }),
 
-        // Edit owner details (PUT /v1/property-owners/{owner_id})
-        editOwner: builder.mutation<any, { id: string, owner: Omit<any, 'ID'> }>({
-            query: ({ id, owner }) => ({
-                url: `/v1/property-owners/${id}`,
-                method: 'PUT',
-                headers: {
-                    'X-Tenant-ID': 'pb.amritsar'
-                },
-                body: owner,
-            }),
-        }),
 
         // Post an application log entry
         postApplicationLog: builder.mutation<PostApplicationLogResponse, PostApplicationLogRequest>({
@@ -151,5 +140,4 @@ export const {
     useGetOwnerByPropertyIdQuery,
     useGetApplicationByApplicationIdQuery,
     useEditApplicationMutation,
-    useEditOwnerMutation
 } = viewApplicationApi;

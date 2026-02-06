@@ -22,7 +22,6 @@ export const previewBoxCardStyle: SxProps<Theme> = {
   p: 6,
   borderRadius: 2,
   bgcolor: "#fff",
-  // boxShadow: "0 1px 8px rgba(0,0,0,.03)",
   border: "2px dashed #888888ff",
 };
 
@@ -34,8 +33,6 @@ export const previewCenteredStyle: SxProps<Theme> = {
 // Styles for the icon displayed in the preview box
 export const previewIconStyle: SxProps<Theme> = {
   fontSize: 32,
-  color: "#c75b2f",
-  mb: 1,
 };
 
 // Styles for the subtitle or description in the preview box
@@ -97,7 +94,7 @@ export const historyLeftStyle: SxProps<Theme> = {
 // Styles for the year or main label in the history item
 export const historyYearStyle: SxProps<Theme> = {
   fontWeight: "bold",
-  color: "#c75b2f",
+  color: "#8d8b8aff",
   minWidth: 48,
   fontSize: 18,
 };
@@ -168,8 +165,9 @@ export const downloadButtonStyle: SxProps<Theme> = {
   borderRadius: "16px",
   px: 2,
   py: "4px",
-  fontSize: 13,
+  fontSize: 12,
   boxShadow: "none",
+  fontWeight: 700,
   "&:hover": {
     background: "#ee8830",
     color: "#ffffff"

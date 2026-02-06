@@ -12,6 +12,7 @@ RUN npm install
 
 # Copy only Storybook-related files
 COPY .storybook/ ./.storybook/
+COPY stories/ ./stories/
 COPY src/ ./src/
 COPY tsconfig*.json ./
 COPY vite.config.ts ./

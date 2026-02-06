@@ -88,20 +88,24 @@ const EditAdditionalDetailsPopover: React.FC<EditAdditionalDetailsPopoverProps> 
     }));
 
     // Validate the updated input using the schema
-    const result = schema.safeParse({
-      ...localFields,
-      fieldValue: {
-        ...localFields.fieldValue,
-        [key]: value,
-      },
-    });
-
-    if (!result.success) {
-      const fieldErrors = result.error.flatten().fieldErrors;
-      setErrors(Object.fromEntries(Object.entries(fieldErrors).map(([k, v]) => [k, v?.[0] || ""])));
-    } else {
-      setErrors({});
-    }
+      const result = schema.safeParse({
+        ...localFields,
+        fieldValue: {
+          ...localFields.fieldValue,
+          [key]: value,
+        },
+      });
+  
+      if (result.success) {
+        setErrors({});
+      } else {
+        const fieldErrors: Record<string, string> = {};
+        result.error.issues.forEach(issue => {
+          const key = issue.path.at(-1)?.toString() || 'unknown';
+          if (!fieldErrors[key]) fieldErrors[key] = issue.message;
+        });
+        setErrors(fieldErrors);
+      }
   };
 
   // Handle change for top-level fields (fieldName, propertyId)
@@ -111,18 +115,21 @@ const EditAdditionalDetailsPopover: React.FC<EditAdditionalDetailsPopoverProps> 
       ...prev,
       [key]: value,
     }));
-
     // Validate the updated input using the schema
     const result = schema.safeParse({
       ...localFields,
       [key]: value,
     });
 
-    if (!result.success) {
-      const fieldErrors = result.error.flatten().fieldErrors;
-      setErrors(Object.fromEntries(Object.entries(fieldErrors).map(([k, v]) => [k, v?.[0] || ""])));
-    } else {
+    if (result.success) {
       setErrors({});
+    } else {
+      const fieldErrors: Record<string, string> = {};
+      result.error.issues.forEach(issue => {
+        const key = issue.path.at(-1)?.toString() || 'unknown';
+        if (!fieldErrors[key]) fieldErrors[key] = issue.message;
+      });
+      setErrors(fieldErrors);
     }
   };
 
@@ -130,8 +137,12 @@ const EditAdditionalDetailsPopover: React.FC<EditAdditionalDetailsPopoverProps> 
   const handleSave = () => {
         const result = schema.safeParse(localFields);
       if (!result.success) {
-        const fieldErrors = result.error.flatten().fieldErrors;
-        setErrors(Object.fromEntries(Object.entries(fieldErrors).map(([k, v]) => [k, v?.[0] || ""])));
+        const fieldErrors: Record<string, string> = {};
+        result.error.issues.forEach(issue => {
+          const key = issue.path.at(-1)?.toString() || 'unknown';
+          if (!fieldErrors[key]) fieldErrors[key] = issue.message;
+        });
+        setErrors(fieldErrors);
           return;
       }
       setErrors({});
@@ -144,12 +155,7 @@ const EditAdditionalDetailsPopover: React.FC<EditAdditionalDetailsPopoverProps> 
     <Dialog
       open={open}
       onClose={onClose}
-      // fullWidth
-      // maxWidth="sm"
-      // BackdropProps={{
-      //   sx: { backgroundColor: 'rgba(0,0,0,0.3)' }
-      // }}
-      PaperProps={{ sx: { p: 4, minWidth: 500, borderRadius: 3, boxShadow: 6 } }}
+      slotProps={{ paper: { sx: { p: 4, minWidth: 500, borderRadius: 3, boxShadow: 6 } } }}
     >
       <Box>
         {/* Dialog title */}
@@ -166,6 +172,7 @@ const EditAdditionalDetailsPopover: React.FC<EditAdditionalDetailsPopoverProps> 
             error={!!errors["fieldName"]}
             helperText={errors["fieldName"]}
             type="text"
+            disabled
           />
           {/* <TextField
             label={labels["propertyId"] || "Property ID"}
@@ -215,18 +222,19 @@ const EditAdditionalDetailsPopover: React.FC<EditAdditionalDetailsPopoverProps> 
       fullWidth
       error={!!errors[key]}
       helperText={errors[key]}
-      SelectProps={{
-        MenuProps: {
-          PaperProps: {
-            style: {
-              maxHeight: 200,
-              // zIndex: 1500, 
+      slotProps={{
+        select: {
+          MenuProps: {
+            PaperProps: {
+              style: {
+                maxHeight: 200,
+                // zIndex: 1500, 
+              },
             },
           },
         },
       }}
     >
-      <MenuItem value="">Select Document Type</MenuItem>
       {documentTypes.map(opt => (
         <MenuItem key={opt.id} value={opt.name}>{opt.name}</MenuItem>
       ))}

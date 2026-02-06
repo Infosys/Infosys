@@ -16,7 +16,6 @@ import {
   cardLeftSection,
   cardRightSection,
   propertyHeader,
-  propertyIcon,
   propertyTitle,
   propertyId,
   infoIcon,
@@ -32,6 +31,7 @@ import {
 } from '../styles/ApplicationCardStyle';
 import { ApplicationInboxAssignmentModal } from '../../assign-agent-to-application/components/ApplicationInboxAssignmentModal';
 import { MapLibreMap } from './ApplicationCardMapComponent';
+import documentIcon from '../../service-manager-dashboard/assets/application_icon.svg';
 
 
 interface ApplicationCardProps {
@@ -77,13 +77,13 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({
   };
 
   const getBGColorForPriority = (priority: string): string => {
-    switch (priority.toLowerCase()) {
-      case 'high': return '#F8D7DA';
-      case 'medium': return '#FFF3CD';
-      case 'low': return '#D1E7DD';
-      default: return '#E2E3E5';
-    }
-  };
+  switch (priority.toLowerCase()) {
+    case 'high': return '#A30202B3'; 
+    case 'medium': return '#A5940073'; 
+    case 'low': return '#00703C73'; 
+    default: return '#E2E3E5';
+  }
+};
 
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
@@ -168,7 +168,7 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({
     <Box sx={cardContainer}>
       <Box sx={cardLeftSection} onClick={() => handlePropertyCardClick(application.ID)}>
         <Box sx={propertyHeader}>
-          <DescriptionOutlinedIcon sx={propertyIcon} />
+          <img src={documentIcon} alt="Application Icon" style={{ width: 20, height: 20, marginTop: '4px', marginLeft: '8px' }} />
           <Box sx={{ flexGrow: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
               <Typography sx={propertyTitle}>

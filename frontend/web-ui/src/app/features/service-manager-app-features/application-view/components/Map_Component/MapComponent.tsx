@@ -5,8 +5,6 @@ import { Box, Button, IconButton } from "@mui/material";
 import closeSvg from "../../Assets/MapMarkerIcon/close.svg";
 import undoSvg from "../../Assets/MapMarkerIcon/undo.svg";
 import editSquareSvg from "../../Assets/MapMarkerIcon/edit_squaremap.svg";
-// import { useDispatch } from 'react-redux';
-// import { selectApplication } from '../../redux/apiSlice';
 import propertyMarkerSvg from '../../Assets/MapMarkerIcon/Proptery one.svg';
 import { useReplaceGisCoordinatesMutation } from '../../api/GisDataAPI';
 import {
@@ -21,8 +19,6 @@ import {
 } from "../../Styles/searchPropertyStyles/MapComponent";
 import type { Property } from '../../model/applicationByIdModel';
 import { useAuth } from '../../../../login-signup/provider/AuthProvider';
-// import { useSelector } from 'react-redux';
-// import type { RootState } from '../../../../../../store';
 import { usePostApplicationLogMutation } from '../../api/applicationApi';
 
 /**
@@ -36,9 +32,22 @@ type PolygonControlRef = {
 } | null;
 
 /**
+ * Props interface for MapWrapper component
+ */
+type MapWrapperProps = Readonly<{
+  interactive: boolean;  // Enable/disable map interactions (pan, zoom)
+  coordinates?: Array<{ Latitude?: number; Longitude?: number; latitude?: number; longitude?: number }> | null;
+  externalControlRef?: React.RefObject<PolygonControlRef>;  // Ref for parent to control polygon drawing 
+  onPolygonComplete?: (coords: Array<{ lat: number; lng: number }>) => void;  // Callback when polygon drawing completes
+  locationMode?: boolean;  // Special mode for single point editing
+  onLocationMove?: (lat: number, lng: number) => void;  // Live callback for map center changes
+  initialCenter?: { lat: number; lng: number } | null;  // Initial map center for location mode
+}>;
+
+/**
  * MapWrapper Component
  * 
- * Core map rendering component using Leaflet.js
+ * Core map rendering component using MapLibre GL
  * Handles both static display and interactive drawing modes
  * 
  * Features:
@@ -55,15 +64,7 @@ export function MapWrapper({
   locationMode,
   onLocationMove,
   initialCenter,
-}: {
-  interactive: boolean;  // Enable/disable map interactions (pan, zoom)
-  coordinates?: Array<{ Latitude?: number; Longitude?: number; latitude?: number; longitude?: number }> | null;
-  externalControlRef?: React.MutableRefObject<PolygonControlRef> | null;  // Ref for parent to control polygon drawing
-  onPolygonComplete?: (coords: Array<{ lat: number; lng: number }>) => void;  // Callback when polygon drawing completes
-  locationMode?: boolean;  // Special mode for single point editing
-  onLocationMove?: (lat: number, lng: number) => void;  // Live callback for map center changes
-  initialCenter?: { lat: number; lng: number } | null;  // Initial map center for location mode
-}) {
+}: MapWrapperProps) {
   // DOM and MapLibre instance references
   const mapRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<maplibregl.Map | null>(null);
@@ -75,236 +76,481 @@ export function MapWrapper({
   const drawnLayersRef = useRef<L.Layer[]>([]);  // Final drawn layers (polygons, markers)
 
   /**
+   * Parse coordinates from props into standardized format
+   */
+  const parseCoordinates = useCallback((): [number, number][] => {
+    if (!coordinates || !Array.isArray(coordinates) || coordinates.length === 0) {
+      return [];
+    }
+    return coordinates.map((c) => [
+      c.Latitude ?? c.latitude ?? 0,
+      c.Longitude ?? c.longitude ?? 0
+    ] as [number, number]);
+  }, [coordinates]);
+
+  /**
+   * Determine initial map center based on mode and available coordinates
+   */
+  const getInitialCenter = useCallback((points: [number, number][]): [number, number] => {
+    if (locationMode && initialCenter) {
+      return [initialCenter.lat, initialCenter.lng];
+    }
+    if (points.length > 0) {
+      return points[0];
+    }
+    return [12.9141, 77.6387]; // Default: Bangalore
+  }, [locationMode, initialCenter]);
+
+  /**
+   * Create custom marker element for map
+   */
+  const createCustomMarkerElement = useCallback(() => {
+    const wrapper = document.createElement('div');
+    wrapper.style.width = '34px';
+    wrapper.style.height = '34px';
+    wrapper.style.position = 'relative';
+    wrapper.style.pointerEvents = 'none';
+
+    const img = document.createElement('img');
+    img.src = propertyMarkerSvg;
+    img.style.width = '34px';
+    img.style.height = '34px';
+    img.style.position = 'absolute';
+    img.style.left = '50%';
+    img.style.bottom = '0';
+    img.style.transform = 'translateX(-50%)';
+    img.style.display = 'block';
+    img.style.margin = '0';
+    img.style.padding = '0';
+
+    wrapper.appendChild(img);
+    return wrapper;
+  }, []);
+
+  /**
+   * Calculate visual centroid using pixel space
+   */
+  const calculateVisualCentroid = useCallback((
+    map: maplibregl.Map,
+    points: [number, number][]
+  ) => {
+    try {
+      const layerPts = points.map(p => map.project([p[1], p[0]]));
+      let signedArea = 0;
+      let cx = 0;
+      let cy = 0;
+      
+      for (let i = 0; i < layerPts.length; i++) {
+        const p0 = layerPts[i];
+        const p1 = layerPts[(i + 1) % layerPts.length];
+        const a = p0.x * p1.y - p1.x * p0.y;
+        signedArea += a;
+        cx += (p0.x + p1.x) * a;
+        cy += (p0.y + p1.y) * a;
+      }
+      
+      signedArea *= 0.5;
+      
+      if (Math.abs(signedArea) < 1e-6) {
+        const avgX = layerPts.reduce((s, p) => s + p.x, 0) / layerPts.length;
+        const avgY = layerPts.reduce((s, p) => s + p.y, 0) / layerPts.length;
+        return map.unproject([avgX, avgY]);
+      }
+      
+      cx = cx / (6 * signedArea);
+      cy = cy / (6 * signedArea);
+      return map.unproject([cx, cy]);
+    } catch (err) {
+      console.warn('[MapWrapper] Centroid calculation failed, using first point', err);
+      return { lat: points[0][0], lng: points[0][1] } as any;
+    }
+  }, []);
+
+  /**
+   * Add marker to map at specified coordinates
+   */
+  const addMarkerToMap = useCallback((
+    map: maplibregl.Map,
+    lat: number,
+    lng: number,
+    createdMarkers: maplibregl.Marker[]
+  ): maplibregl.Marker | null => {
+    try {
+      const el = createCustomMarkerElement();
+      const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' as any })
+        .setLngLat([lng, lat])
+        .addTo(map);
+      createdMarkers.push(marker);
+      return marker;
+    } catch (e) {
+      console.warn('[MapWrapper] Failed to add marker', e);
+      return null;
+    }
+  }, [createCustomMarkerElement]);
+
+  /**
+   * Add polygon to map with fill and outline
+   */
+  const addPolygonToMap = useCallback((
+    map: maplibregl.Map,
+    points: [number, number][],
+    addedSourceIds: string[],
+    addedLayerIds: string[]
+  ) => {
+    const coords = points.map(p => [p[1], p[0]] as [number, number]);
+    const ring = coords.slice();
+    
+    if (ring.length && (ring[0][0] !== ring.at(-1)?.[0] || ring[0][1] !== ring.at(-1)?.[1])) {
+      ring.push(ring[0]);
+    }
+    
+    const sourceId = 'polygon-source';
+    const fillLayerId = 'polygon-fill';
+    const lineLayerId = 'polygon-line';
+    
+    try {
+      map.addSource(sourceId, {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          properties: {},
+          geometry: { type: 'Polygon', coordinates: [ring] }
+        } as any
+      });
+      
+      map.addLayer({
+        id: fillLayerId,
+        type: 'fill',
+        source: sourceId,
+        paint: { 'fill-color': '#C84C0E', 'fill-opacity': 0.2 }
+      });
+      
+      map.addLayer({
+        id: lineLayerId,
+        type: 'line',
+        source: sourceId,
+        paint: { 'line-color': '#C84C0E', 'line-width': 2 }
+      });
+      
+      addedSourceIds.push(sourceId);
+      addedLayerIds.push(fillLayerId, lineLayerId);
+      
+      // Fit bounds
+      const lats = points.map(p => p[0]);
+      const lngs = points.map(p => p[1]);
+      const minLat = Math.min(...lats);
+      const maxLat = Math.max(...lats);
+      const minLng = Math.min(...lngs);
+      const maxLng = Math.max(...lngs);
+      
+      try {
+        map.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 20 });
+      } catch (e) {
+        console.warn('[MapWrapper] Failed to fit bounds', e);
+      }
+    } catch (e) {
+      console.warn('[MapWrapper] Failed to add polygon', e);
+    }
+  }, []);
+
+  /**
+   * Handle polygon display with centroid marker
+   */
+  const handlePolygonDisplay = useCallback((
+    map: maplibregl.Map,
+    points: [number, number][],
+    addedSourceIds: string[],
+    addedLayerIds: string[],
+    createdMarkers: maplibregl.Marker[]
+  ) => {
+    addPolygonToMap(map, points, addedSourceIds, addedLayerIds);
+    
+    try {
+      const centroid = calculateVisualCentroid(map, points);
+      const marker = addMarkerToMap(map, centroid.lat, centroid.lng, createdMarkers);
+      if (marker) {
+        drawnLayersRef.current.push(marker as any);
+      }
+    } catch (e) {
+      console.error('[MapWrapper] Failed to create centroid marker', e);
+    }
+  }, [addPolygonToMap, calculateVisualCentroid, addMarkerToMap]);
+
+  /**
+   * Handle single point display
+   */
+  const handleSinglePointDisplay = useCallback((
+    map: maplibregl.Map,
+    points: [number, number][],
+    createdMarkers: maplibregl.Marker[]
+  ) => {
+    const marker = addMarkerToMap(map, points[0][0], points[0][1], createdMarkers);
+    if (marker) {
+      drawnLayersRef.current.push(marker as any);
+    }
+    
+    try {
+      map.setCenter([points[0][1], points[0][0]]);
+      map.setZoom(15);
+    } catch (e) {
+      console.warn('[MapWrapper] Failed to set center/zoom', e);
+    }
+  }, [addMarkerToMap]);
+
+  /**
+   * Handle two points display
+   */
+  const handleTwoPointsDisplay = useCallback((
+    map: maplibregl.Map,
+    points: [number, number][],
+    createdMarkers: maplibregl.Marker[]
+  ) => {
+    points.forEach(p => {
+      const m = addMarkerToMap(map, p[0], p[1], createdMarkers);
+      if (m) {
+        drawnLayersRef.current.push(m as any);
+      }
+    });
+    
+    const lats = points.map(p => p[0]);
+    const lngs = points.map(p => p[1]);
+    const minLat = Math.min(...lats);
+    const maxLat = Math.max(...lats);
+    const minLng = Math.min(...lngs);
+    const maxLng = Math.max(...lngs);
+    
+    try {
+      map.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 20 });
+    } catch (e) {
+      console.warn('[MapWrapper] Failed to fit bounds', e);
+    }
+  }, [addMarkerToMap]);
+
+  /**
+   * Display features on map based on point count
+   */
+  const displayMapFeatures = useCallback((
+    map: maplibregl.Map,
+    points: [number, number][],
+    defaultCenter: [number, number],
+    addedSourceIds: string[],
+    addedLayerIds: string[],
+    createdMarkers: maplibregl.Marker[]
+  ) => {
+    if (points.length >= 3) {
+      handlePolygonDisplay(map, points, addedSourceIds, addedLayerIds, createdMarkers);
+    } else if (points.length === 1) {
+      handleSinglePointDisplay(map, points, createdMarkers);
+    } else if (points.length === 2) {
+      handleTwoPointsDisplay(map, points, createdMarkers);
+    } else {
+      const marker = addMarkerToMap(map, defaultCenter[0], defaultCenter[1], createdMarkers);
+      if (marker) {
+        drawnLayersRef.current.push(marker as any);
+      }
+    }
+  }, [handlePolygonDisplay, handleSinglePointDisplay, handleTwoPointsDisplay, addMarkerToMap]);
+
+  /**
+   * Disable map interactions
+   */
+  const disableMapInteractions = useCallback((map: maplibregl.Map) => {
+    try { map.dragPan.disable(); } catch (e) { console.warn('[MapWrapper] Failed to disable dragPan', e); }
+    try { map.scrollZoom.disable(); } catch (e) { console.warn('[MapWrapper] Failed to disable scrollZoom', e); }
+    try { map.doubleClickZoom.disable(); } catch (e) { console.warn('[MapWrapper] Failed to disable doubleClickZoom', e); }
+    
+    try {
+      const boxZoom = (map as any).boxZoom;
+      if (boxZoom?.disable) {
+        boxZoom.disable();
+      }
+    } catch (e) {
+      console.warn('[MapWrapper] Failed to disable boxZoom', e);
+    }
+    
+    try {
+      const keyboard = (map as any).keyboard;
+      if (keyboard?.disable) {
+        keyboard.disable();
+      }
+    } catch (e) {
+      console.warn('[MapWrapper] Failed to disable keyboard', e);
+    }
+  }, []);
+
+  /**
+   * Enable map interactions for location mode
+   */
+  const enableMapInteractions = useCallback((map: maplibregl.Map) => {
+    try { map.dragPan.enable(); } catch (e) { console.warn('[MapWrapper] Failed to enable dragPan', e); }
+    try { map.scrollZoom.enable(); } catch (e) { console.warn('[MapWrapper] Failed to enable scrollZoom', e); }
+  }, []);
+
+  /**
+   * Configure map interactivity based on mode
+   */
+  const configureMapInteractivity = useCallback((map: maplibregl.Map) => {
+    if (!interactive && !locationMode) {
+      disableMapInteractions(map);
+    }
+
+    if (locationMode) {
+      enableMapInteractions(map);
+    }
+  }, [interactive, locationMode, disableMapInteractions, enableMapInteractions]);
+
+  /**
+   * Setup location mode event handlers
+   */
+  const setupLocationMode = useCallback((map: maplibregl.Map): (() => void) | null => {
+    if (!locationMode) return null;
+
+    const locationHandler = () => {
+      try {
+        const c = map.getCenter();
+        if (onLocationMove) {
+          onLocationMove(c.lat, c.lng);
+        }
+      } catch (e) {
+        console.warn('[MapWrapper] Failed to read map center', e);
+      }
+    };
+
+    map.on('move', locationHandler);
+    map.on('moveend', locationHandler);
+    map.on('drag', locationHandler);
+
+    if (!initialLocationSentRef.current) {
+      initialLocationSentRef.current = true;
+      locationHandler();
+    }
+
+    return () => {
+      map.off('move', locationHandler);
+      map.off('moveend', locationHandler);
+      map.off('drag', locationHandler);
+    };
+  }, [locationMode, onLocationMove]);
+
+  /**
+   * Clean up map markers and layers
+   */
+  const cleanupMapLayers = useCallback((
+    map: maplibregl.Map,
+    createdMarkers: maplibregl.Marker[],
+    addedLayerIds: string[],
+    addedSourceIds: string[]
+  ) => {
+    createdMarkers.forEach(m => {
+      try {
+        m.remove();
+      } catch (e) {
+        console.warn('[MapWrapper] Failed to remove marker', e);
+      }
+    });
+    createdMarkers.length = 0;
+
+    addedLayerIds.forEach(id => {
+      try {
+        if (map.getLayer(id)) {
+          map.removeLayer(id);
+        }
+      } catch (e) {
+        console.warn('[MapWrapper] Failed to remove layer', e);
+      }
+    });
+
+    addedSourceIds.forEach(id => {
+      try {
+        if (map.getSource(id)) {
+          map.removeSource(id);
+        }
+      } catch (e) {
+        console.warn('[MapWrapper] Failed to remove source', e);
+      }
+    });
+
+    addedLayerIds.length = 0;
+    addedSourceIds.length = 0;
+  }, []);
+
+  /**
    * Main map initialization and update effect
    * Handles map creation, marker placement, and event listeners
    */
   useEffect(() => {
-    if (!mapRef.current) return;
+    const container = mapRef.current;
+    if (!container) return;
 
-    // Parse coordinates from props (keep lat,lng ordering as before)
-    const hasArray = coordinates && Array.isArray(coordinates) && coordinates.length > 0;
-    let points: [number, number][] = [];
-    if (hasArray) {
-      points = coordinates!.map((c) => [c.Latitude ?? c.latitude ?? 0, c.Longitude ?? c.longitude ?? 0] as [number, number]);
-    }
-
-    // Determine map center: prefer initialCenter in locationMode, otherwise use first coordinate
-    const defaultCenterLatLng: [number, number] = (locationMode && initialCenter)
-      ? [initialCenter.lat, initialCenter.lng]
-      : (hasArray ? points[0] : [12.9141, 77.6387]); // Default: Bangalore coordinates
-
-    // MapLibre expects [lng, lat]
+    const points = parseCoordinates();
+    const defaultCenterLatLng = getInitialCenter(points);
     const centerLngLat: [number, number] = [defaultCenterLatLng[1], defaultCenterLatLng[0]];
 
     // Initialize MapLibre map
     const styleUrl = 'https://api.maptiler.com/maps/base-v4/style.json?key=YguiTF06mLtcpSVKIQyc';
     const map = new maplibregl.Map({
-      container: mapRef.current as HTMLElement,
+      container: container,
       style: styleUrl,
-      center: centerLngLat as [number, number],
+      center: centerLngLat,
       zoom: 15,
       attributionControl: false,
     });
 
     mapInstanceRef.current = map;
-    
-    // add zoom control (zoom in/out) at bottom-left; hide compass/rotate control
-   map.addControl(new maplibregl.NavigationControl({ showCompass: false, showZoom: true }), 'bottom-left');
-
-
-    // Utilities for managing MapLibre layers/sources/markers
-    const customMarkerElement = () => {
-      // Create a fixed-size wrapper so MapLibre's anchor calculations are stable across zoom and image load
-      const wrapper = document.createElement('div');
-      wrapper.style.width = '34px';
-      wrapper.style.height = '34px';
-      wrapper.style.position = 'relative';
-      wrapper.style.pointerEvents = 'none';
-
-      const img = document.createElement('img');
-      img.src = propertyMarkerSvg;
-      img.style.width = '34px';
-      img.style.height = '34px';
-      img.style.position = 'absolute';
-      img.style.left = '50%';
-      img.style.bottom = '0';
-      img.style.transform = 'translateX(-50%)';
-      img.style.display = 'block';
-      img.style.margin = '0';
-      img.style.padding = '0';
-
-      wrapper.appendChild(img);
-      return wrapper;
-    };
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false, showZoom: true }), 'bottom-left');
 
     const addedSourceIds: string[] = [];
     const addedLayerIds: string[] = [];
     const createdMarkers: maplibregl.Marker[] = [];
 
-  const addMarker = (lat: number, lng: number) => {
-      try {
-        const el = customMarkerElement();
-        // Use anchor: 'bottom' so the bottom of the image is exactly at the coordinate.
-        const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' as any })
-          .setLngLat([lng, lat])
-          .addTo(map);
-        createdMarkers.push(marker);
-        return marker;
-      } catch (e) {
-        return null;
-      }
-    };
-
-    const clearDrawn = () => {
-      // remove markers
-      createdMarkers.forEach(m => { try { m.remove(); } catch (e) {} });
-      createdMarkers.length = 0;
-
-      // remove layers and sources
-      addedLayerIds.forEach(id => { try { if (map.getLayer(id)) map.removeLayer(id); } catch (e) {} });
-      addedSourceIds.forEach(id => { try { if (map.getSource(id)) map.removeSource(id); } catch (e) {} });
-      addedLayerIds.length = 0;
-      addedSourceIds.length = 0;
-    };
-
     // When map is loaded, add initial features
     map.on('load', () => {
-      // Display markers/polygons only when NOT in location editing mode
       if (!locationMode) {
-        if (points.length >= 3) {
-          // Create GeoJSON polygon (MapLibre expects [lng,lat])
-          const coords = points.map(p => [p[1], p[0]] as [number, number]);
-          // ensure closed ring
-          const ring = coords.slice();
-          if (ring.length && (ring[0][0] !== ring[ring.length - 1][0] || ring[0][1] !== ring[ring.length - 1][1])) {
-            ring.push(ring[0]);
-          }
-          const sourceId = 'polygon-source';
-          const fillLayerId = 'polygon-fill';
-          const lineLayerId = 'polygon-line';
-          map.addSource(sourceId, { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [ring] } } as any });
-          map.addLayer({ id: fillLayerId, type: 'fill', source: sourceId, paint: { 'fill-color': '#C84C0E', 'fill-opacity': 0.2 } });
-          map.addLayer({ id: lineLayerId, type: 'line', source: sourceId, paint: { 'line-color': '#C84C0E', 'line-width': 2 } });
-          addedSourceIds.push(sourceId);
-          addedLayerIds.push(fillLayerId, lineLayerId);
-
-          // Fit bounds
-          const lats = points.map(p => p[0]);
-          const lngs = points.map(p => p[1]);
-          const minLat = Math.min(...lats), maxLat = Math.max(...lats);
-          const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
-          try { map.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 20 }); } catch (e) {}
-
-          // compute visual centroid using pixel space
-          const computeVisualCentroid = (latlngs: [number, number][]) => {
-            try {
-              const layerPts = latlngs.map(p => map.project([p[1], p[0]]));
-              let signedArea = 0, cx = 0, cy = 0;
-              for (let i = 0; i < layerPts.length; i++) {
-                const p0 = layerPts[i];
-                const p1 = layerPts[(i + 1) % layerPts.length];
-                const a = p0.x * p1.y - p1.x * p0.y;
-                signedArea += a;
-                cx += (p0.x + p1.x) * a;
-                cy += (p0.y + p1.y) * a;
-              }
-              signedArea *= 0.5;
-              if (Math.abs(signedArea) < 1e-6) {
-                const avgX = layerPts.reduce((s, p) => s + p.x, 0) / layerPts.length;
-                const avgY = layerPts.reduce((s, p) => s + p.y, 0) / layerPts.length;
-                return map.unproject([avgX, avgY]);
-              }
-              cx = cx / (6 * signedArea);
-              cy = cy / (6 * signedArea);
-              return map.unproject([cx, cy]);
-            } catch (err) {
-              return { lat: latlngs[0][0], lng: latlngs[0][1] } as any;
-            }
-          };
-
-          try {
-            const centroid = computeVisualCentroid(points);
-            const marker = addMarker(centroid.lat, centroid.lng);
-            // no popup; keep marker
-            if (marker) drawnLayersRef.current.push(marker as any);
-          } catch (e) {
-            console.error('Failed to create centroid marker:', e);
-          }
-
-        } else if (points.length === 1) {
-          const marker = addMarker(points[0][0], points[0][1]);
-          if (marker) drawnLayersRef.current.push(marker as any);
-          try { map.setCenter([points[0][1], points[0][0]]); map.setZoom(15); } catch (e) {}
-
-        } else if (points.length === 2) {
-          points.forEach(p => { const m = addMarker(p[0], p[1]); if (m) drawnLayersRef.current.push(m as any); });
-          const lats = points.map(p => p[0]);
-          const lngs = points.map(p => p[1]);
-          const minLat = Math.min(...lats), maxLat = Math.max(...lats);
-          const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
-          try { map.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 20 }); } catch (e) {}
-
-        } else {
-          // default marker at center
-          const marker = addMarker(defaultCenterLatLng[0], defaultCenterLatLng[1]);
-          if (marker) drawnLayersRef.current.push(marker as any);
-        }
+        displayMapFeatures(map, points, defaultCenterLatLng, addedSourceIds, addedLayerIds, createdMarkers);
       }
     });
 
-    // Control map interactivity based on props
-    if (!interactive && !locationMode) {
-      try { map.dragPan.disable(); } catch (e) {}
-      try { map.scrollZoom.disable(); } catch (e) {}
-      try { map.doubleClickZoom.disable(); } catch (e) {}
-      try { map.boxZoom && (map.boxZoom as any).disable && (map.boxZoom as any).disable(); } catch (e) {}
-      try { (map as any).keyboard && (map as any).keyboard.disable && (map as any).keyboard.disable(); } catch (e) {}
-    }
+    configureMapInteractivity(map);
+    const cleanupLocationMode = setupLocationMode(map);
 
-    // Always allow interactions in location mode for repositioning
-    if (locationMode) {
-      try { map.dragPan.enable(); } catch (e) {}
-      try { map.scrollZoom.enable(); } catch (e) {}
-    }
-
-    // Location mode: Track map center changes in real-time
-    let locationHandler: (() => void) | null = null;
-    if (locationMode) {
-      locationHandler = () => {
-        try {
-          const c = map.getCenter();
-          onLocationMove && onLocationMove(c.lat, c.lng);
-        } catch (e) {
-          console.warn('[MapWrapper] Failed to read map center', e);
-        }
-      };
-
-      map.on('move', locationHandler);
-      map.on('moveend', locationHandler);
-      map.on('drag', locationHandler);
-
-      if (!initialLocationSentRef.current) {
-        initialLocationSentRef.current = true;
-        locationHandler();
+    setTimeout(() => {
+      try {
+        map.resize();
+      } catch (e) {
+        console.warn('[MapWrapper] Failed to resize map', e);
       }
-    }
+    }, 200);
 
-    // Resize map shortly after mount
-    setTimeout(() => { try { map.resize(); } catch (e) {} }, 200);
-
-    // Cleanup function
     return () => {
-      if (locationHandler) {
-        map.off('move', locationHandler);
-        map.off('moveend', locationHandler);
-        map.off('drag', locationHandler);
+      if (cleanupLocationMode) {
+        cleanupLocationMode();
       }
       initialLocationSentRef.current = false;
-      try { clearDrawn(); } catch (e) {}
-      try { map.remove(); } catch (e) {}
+      try {
+        cleanupMapLayers(map, createdMarkers, addedLayerIds, addedSourceIds);
+      } catch (e) {
+        console.warn('[MapWrapper] Failed to cleanup map layers', e);
+      }
+      try {
+        map.remove();
+      } catch (e) {
+        console.warn('[MapWrapper] Failed to remove map', e);
+      }
       mapInstanceRef.current = null;
     };
-  }, [interactive, coordinates, locationMode, initialCenter, onLocationMove]);
+  }, [
+    interactive,
+    coordinates,
+    locationMode,
+    initialCenter,
+    onLocationMove,
+    parseCoordinates,
+    getInitialCenter,
+    displayMapFeatures,
+    configureMapInteractivity,
+    setupLocationMode,
+    cleanupMapLayers
+  ]);
 
   /**
    * Expose polygon drawing controls to parent component via ref
@@ -331,24 +577,84 @@ export function MapWrapper({
    * - Attaches click handler for point placement
    */
   const startDrawingOnMap = () => {
-    const map = mapInstanceRef.current as maplibregl.Map | null;
+    const map = mapInstanceRef.current;
     if (!map) return;
 
     drawingPointsRef.current = [];
 
-    // remove any preview source/layer
-    try {
-      if (map.getLayer('preview-line')) map.removeLayer('preview-line');
-      if (map.getLayer('preview-fill')) map.removeLayer('preview-fill');
-      if (map.getSource('preview')) map.removeSource('preview');
-    } catch (e) {}
+    // Remove preview layers
+    const previewLayers = ['preview-line', 'preview-fill'];
+    previewLayers.forEach(layerId => {
+      try {
+        if (map.getLayer(layerId)) {
+          map.removeLayer(layerId);
+        }
+      } catch (e) {
+        console.warn(`[MapWrapper] Failed to remove layer ${layerId}`, e);
+      }
+    });
 
-    tempMarkersRef.current.forEach(m => { try { (m as any).remove(); } catch (e) {} });
+    try {
+      if (map.getSource('preview')) {
+        map.removeSource('preview');
+      }
+    } catch (e) {
+      console.warn('[MapWrapper] Failed to remove preview source', e);
+    }
+
+    tempMarkersRef.current.forEach(m => {
+      try {
+        (m as any).remove();
+      } catch (e) {
+        console.warn('[MapWrapper] Failed to remove temp marker', e);
+      }
+    });
     tempMarkersRef.current = [];
 
-    (map.getContainer() as HTMLElement).style.cursor = 'crosshair';
+    const container = map.getContainer();
+    if (container) {
+      container.style.cursor = 'crosshair';
+    }
     map.getCanvas().style.cursor = 'crosshair';
     map.on('click', onMapClick);
+  };
+
+  /**
+   * Update preview geometry based on current drawing points
+   */
+  const updatePreviewGeometry = (map: maplibregl.Map) => {
+    try {
+      const coords = drawingPointsRef.current.map(p => [p[1], p[0]]);
+      const preview = {
+        type: 'Feature',
+        geometry: drawingPointsRef.current.length >= 3
+          ? { type: 'Polygon', coordinates: [[...coords, coords[0]]] }
+          : { type: 'LineString', coordinates: coords }
+      } as any;
+
+      const previewSource = map.getSource('preview');
+      
+      if (previewSource) {
+        const geoJsonSource = previewSource as maplibregl.GeoJSONSource;
+        geoJsonSource.setData(preview);
+      } else {
+        map.addSource('preview', { type: 'geojson', data: preview });
+        map.addLayer({
+          id: 'preview-fill',
+          type: 'fill',
+          source: 'preview',
+          paint: { 'fill-color': '#C84C0E', 'fill-opacity': 0.15 }
+        });
+        map.addLayer({
+          id: 'preview-line',
+          type: 'line',
+          source: 'preview',
+          paint: { 'line-color': '#C84C0E', 'line-width': 2 }
+        });
+      }
+    } catch (err) {
+      console.warn('[MapWrapper] Failed to update preview geometry', err);
+    }
   };
 
   /**
@@ -361,10 +667,10 @@ export function MapWrapper({
     const latlng: [number, number] = [e.lngLat.lat, e.lngLat.lng];
     drawingPointsRef.current.push(latlng);
 
-    const map = mapInstanceRef.current as maplibregl.Map | null;
+    const map = mapInstanceRef.current;
     if (!map) return;
 
-    // add small DOM marker at click location
+    // Add small DOM marker at click location
     try {
       const el = document.createElement('div');
       el.style.width = '10px';
@@ -372,31 +678,117 @@ export function MapWrapper({
       el.style.background = '#C84C0E';
       el.style.borderRadius = '50%';
       el.style.transform = 'translate(-50%, -50%) scale(1)';
-      // prevent the temp marker from catching pointer events
       el.style.pointerEvents = 'none';
+      
       const m = new maplibregl.Marker({ element: el })
         .setLngLat([e.lngLat.lng, e.lngLat.lat])
         .addTo(map);
-      // store as any in tempMarkersRef
       tempMarkersRef.current.push(m as any);
-    } catch (err) {}
+    } catch (err) {
+      console.warn('[MapWrapper] Failed to add temp marker', err);
+    }
 
-    // update preview source
-    try {
-      const coords = drawingPointsRef.current.map(p => [p[1], p[0]]);
-      const preview = {
-        type: 'Feature',
-        geometry: drawingPointsRef.current.length >= 3 ? { type: 'Polygon', coordinates: [[...coords, coords[0]]] } : { type: 'LineString', coordinates: coords }
-      } as any;
+    updatePreviewGeometry(map);
+  };
 
-      if (!map.getSource('preview')) {
-        map.addSource('preview', { type: 'geojson', data: preview });
-        map.addLayer({ id: 'preview-fill', type: 'fill', source: 'preview', paint: { 'fill-color': '#C84C0E', 'fill-opacity': 0.15 } });
-        map.addLayer({ id: 'preview-line', type: 'line', source: 'preview', paint: { 'line-color': '#C84C0E', 'line-width': 2 } });
-      } else {
-        (map.getSource('preview') as any).setData(preview);
+  /**
+   * Remove preview layers and source from map
+   */
+  const removePreviewLayers = (map: maplibregl.Map) => {
+    const previewLayers = ['preview-line', 'preview-fill'];
+    previewLayers.forEach(layerId => {
+      try {
+        if (map.getLayer(layerId)) {
+          map.removeLayer(layerId);
+        }
+      } catch (e) {
+        console.warn(`[MapWrapper] Failed to remove ${layerId}`, e);
       }
-    } catch (err) { }
+    });
+
+    try {
+      if (map.getSource('preview')) {
+        map.removeSource('preview');
+      }
+    } catch (e) {
+      console.warn('[MapWrapper] Failed to remove preview source', e);
+    }
+  };
+
+  /**
+   * Remove all temporary markers
+   */
+  const removeTempMarkers = () => {
+    tempMarkersRef.current.forEach(m => {
+      try {
+        (m as any).remove();
+      } catch (e) {
+        console.warn('[MapWrapper] Failed to remove temp marker', e);
+      }
+    });
+    tempMarkersRef.current = [];
+  };
+
+  /**
+   * Add final drawn polygon to map
+   */
+  const addDrawnPolygon = (map: maplibregl.Map, points: [number, number][]) => {
+    const coords = points.map(p => [p[1], p[0]]);
+    const ring = coords.slice();
+    
+    if (ring.length && (ring[0][0] !== ring.at(-1)?.[0] || ring[0][1] !== ring.at(-1)?.[1])) {
+      ring.push(ring[0]);
+    }
+
+    // Remove existing drawn layers
+    const drawnLayers = ['drawn-fill', 'drawn-line'];
+    drawnLayers.forEach(layerId => {
+      try {
+        if (map.getLayer(layerId)) {
+          map.removeLayer(layerId);
+        }
+      } catch (e) {
+        console.warn(`[MapWrapper] Failed to remove ${layerId}`, e);
+      }
+    });
+
+    try {
+      if (map.getSource('drawn')) {
+        map.removeSource('drawn');
+      }
+    } catch (e) {
+      console.warn('[MapWrapper] Failed to remove drawn source', e);
+    }
+
+    // Add new drawn polygon
+    try {
+      map.addSource('drawn', {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          properties: {},
+          geometry: { type: 'Polygon', coordinates: [ring] }
+        } as any
+      });
+      
+      map.addLayer({
+        id: 'drawn-fill',
+        type: 'fill',
+        source: 'drawn',
+        paint: { 'fill-color': '#C84C0E', 'fill-opacity': 0.15 }
+      });
+      
+      map.addLayer({
+        id: 'drawn-line',
+        type: 'line',
+        source: 'drawn',
+        paint: { 'line-color': '#C84C0E', 'line-width': 2 }
+      });
+
+      drawnLayersRef.current.push('drawn' as any);
+    } catch (e) {
+      console.warn('[MapWrapper] Failed to add drawn polygon', e);
+    }
   };
 
   /**
@@ -408,42 +800,33 @@ export function MapWrapper({
    * - Cleans up temporary markers
    */
   const finishDrawingOnMap = () => {
-    const map = mapInstanceRef.current as maplibregl.Map | null;
+    const map = mapInstanceRef.current;
     if (!map) return;
 
     map.off('click', onMapClick);
-    (map.getContainer() as HTMLElement).style.cursor = '';
+    
+    const container = map.getContainer();
+    if (container) {
+      container.style.cursor = '';
+    }
     map.getCanvas().style.cursor = '';
 
     const pts = drawingPointsRef.current.slice();
+    
     if (pts.length >= 3) {
-      // Add final polygon source/layer
-      const coords = pts.map(p => [p[1], p[0]]);
-      const ring = coords.slice(); if (ring.length && (ring[0][0] !== ring[ring.length-1][0] || ring[0][1] !== ring[ring.length-1][1])) ring.push(ring[0]);
-      try {
-        if (map.getSource('drawn')) map.removeSource('drawn');
-        if (map.getLayer('drawn-fill')) map.removeLayer('drawn-fill');
-        if (map.getLayer('drawn-line')) map.removeLayer('drawn-line');
-      } catch (e) {}
-      try {
-  map.addSource('drawn', { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [ring] } } as any });
-        map.addLayer({ id: 'drawn-fill', type: 'fill', source: 'drawn', paint: { 'fill-color': '#C84C0E', 'fill-opacity': 0.15 } });
-        map.addLayer({ id: 'drawn-line', type: 'line', source: 'drawn', paint: { 'line-color': '#C84C0E', 'line-width': 2 } });
-      } catch (e) {}
+      addDrawnPolygon(map, pts);
 
-      drawnLayersRef.current.push('drawn' as any);
-
-      // Notify parent
-      try { if (onPolygonComplete) onPolygonComplete(pts.map(p => ({ lat: p[0], lng: p[1] }))); } catch (e) { console.error(e); }
+      try {
+        if (onPolygonComplete) {
+          onPolygonComplete(pts.map(p => ({ lat: p[0], lng: p[1] })));
+        }
+      } catch (e) {
+        console.error('[MapWrapper] Failed to call onPolygonComplete', e);
+      }
     }
 
-    // remove preview and temp markers
-    try { if (map.getLayer('preview-line')) map.removeLayer('preview-line'); } catch (e) {}
-    try { if (map.getLayer('preview-fill')) map.removeLayer('preview-fill'); } catch (e) {}
-    try { if (map.getSource('preview')) map.removeSource('preview'); } catch (e) {}
-
-    tempMarkersRef.current.forEach(m => { try { (m as any).remove(); } catch (e) {} });
-    tempMarkersRef.current = [];
+    removePreviewLayers(map);
+    removeTempMarkers();
     drawingPointsRef.current = [];
   };
 
@@ -454,26 +837,26 @@ export function MapWrapper({
    * - Redraws temporary visualization
    */
   const undoDrawingOnMap = () => {
-    const map = mapInstanceRef.current as maplibregl.Map | null;
+    const map = mapInstanceRef.current;
     if (!map) return;
 
-    // remove last temp marker
+    // Remove last temp marker
     try {
       const last = tempMarkersRef.current.pop();
-      if (last) try { (last as any).remove(); } catch (e) {}
-    } catch (e) {}
+      if (last) {
+        try {
+          (last as any).remove();
+        } catch (e) {
+          console.warn('[MapWrapper] Failed to remove last marker', e);
+        }
+      }
+    } catch (e) {
+      console.warn('[MapWrapper] Failed to pop marker', e);
+    }
 
     drawingPointsRef.current.pop();
 
-    // update preview source
-    try {
-      const coords = drawingPointsRef.current.map(p => [p[1], p[0]]);
-      const preview = {
-        type: 'Feature',
-        geometry: drawingPointsRef.current.length >= 3 ? { type: 'Polygon', coordinates: [[...coords, coords[0]]] } : { type: 'LineString', coordinates: coords }
-      } as any;
-      if (map.getSource('preview')) (map.getSource('preview') as any).setData(preview);
-    } catch (e) {}
+    updatePreviewGeometry(map);
   };
 
   /**
@@ -481,27 +864,37 @@ export function MapWrapper({
    * @param notify - If true, calls onPolygonComplete with empty array
    */
   const clearDrawingsOnMap = (notify: boolean = false) => {
-    const map = mapInstanceRef.current as maplibregl.Map | null;
+    const map = mapInstanceRef.current;
     if (!map) return;
 
-    // remove drawn source/layers
-    try { if (map.getLayer('drawn-fill')) map.removeLayer('drawn-fill'); } catch (e) {}
-    try { if (map.getLayer('drawn-line')) map.removeLayer('drawn-line'); } catch (e) {}
-    try { if (map.getSource('drawn')) map.removeSource('drawn'); } catch (e) {}
+    // Remove drawn layers
+    const drawnLayers = ['drawn-fill', 'drawn-line'];
+    drawnLayers.forEach(layerId => {
+      try {
+        if (map.getLayer(layerId)) {
+          map.removeLayer(layerId);
+        }
+      } catch (e) {
+        console.warn(`[MapWrapper] Failed to remove ${layerId}`, e);
+      }
+    });
 
-    // remove preview
-    try { if (map.getLayer('preview-line')) map.removeLayer('preview-line'); } catch (e) {}
-    try { if (map.getLayer('preview-fill')) map.removeLayer('preview-fill'); } catch (e) {}
-    try { if (map.getSource('preview')) map.removeSource('preview'); } catch (e) {}
+    try {
+      if (map.getSource('drawn')) {
+        map.removeSource('drawn');
+      }
+    } catch (e) {
+      console.warn('[MapWrapper] Failed to remove drawn source', e);
+    }
 
-    // remove markers
-    tempMarkersRef.current.forEach(m => { try { (m as any).remove(); } catch (e) {} });
-    tempMarkersRef.current = [];
-
+    removePreviewLayers(map);
+    removeTempMarkers();
     drawingPointsRef.current = [];
 
     // Notify parent if requested
-    if (notify && onPolygonComplete) onPolygonComplete([]);
+    if (notify && onPolygonComplete) {
+      onPolygonComplete([]);
+    }
   };
 
   return <Box ref={mapRef} sx={mapDivStyle} />;
@@ -511,9 +904,9 @@ export function MapWrapper({
  * MapComponent Props Interface
  */
 interface MapComponentProps {
-  application: Property | null;
-  applicationStatus: string  // Property data containing GIS information
-  applicationID: string
+  readonly application: Property | null;
+  readonly applicationStatus: string;  // Property data containing GIS information
+  readonly applicationID: string;
 }
 
 /**
@@ -537,7 +930,6 @@ export default function MapComponent({ application, applicationStatus, applicati
   // Extract coordinates from application data
   const coordinates = application?.GISData?.Coordinates;
   const status = applicationStatus;
-  // console.log("application Status from map  :",status );
   
 
   // UI state
@@ -650,7 +1042,6 @@ export default function MapComponent({ application, applicationStatus, applicati
           applicationId,
           points: updatedCoords 
         }).unwrap();
-        // console.log('Polygon coordinates saved successfully');
       } catch (err) {
         console.error('Failed to save polygon coordinates', err);
         setCurrentPolygon(null);
@@ -665,13 +1056,12 @@ export default function MapComponent({ application, applicationStatus, applicati
       propertyId: application?.GISData?.PropertyID || '',
       gisDataId: gisDataId || '',
       action: "EDIT_POLYGON",
-      performedBy: (typeof userName !== 'undefined' && userName) ? userName : "SERVICE_MANAGER",
+      performedBy: userName !== undefined && userName ? userName : "SERVICE_MANAGER",
       actor: "SERVICE MANAGER",
       comments,
       timestamp: new Date().toISOString(),
       metadata: {}
     };
-    // console.log("Polygon Log Payload : ", logPayload);
 
     // Post the log
     try {
@@ -690,11 +1080,7 @@ export default function MapComponent({ application, applicationStatus, applicati
    * - Persists to backend
    * - Exits location mode on success
    */
- 
-    // const currentUserRole = useSelector((state: RootState) => state.user.currentUser?.role);
-    
-    
-    const saveLocation = async () => {
+  const saveLocation = async () => {
     if (!locationCenter) return;
 
     const payload = [{ latitude: locationCenter.lat, longitude: locationCenter.lng }];
@@ -742,7 +1128,7 @@ export default function MapComponent({ application, applicationStatus, applicati
       propertyId: application?.GISData?.PropertyID || '',
       gisDataId: gisDataId || '',
       action: "EDIT_LOCATION",
-      performedBy: (typeof userName !== 'undefined' && userName) ? userName : "SERVICE_MANAGER",
+      performedBy: userName !== undefined && userName ? userName : "SERVICE_MANAGER",
       actor: "SERVICE MANAGER",
       comments,
       timestamp: new Date().toISOString(),
@@ -778,7 +1164,7 @@ export default function MapComponent({ application, applicationStatus, applicati
   const displayCoords = React.useMemo(() => {
     if (locationMode) return null;  // Hide markers in location edit mode
     
-    if (currentPolygon && currentPolygon.length) {
+    if (currentPolygon?.length) {
       return currentPolygon.map((p) => ({ Latitude: p.lat, Longitude: p.lng }));
     }
     
@@ -941,16 +1327,16 @@ export default function MapComponent({ application, applicationStatus, applicati
 
             // Calculate initial center for location edit mode
             // Priority: single saved point > polygon centroid > default
-            const coordsForCenter = (currentPolygon && currentPolygon.length)
-              ? currentPolygon
-              : (Array.isArray(displayCoords) ? backendCoordsToPolygon(displayCoords) : []);
+            const polygonCoords = currentPolygon?.length ? currentPolygon : null;
+            const backendCoords = Array.isArray(displayCoords) ? backendCoordsToPolygon(displayCoords) : [];
+            const coordsForCenter = polygonCoords || backendCoords;
 
             let initial: { lat: number; lng: number } | null = null;
 
-            if (coordsForCenter && coordsForCenter.length === 1) {
+            if (coordsForCenter?.length === 1) {
               // Single point: use directly
               initial = { lat: coordsForCenter[0].lat, lng: coordsForCenter[0].lng };
-            } else if (coordsForCenter && coordsForCenter.length > 1) {
+            } else if (coordsForCenter?.length) {
               // Multiple points: calculate average as initial center
               const avg = coordsForCenter.reduce(
                 (acc, p) => ({ lat: acc.lat + p.lat, lng: acc.lng + p.lng }), 

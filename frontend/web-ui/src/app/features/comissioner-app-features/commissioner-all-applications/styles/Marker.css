@@ -1,0 +1,33 @@
+
+/*
+  Customizes the default Leaflet marker icon when using the 'custom-marker-icon' class.
+  Removes background and border for a clean, transparent marker.
+*/
+.leaflet-marker-icon.custom-marker-icon {
+  background: transparent;
+  border: none;
+}
+
+
+/*
+  Styles the custom marker icon container:
+  - Uses flexbox to center its content (usually an SVG)
+  - Sets a fixed size for consistent marker appearance
+*/
+.custom-marker-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+
+/*
+  Adds a subtle drop shadow to the SVG inside the marker for better visibility on the map.
+  Disables pointer events so the SVG doesn't interfere with map interactions.
+*/
+.custom-marker-icon svg {
+  filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.3));
+  pointer-events: none;
+}

@@ -15,7 +15,7 @@
 import React, { useState } from 'react';
 import MapComponent from './Map_Component/MapComponent';
 import SelectorTab from './SelectorTab/SelectorTab';
-import { Box, Typography, Select, MenuItem, CircularProgress, Alert, Dialog, DialogContent } from '@mui/material';
+import { Box, Typography, Select, MenuItem, CircularProgress, Alert, Dialog, DialogContent, Snackbar } from '@mui/material';
 import { JurisdictionDropdown } from '../../../../components/JurisdictionDropdown/JurisdictionDropdown';
 import { jurisdictionDropdownStyles } from '../../../../styles/HomePageStyle/HomePageStyle';
 import { loadingContainer } from '../../all-applications/styles/AllApplicationStyle';
@@ -34,29 +34,55 @@ type TabType = 'property' | 'documents' | 'services' | 'change';
 
 // Props for the Properties page component
 interface PropertiesPageProps {
-  propertyDetails?: boolean;
   applicationID: string;
-  sideBarOpen?: boolean;
-  setSelectedNav?: (nav: string) => void;
 }
 
 
 export const Properties: React.FC<PropertiesPageProps> = ({ applicationID }) => {
+  // Helper function to render select value
+  const getActionLabel = (selected: string, status?: string) => {
+    if (selected === "") {
+      if (status === "AUDIT_VERIFIED") {
+        return "Application Accepted";
+      }
+      return <em>Act on this Application</em>;
+    }
+    if (selected === "accept") return "Accept";
+    if (selected === "reassign") return "Reassign";
+    if (selected === "assign") return "Assign";
+    return selected;
+  };
+
   // State for active tab, action dropdown, and dialog visibility
   const [activeTab, setActiveTab] = useState<TabType>('property');
   const [action, setAction] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
 
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMsg, setSnackbarMsg] = useState('');
+
   // Fetch data using RTK Query
   const { data: applicationData, error: apiError, isLoading: apiLoading } = useGetApplicationByApplicationIdQuery(applicationID);
-  // console.log("Application data id :", applicationData?.data.ID);
-  // console.log("Application data : ", applicationData);
-  
+
   const [acceptApplication, { isLoading: acceptLoading }] = useAcceptApplicationMutation();
   const agentId = applicationData?.data.AssignedAgent;
-  // console.log("Application data", applicationData);
   
+ const handleSelectChange = async (e: any) => {
+    const val = String(e.target.value);
+    setAction(val);
+    if (val === 'accept') {
+      await handleAcceptApplication();
+      setSnackbarMsg('Application Accepted successfully');
+      setSnackbarOpen(true);
+    } else if (val === 'assign') {
+      setAssignDialogOpen(true);
+      setAction("");
+    } else if (val === 'reassign') {
+      setDialogOpen(true);
+      setAction("");
+    }
+  };
 
   // Handler for accepting the application
   const handleAcceptApplication = async () => {
@@ -162,12 +188,15 @@ export const Properties: React.FC<PropertiesPageProps> = ({ applicationID }) => 
               <Typography sx={{ fontSize: 32, fontWeight: 700, ml: '3px', mt: '10px'}}>
                 {applicationData?.data.Property.ComplexName ?? 'Loading...'} <br />
               </Typography>
-              <Typography sx={{ fontSize: 18, fontWeight: 400, ml: '3px', mb: 1, color: '#000000ff' }}>
-                {applicationData?.data.ApplicationNo?? 'Loading address...'}
+               <Typography sx={{ fontSize: 12, fontWeight: 300, ml: '3px', mb: 0, color: '#000000ff' }}>
+                Application No:
+              </Typography>
+              <Typography sx={{ fontSize: 18, fontWeight: 400, ml: '3px', color: '#000000ff' }}>
+              {applicationData?.data.ApplicationNo?? 'Loading address...'}
               </Typography>
             </Box>
             
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb:0 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', justifyItems: 'center', alignItems: 'center' }}>
               <Box
                 sx={{
                   borderRadius: '20px',
@@ -177,9 +206,9 @@ export const Properties: React.FC<PropertiesPageProps> = ({ applicationID }) => 
                   fontSize: 16,
                   px: 3,
                   py: 0.2,
+                  height: 25,
                   width: 'fit-content',
                   display: 'inline-block',
-                  // minWidth: 120,
                   textAlign: 'center',
                   letterSpacing: 1,
                   border: 'none',
@@ -189,66 +218,56 @@ export const Properties: React.FC<PropertiesPageProps> = ({ applicationID }) => 
                {statusInfo.label}
               </Box>
 
-              {/* Action dropdown for Accept, Assign, Reassign */}
-              {applicationData?.data.Status !== "AUDIT_VERIFIED" && (
-                <Select
-                  value={action}
-                  onChange={async e => {
-                    const val = String(e.target.value);
-                    setAction(val);
-                    if (val === 'accept') {
-                      await handleAcceptApplication();
-                    } else if (val === 'reassign') {
-                      setDialogOpen(true);
-                      setAction("");
-                    } else if (val === 'assign') {
-                      setAssignDialogOpen(true);
-                      setAction("");
-                    }
-                  }}
-                  size="small"
-                  sx={selectActionStyle}
-                  displayEmpty
-                  renderValue={selected =>
-                    selected === ""
-                      ? (
-                        applicationData?.data.Status === "AUDIT_VERIFIED"
-                          ? "Application Accepted"
-                          : <em>Act on this Application</em>
-                      )
-                      : (
-                        selected === "accept" ? "Accept" :
-                          selected === "reassign" ? "Reassign" :
-                            selected === "assign" ? "Assign" : selected
-                      )
-                  }
-                  MenuProps={{
-                    PaperProps: selectMenuPaperProps
-                  }}
-                  disabled={acceptLoading}
-                >
-                  {applicationData?.data.Status === "INITIATED" && (
-                    <MenuItem value="assign">Assign</MenuItem>
-                  )}
-                  {applicationData?.data.Status === "VERIFIED" && [
-                    <MenuItem value="accept" key="accept">Accept</MenuItem>,
-                    <MenuItem value="reassign" key="reassign">Reassign</MenuItem>
-                  ]}
-                  {applicationData?.data.Status === "ASSIGNED" && (
-                    <MenuItem value="reassign">Reassign</MenuItem>
-                  )}
-                </Select>
-              )}
+                  {/* Action dropdown for Accept, Assign, Reassign */}
+        {applicationData?.data.Status !== "AUDIT_VERIFIED" && (
+          <Select
+            value={action}
+            onChange={handleSelectChange}
+            size="small"
+            sx={selectActionStyle}
+            displayEmpty
+            renderValue={selected => getActionLabel(selected, applicationData?.data.Status)}
+            MenuProps={{
+              PaperProps: selectMenuPaperProps
+            }}
+            disabled={acceptLoading}
+          >
+            {applicationData?.data.Status === "INITIATED" && (
+              <MenuItem value="assign">Assign</MenuItem>
+            )}
+            {applicationData?.data.Status === "VERIFIED" && [
+              <MenuItem value="accept" key="accept">Accept</MenuItem>,
+              <MenuItem value="reassign" key="reassign">Reassign</MenuItem>
+            ]}
+            {applicationData?.data.Status === "ASSIGNED" && (
+              <MenuItem value="reassign">Reassign</MenuItem>
+            )}
+          </Select>
+        )}
             </Box>
+
+              {/* Snackbar for feedback */}
+          <Snackbar
+            open={snackbarOpen}
+            autoHideDuration={3000}
+            onClose={() => setSnackbarOpen(false)}
+            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+          >
+            <Alert onClose={() => setSnackbarOpen(false)} severity="success" sx={{ width: '100%' }}>
+              {snackbarMsg}
+            </Alert>
+          </Snackbar>
 
             {/* Dialog for reassigning application */}
             <Dialog
               open={dialogOpen}
               onClose={() => setDialogOpen(false)}
-              PaperProps={{
-                sx: {
-                  minWidth: 500,
-                  borderRadius: '20px',
+              slotProps={{
+                paper: {
+                  sx: {
+                    minWidth: 500,
+                    borderRadius: '20px',
+                  }
                 }
               }}
             >
@@ -266,10 +285,12 @@ export const Properties: React.FC<PropertiesPageProps> = ({ applicationID }) => 
             <Dialog
               open={assignDialogOpen}
               onClose={() => setAssignDialogOpen(false)}
-              PaperProps={{
-                sx: {
-                  minWidth: 500,
-                  borderRadius: '20px',
+              slotProps={{
+                paper: {
+                  sx: {
+                    minWidth: 500,
+                    borderRadius: '20px',
+                  }
                 }
               }}
             >

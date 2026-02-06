@@ -9,7 +9,6 @@ export const dialogPaperStyle: SxProps<Theme> = {
   p: 0,
   minWidth: 420,
   maxWidth: 510,
-  boxShadow: "0px 6px 24px 0px rgba(36,66,117,0.16)",
 };
 
 // Styles for the title text of the dialog
@@ -29,11 +28,12 @@ export const closeButtonStyle: SxProps<Theme> = {
   right: 14,
   bgcolor: "#F3F8FA",
   color: "#0B4B66",
-  width: 36,
+  width: "100%",
   height: 36,
   borderRadius: "50%",
   minWidth: 0,
   boxShadow: "none",
+  alignContent: "center",
   "&:hover": {
     bgcolor: "#ebf3fa",
   },
@@ -68,14 +68,13 @@ export const textFieldStyle: SxProps<Theme> = {
 
 // Styles for the file input dropzone area
 export const fileInputRoot: SxProps<Theme> = {
-  bgcolor: "#F8FAFB",
-  border: "1.5px dashed #DBDFE6",
+  bgcolor: "#edecebff",
+  border: "3px dashed #DBDFE6",
   borderRadius: "8px",
   p: "25px 0",
-  mb: 2.2,
+  mb: 2,
   display: "flex",
   flexDirection: "column",
-  alignItems: "center",
   textAlign: "center",
   minHeight: 80,
   cursor: "pointer",
@@ -84,7 +83,7 @@ export const fileInputRoot: SxProps<Theme> = {
 // Styles for the container displaying uploaded files
 export const uploadedFileStyle: SxProps<Theme> = {
   display: "flex",
-  alignItems: "center",
+  alignItems: "start",
   justifyContent: "space-between",
   mt: 1,
   mb: 2,
@@ -114,7 +113,7 @@ export const downloadBtnStyle: SxProps<Theme> = {
 export const buttonBarStyle: SxProps<Theme> = {
   display: "flex",
   width: "100%",
-  justifyContent: "flex-end",
+  justifyContent: "space-between",
   gap: 1.5,
   mt: 3,
   mb: 2,
@@ -125,7 +124,7 @@ export const cancelBtnStyle: SxProps<Theme> = {
   color: "#0B4B66",
   bgcolor: "#F8FAFB",
   borderRadius: "8px",
-  width: 104,
+  width: "50%",
   height: 36,
   fontWeight: 600,
   fontSize: "15px",
@@ -142,7 +141,7 @@ export const submitBtnStyle: SxProps<Theme> = {
   color: "#fff",
   bgcolor: "#0B4B66",
   borderRadius: "8px",
-  width: 104,
+  width: "50%",
   height: 36,
   fontWeight: 600,
   fontSize: "15px",

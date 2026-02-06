@@ -1,4 +1,3 @@
-
 // This component provides a UI for reassigning an application to a different agent.
 // It fetches available agents, allows the user to select one, and assigns the application via an API call.
 // The component is used in the property details view for agent reassignment.
@@ -6,6 +5,8 @@ import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
+import Snackbar from "@mui/material/Snackbar";
+import MuiAlert from "@mui/material/Alert";
 
 import MenuItem from "@mui/material/MenuItem";
 import { useState } from "react";
@@ -28,6 +29,7 @@ const ApplicationAssignmentBox = ({ward,  applicationId, onClose, assignedAgentI
   const { data: agentsData, isLoading } = useGetAgentsQuery({ ward: ward });
   // State for the selected agent to assign
   const [selectedAgent, setSelectedAgent] = useState("");
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   // Exclude the currently assigned agent from the dropdown
   const filteredAgents = (agentsData?.data.users || []).filter(
@@ -40,13 +42,17 @@ const ApplicationAssignmentBox = ({ward,  applicationId, onClose, assignedAgentI
   // Handle the assign button click
   const handleAssign = async () => {
     if (!selectedAgent) return;
-
+  // Close dialog after 3 seconds
     await assignApplication({
       applicationId,
       agentId: selectedAgent,
       comments: "",
     });
-    onClose();
+   setSnackbarOpen(true); // Show snackbar
+    setTimeout(() => {
+      setSnackbarOpen(false);
+      onClose();
+    }, 3000);
   };
 
 
@@ -97,6 +103,17 @@ const ApplicationAssignmentBox = ({ward,  applicationId, onClose, assignedAgentI
           Assign
         </Button>
       </Box>
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={2000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <MuiAlert onClose={() => setSnackbarOpen(false)} severity="success" sx={{ width: '100%' }}>
+          Application assign successfully
+        </MuiAlert>
+      </Snackbar>
     </Box>
   );
 };

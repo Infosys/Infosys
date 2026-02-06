@@ -9,7 +9,6 @@ import { type AllApplicationModel } from '../../models/ServiceManagerDashboard/P
 import propertyIcon from '../../assets/application_icon.svg';
 import { useNavigate } from 'react-router-dom';
 import ApplicationInboxAssignmentModal from '../../../assign-agent-to-application/components/ApplicationInboxAssignmentModal';
-// import { useReassignApplicationMutation } from '../../../assign-agent-to-application/api/assignAgentApi';
 
 
 // Props for the ApplicationCard component
@@ -195,13 +194,7 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({
               <Button
                 startIcon={<OpenInNewIcon sx={{ fontSize: 10, color: "#B16C3B" }} />}
                 onClick={
-                  // e => {
-                  // e.stopPropagation();
-                  // if (onViewLocation) {
-                  //   onViewLocation(application);
-                  // } else {
-                  //   window.open(application.getLocationUrl(), '_blank');
-                  // }}
+                  
                   () => { }
                 }
                 sx={{

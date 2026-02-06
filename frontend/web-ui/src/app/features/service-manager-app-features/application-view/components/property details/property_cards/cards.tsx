@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import {
   Box, Button, Typography
 } from '@mui/material';
-import { useEditAddressMutation } from '../../../api/edit-application-apis/editApplicationApi';
 import EditSquareIcon from '../../../Assets/edit_square.svg';
 import {
   propertyDetailsGridStyle,
@@ -27,7 +26,7 @@ import {
   constructionLabels,
   floorLabels,
   additionalDetailsLabels,
-  amenitiesLabels
+ 
 } from "./cardLabels/cardLabels";
 
 import EditOwnerPopover from './editCardPopup/editOwnerPopup';
@@ -35,7 +34,6 @@ import type { OwnerEditInput } from './editCardPopup/editOwnerPopup';
 import EditAddressPopover from './editCardPopup/editAddressPopup';
 import type { AddressEditInput } from './editCardPopup/editAddressPopup';
 import EditPropertyPopover from './editCardPopup/editPropertypopup';
-// // import type { Property } from './editCardPopup/editPropertypopup';
 import EditAssessmentPopover from './editCardPopup/editAssessmentDetailsPopup';
 import type { AssessmentEditInput } from './editCardPopup/editAssessmentDetailsPopup';
 import EditIGSRPopover from './editCardPopup/editIgrsPopup';
@@ -48,7 +46,6 @@ import EditAmenitiesPopover from './editCardPopup/editAmenitiesPopup';
 import type { AmenitiesEditInput } from './editCardPopup/editAmenitiesPopup';
 import EditAdditionalDetailsPopover from './editCardPopup/editadditionalDetailspopup';
 import type { AdditionalDetailsEditInput } from './editCardPopup/editadditionalDetailspopup';
-import { usePostApplicationLogMutation } from '../../../api/applicationApi';
 import {
   useEditOwnerMutation,
   useEditAssessmentMutation,
@@ -56,7 +53,8 @@ import {
   useEditConstructionMutation,
   useEditFloorMutation,
   useEditAmenitiesMutation,
-  useEditAdditionalDetailsMutation
+  useEditAdditionalDetailsMutation,
+  useEditAddressMutation
 } from '../../../api/edit-application-apis/editApplicationApi';
 import { useGetOwnerByPropertyIdQuery, useEditApplicationMutation, useGetApplicationByApplicationIdQuery } from '../../../api/applicationApi';
 
@@ -73,16 +71,25 @@ import ApplicationTrack from '../../Application_Log/ApplicationTrack';
 import z from 'zod';
 import type { Property } from '../../../model/applicationByIdModel';
 import { useGetMdmsEnumerationQuery } from '../../../api/mdmsService/mdmsApi';
-import { useAuth } from '../../../../../login-signup/provider/AuthProvider';
+
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../../../../../store/index";
+// Define land type label mappings
+const LandTypeLabels: Record<string, string> = {
+  vacant: 'Vacant Land',
+  structure: 'Land with Structure',
+  multi: 'Land with Multiple Structures',
+  unit: 'Building Unit'
+};
 
 
 function pickFields<T>(obj: Record<string, any>, keys: readonly (keyof T)[]): Partial<T> {
   if (!obj) return {};
   const result: Partial<T> = {};
   keys.forEach(k => {
-    result[k] = obj[k as string] !== null && obj[k as string] !== undefined ? obj[k as string] : "";
+  if (obj[k as string] !== undefined) {
+        result[k] = obj[k as string];
+      }
   });
   return result;
 }
@@ -98,23 +105,101 @@ function getChangedFields<T>(original: Partial<T>, updated: Partial<T>): Partial
   return changes;
 }
 
+function formatValueForLog(value: any): string {
+  if (value === null || value === undefined) return 'Empty';
+  if (value === '') return 'Empty';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (Array.isArray(value)) return value.length > 0 ? value.join(', ') : 'empty';
+  if (value instanceof Error) return value.message;
+  if (typeof value === 'object') return JSON.stringify(value);
+  return String(value);
+}
+
+function shouldShowOwnerField(key: string, value: any): boolean {
+  if (key === 'Guardian' || key === 'GuardianType') {
+    return value !== undefined && value !== null && value !== "";
+  }
+  return true;
+}
+
+function shouldShowAddressField(value: any): boolean {
+  return value !== undefined && value !== 0 && value !== null && value !== "";
+}
+
+function getAddressDisplayValue(key: string, value: any): string {
+  if (key === "DifferentCorrespondenceAddress") {
+    if (value === true) return "Yes";
+    if (value === false) return "Same as Current Address";
+  }
+  return formatValueForLog(value);
+}
+
+function shouldShowPropertyField(key: string, typeOfLand: string): boolean {
+  const isVacantOrUnit = typeOfLand === 'vacant' || typeOfLand === 'unit';
+  const conditionalFields = ['hasMezzanineFloor', 'noOfBasements', 'noOfBuildings', 'noOfFloors'];
+  
+  // Don't show conditional fields for vacant/unit types
+  if (isVacantOrUnit && conditionalFields.includes(key)) {
+    return false;
+  }
+  
+  // Don't show noOfBuildings for structure type
+  if (typeOfLand === 'structure' && key === 'noOfBuildings') {
+    return false;
+  }
+  
+  return true;
+}
+
+function getPropertyDisplayValue(key: string, value: any): string {
+  if (key === 'typeOfLand' && typeof value === 'string') {
+    return LandTypeLabels[value] || value;
+  }
+  if (key === 'hasMezzanineFloor' && typeof value === 'boolean') {
+    return value ? 'Yes' : 'No';
+  }
+  return formatValueForLog(value);
+}
+
+function getErrorMessage(error: unknown): string {
+  if (!error) return 'Unknown error';
+  if (typeof error === 'string') return error;
+  if (error instanceof Error) return error.message;
+  
+  const anyErr = error as any;
+  if (anyErr?.message && typeof anyErr.message === 'string') return anyErr.message;
+  if (anyErr?.error?.message && typeof anyErr.error.message === 'string') return anyErr.error.message;
+  if (anyErr?.data?.message && typeof anyErr.data.message === 'string') return anyErr.data.message;
+  
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return 'An unexpected error occurred';
+  }
+}
+
+function getAdditionalDetailsDisplayValue(value: any): string {
+  if (typeof value === "boolean") {
+    return value ? "Yes" : "No";
+  }
+  return formatValueForLog(value);
+}
+
 interface CardsProps {
   applicationID: string;
 }
 
-export default function Cards({ applicationID }: CardsProps) {
 
-  const { user } = useAuth();
-  const userName= user?.username
-  const currentUserRole = useSelector((state: RootState) => state.user.currentUser?.role);
-  // console.log("New User from Hook: ", currentUserRole);
-  
-  const { data: application, error: apiError, isLoading: apiLoading } = useGetApplicationByApplicationIdQuery(applicationID);
-  console.log("Application data :", application);
-  const status = application?.data.Status;
+export default function Cards({ applicationID }: Readonly<CardsProps>) {
+
  
- const isEditDisabled = status === "AUDIT_VERIFIED";
- const shouldHideEditButton = currentUserRole === "COMMISSIONER" || status === "APPROVED";
+  const currentUserRole = useSelector((state: RootState) => state.user.currentUser?.role);
+  
+  const { data: application, error: apiError, isLoading: apiLoading, refetch } = useGetApplicationByApplicationIdQuery(applicationID);
+  const status = application?.data.Status;
+  const isEditDisabled = status === "AUDIT_VERIFIED";
+  const shouldHideEditButton = currentUserRole === "COMMISSIONER" || status === "APPROVED";
   const [editOwner] = useEditOwnerMutation();
   const [editAssessment] = useEditAssessmentMutation();
   const [editIGRS] = useEditIGRSMutation();
@@ -129,7 +214,9 @@ export default function Cards({ applicationID }: CardsProps) {
   const { data: ownerData, isLoading: ownerLoading, error: ownerError } = useGetOwnerByPropertyIdQuery(
     propertyId,
     { skip: !propertyId }
+    
   );
+  ;
 
   const [owners, setOwners] = useState<any[]>([]);
   const [editingOwnerIndex, setEditingOwnerIndex] = useState<number | null>(null);
@@ -159,11 +246,17 @@ export default function Cards({ applicationID }: CardsProps) {
 
   const [additionalDetails, setAdditionalDetails] = useState<Partial<AdditionalDetailsEditInput>>({});
   const [openAdditionalDetailsPopover, setOpenAdditionalDetailsPopover] = useState(false);
+  const schemaCode1 = 'PropertyTax.Enumeration';
+  const schemaCode2 = 'PropertyTax.UnitOfMeasurement';
+  const { data: mdmsData } = useGetMdmsEnumerationQuery(schemaCode1);
+  const { data: mdmsData2 } = useGetMdmsEnumerationQuery(schemaCode2);
+   console.log("Application Data:", application);
   
-  const { data: mdmsData } = useGetMdmsEnumerationQuery();
-  // console.log("MDMS DATA: ",mdmsData);
 
-  const [postApplicationLog] = usePostApplicationLogMutation();
+  const unit = mdmsData2?.unitOfmeasurement || "";
+
+
+ 
   useEffect(() => {
     if (Array.isArray(ownerData?.data)) {
       setOwners(ownerData.data);
@@ -215,14 +308,11 @@ export default function Cards({ applicationID }: CardsProps) {
 
         // Log changed fields before editing
         const changedFields = getChangedFields<OwnerEditInput>(ownerObj, fields);
-        // Object.entries(changedFields).forEach(([key, value]) => {
-        //   console.log(`${key} changed from ${ownerObj[key]} to ${value}`);
-        // });
 
         const mergedOwner = {
           ...ownerObj,
           ...fields,
-          AdhaarNo: fields.AdhaarNo !== undefined ? Number(fields.AdhaarNo) : ownerObj.AdhaarNo,
+          AdhaarNo: fields.AdhaarNo === undefined ? ownerObj.AdhaarNo : Number(fields.AdhaarNo),
           propertyId: ownerObj.propertyId || application?.data?.Property?.ID,
         };
 
@@ -233,45 +323,28 @@ export default function Cards({ applicationID }: CardsProps) {
         };
 
         try {
-          const response = await editOwner(payload).unwrap();
+          const response = await editOwner({ ...payload, applicationId: application?.data?.ID || '' }).unwrap();
           setOwners(prev => {
             const updated = [...prev];
             updated[idx] = response.data;
             return updated;
           });
           setOpenOwnerPopover(false);
+          refetch();
         } catch (err) {
-          // console.error("editOwner mutation error:", err);
+          console.error("editOwner mutation error:", err);
         }
 
         // Prepare log entries
         const logEntries = Object.entries(changedFields).map(
           ([key, value]) =>
-            `${ownerLabels[key] || key} changed from ${ownerObj[key]} to ${value}`
+            `${ownerLabels[key] || key} changed from ${formatValueForLog(ownerObj[key])} to ${formatValueForLog(value)}`
         );
         const comments = logEntries.join("; ");
+        console.log("Owner Log Api Called with comments: ", comments);
+        
 
-          // Build log payload
-         const logPayload = {
-            applicationId: application?.data?.ID || '',
-            propertyId: propertyId,
-            ownerId: ownerId,
-            action: "EDIT_OWNER", 
-            performedBy: userName || "No data found",
-            actor: currentUserRole || " No data found",
-            comments: comments,
-            timestamp: new Date().toISOString(),
-            metadata: {}
-          }; 
-          // console.log("Log Payload : ",logPayload);
-          
-
-          // Post the log
-          try {
-            await postApplicationLog(logPayload).unwrap();
-          } catch (err) {
-            // console.error("Failed to post application log:", err);
-          }
+        
       };
 
 //  handle address save
@@ -284,15 +357,12 @@ export default function Cards({ applicationID }: CardsProps) {
     return;
   }
 
-  // Log changed fields before editing
-  const changedFields = getChangedFields<AddressEditInput>(address, fields);
-  // Object.entries(changedFields).forEach(([key, value]) => {
-  //   console.log(`${addressLabels[key] || key} changed from ${address[key as keyof AddressEditInput]} to ${value}`);
-  // });
+ 
+  
 
   const updatedAddress = {
     propertyId: application?.data?.Property?.ID ?? "",
-    PinCode: fields.PinCode !== undefined ? Number(fields.PinCode) : 0,
+    PinCode: fields.PinCode === undefined ? 0 : Number(fields.PinCode),
     locality: fields.Locality ?? "",
     zoneNo: fields.ZoneNo ?? "",
     wardNo: fields.WardNo ?? "",
@@ -300,54 +370,27 @@ export default function Cards({ applicationID }: CardsProps) {
     street: fields.Street ?? "",
     correspondenceAddress1: fields.CorrespondenceAddress1 ?? "",
     correspondenceAddress2: fields.CorrespondenceAddress2 ?? "",
-    correspondenceAddress3: fields.CorrespondenceAddress3 ?? "",
+    correspondencePincode: fields.CorrespondencePincode === undefined ? 0 : Number(fields.CorrespondencePincode),
     electionWard: fields.ElectionWard ?? "",
     secretariatWard: fields.SecretariatWard ?? "",
     differentCorrespondenceAddress: fields.DifferentCorrespondenceAddress ?? false,
   };
 
   try {
-    await editAddress({ id: addressId, body: updatedAddress }).unwrap();
+    await editAddress({ id: addressId, body: updatedAddress, applicationId: application?.data?.ID || '' }).unwrap();
     setOpenAddressPopover(false);
+    refetch();
   } catch (err) {
-    // console.error("Edit address error:", err);
+    console.error("Edit address error:", err);
   }
 
-  // Prepare log entries in the required format
-  const logEntries = Object.entries(changedFields).map(
-    ([key, value]) =>
-      `${addressLabels[key] || key} changed from ${address[key as keyof AddressEditInput]} to ${value}`
-  );
-  const comments = logEntries.join("; ");
-
-  // Build log payload
-  const logPayload = {
-    applicationId: application?.data?.ID || '',
-    propertyId: application?.data?.Property?.ID || '',
-    addressId: addressId,
-    action: "EDIT_ADDRESS",
-    performedBy: userName || "No data found",
-    actor: currentUserRole || " No data found",
-    comments: comments,
-    timestamp: new Date().toISOString(),
-    metadata: {}
-  };
-  // console.log("Address Log Payload : ", logPayload);
-
-  // Post the log
-  try {
-    await postApplicationLog(logPayload).unwrap();
-  } catch (err) {
-    console.error("Failed to post address application log:", err);
-  }
+  
+  
 };
 
 const handlePropertyPopoverSave = async (fields: Partial<Property>) => {
   // Log the rendered property state before update
-  // console.log("Rendered property before update:", property);
-
   setProperty(fields);
-// console.log("Rendered property after update (from fields):", fields);
 
   if (!application?.data?.Property) {
     alert("Cannot edit property: Property data missing.");
@@ -355,55 +398,26 @@ const handlePropertyPopoverSave = async (fields: Partial<Property>) => {
     return;
   }
 
-  // Log changed fields before editing
-  const changedFields = getChangedFields<Property>(property, fields);
-  // Object.entries(changedFields).forEach(([key, value]) => {
-  //   console.log(`${propertyLabels[key] || key} changed from ${property[key as keyof Property]} to ${value}`);
-  // });
-
   const updatedProperty: Property = {
     ...application.data.Property,
     ...fields,
     applicationId: application.data.ID
   } as Property;
+  
 
   try {
     await editApplication({ property: updatedProperty, applicationId: application.data.ID }).unwrap();
     setOpenPropertyPopover(false);
-    // Log the rendered property state after update
-    setTimeout(() => {
-      // console.log("Rendered property after update:", property);
-    }, 0);
+    refetch();
   } catch (err) {
-    // console.error("Edit property error:", err);
+    console.error("Edit property error:", err);
   }
 
-  // Prepare log entries in the required format
-  const logEntries = Object.entries(changedFields).map(
-    ([key, value]) =>
-      `${propertyLabels[key] || key} changed from ${property[key as keyof Property]} to ${value}`
-  );
-  const comments = logEntries.join("; ");
+  
 
-  // Build log payload
-  const logPayload = {
-    applicationId: application?.data?.ID || '',
-    propertyId: application?.data?.Property?.ID || '',
-    action: "EDIT_PROPERTY",
-    performedBy: userName || "No data found",
-    actor: currentUserRole || " No data found",
-    comments: comments,
-    timestamp: new Date().toISOString(),
-    metadata: {}
-  };
-  // console.log("Property Log Payload : ", logPayload);
 
-  // Post the log
-  try {
-    await postApplicationLog(logPayload).unwrap();
-  } catch (err) {
-    console.error("Failed to post property application log:", err);
-  }
+  
+  
 };
 
   const handleAssessmentPopoverSave = async (fields: Partial<AssessmentEditInput>) => {
@@ -420,11 +434,6 @@ const handlePropertyPopoverSave = async (fields: Partial<Property>) => {
     return;
   }
 
-  // Log changed fields before editing
-  const changedFields = getChangedFields<AssessmentEditInput>(assessment, fields);
-      // Object.entries(changedFields).forEach(([key, value]) => {
-      //   console.log(`${assessmentLabels[key] || key} changed from ${assessment[key as keyof AssessmentEditInput]} to ${value}`);
-      // });
 
       const payload = {
         id: String(assessmentId),
@@ -440,39 +449,16 @@ const handlePropertyPopoverSave = async (fields: Partial<Property>) => {
       };
 
       try {
-        await editAssessment(payload).unwrap();
+        await editAssessment({ ...payload, applicationId: application?.data?.ID || '' }).unwrap();
         setOpenAssessmentPopover(false);
+        refetch();
       } catch (err) {
         console.error("Edit assessment error:", err);
       }
 
-      // Prepare log entries in the required format
-      const logEntries = Object.entries(changedFields).map(
-        ([key, value]) =>
-          `${assessmentLabels[key] || key} changed from ${assessment[key as keyof AssessmentEditInput]} to ${value}`
-      );
-      const comments = logEntries.join("; ");
+     
 
-      // Build log payload
-      const logPayload = {
-        applicationId: application?.data?.ID || '',
-        propertyId: propertyId,
-        assessmentId: assessmentId,
-        action: "EDIT_ASSESSMENT",
-        performedBy: userName || "No data found",
-        actor: currentUserRole || " No data found",
-        comments: comments,
-        timestamp: new Date().toISOString(),
-        metadata: {}
-      };
-      // console.log("Assessment Log Payload : ", logPayload);
-
-      // Post the log
-      try {
-        await postApplicationLog(logPayload).unwrap();
-      } catch (err) {
-        console.error("Failed to post assessment application log:", err);
-      }
+     
     };
 
   const handleIGSRPopoverSave = async (fields: Partial<IGRSEditInput>) => {
@@ -491,12 +477,8 @@ const handlePropertyPopoverSave = async (fields: Partial<Property>) => {
     return;
   }
 
-  // Log changed fields before editing
-  const changedFields = getChangedFields<IGRSEditInput>(igsr, fields);
-  // Object.entries(changedFields).forEach(([key, value]) => {
-  //   console.log(`${igsrLabels[key] || key} changed from ${igsr[key as keyof IGRSEditInput]} to ${value}`);
-  // });
-
+ 
+  
   const body = {
     propertyId: application.data.Property.ID,
     habitation: fields.habitation ?? "",
@@ -517,50 +499,24 @@ const handlePropertyPopoverSave = async (fields: Partial<Property>) => {
     await editIGRS({
       id,
       body,
+      applicationId: application?.data?.ID || ''
     }).unwrap();
     setOpenIGSRPopover(false);
+    refetch();
   } catch (err) {
     console.error("Edit IGRS error:", err);
   }
 
-  // Prepare log entries in the required format
-  const logEntries = Object.entries(changedFields).map(
-    ([key, value]) =>
-      `${igsrLabels[key] || key} changed from ${igsr[key as keyof IGRSEditInput]} to ${value}`
-  );
-  const comments = logEntries.join("; ");
+ 
 
-  // Build log payload
-  const logPayload = {
-    applicationId: application?.data?.ID || '',
-    propertyId: propertyId,
-    igrsId: id,
-    action: "EDIT_IGRS",
-    performedBy: userName || "No data found",
-    actor: currentUserRole || " No data found",
-    comments: comments,
-    timestamp: new Date().toISOString(),
-    metadata: {}
-  };
-  // console.log("IGRS Log Payload : ", logPayload);
-
-  // Post the log
-  try {
-    await postApplicationLog(logPayload).unwrap();
-  } catch (err) {
-    console.error("Failed to post IGRS application log:", err);
-  }
+  
 };
 
   const handleConstructionPopoverSave = async (fields: Partial<ConstructionEditInput>) => {
       setConstruction(fields);
       const constructionId = application?.data.Property.ConstructionDetails.ID;
 
-      // Log changed fields before editing
-      const changedFields = getChangedFields<ConstructionEditInput>(construction, fields);
-      // Object.entries(changedFields).forEach(([key, value]) => {
-      //   console.log(`${constructionLabels[key] || key} changed from ${construction[key as keyof ConstructionEditInput]} to ${value}`);
-      // });
+     
 
       const Putbody = {
         ...fields as any,
@@ -570,40 +526,18 @@ const handlePropertyPopoverSave = async (fields: Partial<Property>) => {
       try {
         await editConstruction({
           id: constructionId ?? "",
-          body: Putbody
+          body: Putbody,
+          applicationId: application?.data?.ID || ''
         }).unwrap();
         setOpenConstructionPopover(false);
+        refetch();
       } catch (err) {
         console.error("Construction edit error:", err);
       }
 
-      // Prepare log entries in the required format
-      const logEntries = Object.entries(changedFields).map(
-        ([key, value]) =>
-          `${constructionLabels[key] || key} changed from ${construction[key as keyof ConstructionEditInput]} to ${value}`
-      );
-      const comments = logEntries.join("; ");
+    
 
-      // Build log payload
-      const logPayload = {
-        applicationId: application?.data?.ID || '',
-        propertyId: application?.data?.Property?.ID || '',
-        constructionId: constructionId,
-        action: "EDIT_CONSTRUCTION",
-        performedBy: userName || "No data found",
-            actor: currentUserRole || " No data found",
-        comments: comments,
-        timestamp: new Date().toISOString(),
-        metadata: {}
-      };
-      // console.log("Construction Log Payload : ", logPayload);
-
-      // Post the log
-      try {
-        await postApplicationLog(logPayload).unwrap();
-      } catch (err) {
-        console.error("Failed to post construction application log:", err);
-      }
+     
     };
 
   const handleFloorPopoverSave = async (fields: Partial<FloorEditInput>) => {
@@ -624,11 +558,7 @@ const handlePropertyPopoverSave = async (fields: Partial<Property>) => {
         return;
       }
 
-      // Log changed fields before editing
-      const changedFields = getChangedFields<FloorEditInput>(floors[idx], fields);
-      // Object.entries(changedFields).forEach(([key, value]) => {
-      //   console.log(`${floorLabels[key] || key} changed from ${floors[idx][key as keyof FloorEditInput]} to ${value}`);
-      // });
+      
 
       const floorBody = {
         FloorNo: fields.FloorNo ? Number(fields.FloorNo) : 0,
@@ -651,40 +581,18 @@ const handlePropertyPopoverSave = async (fields: Partial<Property>) => {
       try {
         await editFloor({
           id: floorId,
-          body: floorBody
+          body: floorBody,
+          applicationId: application?.data?.ID || ''
         }).unwrap();
         setOpenFloorPopover(false);
+        refetch();
       } catch (err) {
         console.error("Floor edit error:", err);
       }
 
-      // Prepare log entries in the required format
-      const logEntries = Object.entries(changedFields).map(
-        ([key, value]) =>
-          `${floorLabels[key] || key} changed from ${floors[idx][key as keyof FloorEditInput]} to ${value}`
-      );
-      const comments = logEntries.join("; ");
+     
 
-      // Build log payload
-      const logPayload = {
-        applicationId: application?.data?.ID || '',
-        propertyId: application?.data?.Property?.ID || '',
-        floorId: floorId,
-        action: "EDIT_FLOOR",
-        performedBy: userName || "No data found",
-            actor: currentUserRole || " No data found",
-        comments: comments,
-        timestamp: new Date().toISOString(),
-        metadata: {}
-      };
-      // console.log("Floor Log Payload : ", logPayload);
-
-      // Post the log
-      try {
-        await postApplicationLog(logPayload).unwrap();
-      } catch (err) {
-        console.error("Failed to post floor application log:", err);
-      }
+    
     };
 
   const handleAmenitiesPopoverSave = async (fields: Partial<AmenitiesEditInput>) => {
@@ -697,52 +605,27 @@ const handlePropertyPopoverSave = async (fields: Partial<Property>) => {
     return;
   }
 
-  // Log changed fields before editing
-  const changedFields = getChangedFields<AmenitiesEditInput>(amenities, fields);
-  // Object.entries(changedFields).forEach(([key, value]) => {
-  //   console.log(`${amenitiesLabels?.[key] || key} changed from ${amenities[key as keyof AmenitiesEditInput]} to ${value}`);
-  // });
+  
 
   setAmenities({ property_id, type });
   try {
     await editAmenities({
       id: amenitiesId,
       propertyId: property_id,
-      amenities: { property_id, type }
+      amenities: { property_id, type },
+      applicationId: application?.data?.ID || ''
     }).unwrap();
+    setOpenAmenitiesPopover(false);
+    refetch();
   } catch (err) {
     console.error("Amenities edit error:", err);
+    setOpenAmenitiesPopover(false);
   }
 
-  setOpenAmenitiesPopover(false);
+ 
 
-  // Prepare log entries in the required format
-  const logEntries = Object.entries(changedFields).map(
-    ([key, value]) =>
-      `${amenitiesLabels?.[key] || key} changed from ${amenities[key as keyof AmenitiesEditInput]} to ${value}`
-  );
-  const comments = logEntries.join("; ");
+ 
 
-  // Build log payload
-  const logPayload = {
-    applicationId: application?.data?.ID || '',
-    propertyId: property_id,
-    amenitiesId: amenitiesId,
-    action: "EDIT_AMENITIES",
-    performedBy: userName || "No data found",
-            actor: currentUserRole || " No data found",
-    comments: comments,
-    timestamp: new Date().toISOString(),
-    metadata: {}
-  };
-  // console.log("Amenities Log Payload : ", logPayload);
-
-  // Post the log
-  try {
-    await postApplicationLog(logPayload).unwrap();
-  } catch (err) {
-    console.error("Failed to post amenities application log:", err);
-  }
 };
 
 const handleAdditionalDetailsPopoverSave = async (fields: Partial<AdditionalDetailsEditInput>) => {
@@ -754,11 +637,8 @@ const handleAdditionalDetailsPopoverSave = async (fields: Partial<AdditionalDeta
     return;
   }
 
-  // Log changed fields before editing
-  const changedFields = getChangedFields<AdditionalDetailsEditInput>(additionalDetails, fields);
-  // Object.entries(changedFields).forEach(([key, value]) => {
-  //   console.log(`${additionalDetailsLabels[key] || key} changed from ${additionalDetails[key as keyof AdditionalDetailsEditInput]} to ${value}`);
-  // });
+ 
+ 
 
   const payload = {
     id: additionalDetailsObj.ID,
@@ -771,52 +651,16 @@ const handleAdditionalDetailsPopoverSave = async (fields: Partial<AdditionalDeta
   };
 
   try {
-    await editAdditionalDetails(payload).unwrap();
+    await editAdditionalDetails({ ...payload, applicationId: application?.data?.ID || '' }).unwrap();
     setOpenAdditionalDetailsPopover(false);
+    refetch();
   } catch (err) {
     console.error("Additional details edit error:", err);
   }
 
-  // Prepare log entries in the required format
-  // const logEntries = Object.entries(changedFields).map(
-  //   ([key, value]) =>
-  //     `${additionalDetailsLabels[key] || key} changed from ${additionalDetails[key as keyof AdditionalDetailsEditInput]} to ${value}`
-  // );
-      const logEntries = Object.entries(changedFields).flatMap(([key, value]) => {
-      if (key === "fieldValue" && typeof value === "object" && value !== null) {
-        const oldValRaw = additionalDetails[key as keyof AdditionalDetailsEditInput] || {};
-        const oldVal: Record<string, any> = typeof oldValRaw === "object" && oldValRaw !== null ? oldValRaw : {};
+  
 
-        const newVal = value as Record<string, any>;
-        // Only log changed pairs
-        return Object.keys(newVal).filter(k => oldVal[k] !== newVal[k]).map(k =>
-          `${additionalDetailsLabels[k] || k} changed from ${oldVal[k] ?? ""} to ${newVal[k] ?? ""}`
-        );
-      }
-      return `${additionalDetailsLabels[key] || key} changed from ${additionalDetails[key as keyof AdditionalDetailsEditInput]} to ${value}`;
-    });
-  const comments = logEntries.join("; ");
-
-  // Build log payload
-  const logPayload = {
-    applicationId: application?.data?.ID || '',
-    propertyId: additionalDetailsObj.PropertyID,
-    additionalDetailsId: additionalDetailsObj.ID,
-    action: "EDIT_ADDITIONAL_DETAILS",
-      performedBy: userName || "SERVICE_MANAGER",
-      actor: "SERVICE_MANAGER",
-    comments: comments,
-    timestamp: new Date().toISOString(),
-    metadata: {}
-  };
-  // console.log("Additional Details Log Payload : ", logPayload);
-
-  // Post the log
-  try {
-    await postApplicationLog(logPayload).unwrap();
-  } catch (err) {
-    console.error("Failed to post additional details application log:", err);
-  }
+ 
 };
 
   // Popover togglers
@@ -854,12 +698,17 @@ const handleAdditionalDetailsPopoverSave = async (fields: Partial<AdditionalDeta
   const handleAdditionalDetailsEditClick = () => setOpenAdditionalDetailsPopover(true);
   const handleAdditionalDetailsPopoverClose = () => setOpenAdditionalDetailsPopover(false);
 
-  if (apiLoading || ownerLoading)
+  if (apiLoading || ownerLoading) {
     return <Box sx={{ display: 'grid', width: '100%' }}>Loading...</Box>;
-  if (apiError || ownerError)
-    return <Box sx={{ display: 'grid', width: '100%' }}>Error: {(apiError || ownerError)?.toString()}</Box>;
-  if (!application)
+  }
+  
+  if (apiError || ownerError) {
+    return <Box sx={{ display: 'grid', width: '100%' }}>Error: {getErrorMessage(apiError || ownerError)}</Box>;
+  }
+  
+  if (!application) {
     return <Box sx={{ display: 'grid', width: '100%' }}>No property found.</Box>;
+  }
 
   return (
     <Box sx={propertyDetailsGridStyle}>
@@ -879,12 +728,14 @@ const handleAdditionalDetailsPopoverSave = async (fields: Partial<AdditionalDeta
               </Button>
             )}
             </Box>
-            {Object.entries(ownerFormFields).map(([key, value]) => (
-              <Box sx={cardRowStyle} key={key}>
-                <Typography style={cardLabelStyle} component="span">{ownerLabels[key] || key}:</Typography>
-                <Typography style={cardContentStyle} component="span">{value !== undefined && value !== null ? String(value) : ""}</Typography>
-              </Box>
-            ))}
+            {Object.entries(ownerFormFields)
+              .filter(([key, value]) => shouldShowOwnerField(key, value))
+              .map(([key, value]) => (
+                <Box sx={cardRowStyle} key={key}>
+                  <Typography style={cardLabelStyle} component="span">{ownerLabels[key] || key}:</Typography>
+                  <Typography style={cardContentStyle} component="span">{formatValueForLog(value)}</Typography>
+                </Box>
+              ))}
             {openOwnerPopover && editingOwnerIndex === idx && (
                 <EditOwnerPopover
                   open={openOwnerPopover}
@@ -894,6 +745,7 @@ const handleAdditionalDetailsPopoverSave = async (fields: Partial<AdditionalDeta
                   onSave={handleOwnerPopoverSave}
                   schema={ownerSchema}
                   genderOptions={mdmsData?.genderOptions ?? []}
+                  guardianRelationshipOptions={mdmsData?.guardianRelationshipOptions ?? []}
                 />
               )}
           </Box>
@@ -910,12 +762,12 @@ const handleAdditionalDetailsPopoverSave = async (fields: Partial<AdditionalDeta
             </Button>
           )}
         </Box>
-       {Object.entries(address)
-          .filter(([_, value]) => value !== undefined && value !== null && value !== "")
+        {Object.entries(address)
+          .filter(([_, value]) => shouldShowAddressField(value))
           .map(([key, value]) => (
             <Box sx={cardRowStyle} key={key}>
               <Typography style={cardLabelStyle} component="span">{addressLabels[key] || key}:</Typography>
-              <Typography style={cardContentStyle} component="span">{String(value)}</Typography>
+              <Typography style={cardContentStyle} component="span">{getAddressDisplayValue(key, value)}</Typography>
             </Box>
           ))}
        {openAddressPopover && (
@@ -934,23 +786,25 @@ const handleAdditionalDetailsPopoverSave = async (fields: Partial<AdditionalDeta
           )}
       </Box>
 
-      {/* Property Details card */}
-      <Box sx={cardStyle}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Typography sx={cardHeaderLabelStyle}>Property Info</Typography>
-          {!shouldHideEditButton && (
-            <Button aria-label="edit" size="small" sx={{ minWidth: 0, ml: 1, p: 0, opacity: isEditDisabled ? 0.5 : 1 }} onClick={handlePropertyEditClick} disabled={isEditDisabled}>
-              <img src={EditSquareIcon} alt="edit" style={{ width: 20, height: 20 }} />
-            </Button>
-          )}
-        </Box>
-        {Object.entries(property).map(([key, value]) => (
+   {/* Property Details card */}
+    <Box sx={cardStyle}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Typography sx={cardHeaderLabelStyle}>Property Info</Typography>
+        {!shouldHideEditButton && (
+          <Button aria-label="edit" size="small" sx={{ minWidth: 0, ml: 1, p: 0, opacity: isEditDisabled ? 0.5 : 1 }} onClick={handlePropertyEditClick} disabled={isEditDisabled}>
+            <img src={EditSquareIcon} alt="edit" style={{ width: 20, height: 20 }} />
+          </Button>
+        )}
+      </Box>
+      {Object.entries(property)
+        .filter(([key]) => shouldShowPropertyField(key, property.typeOfLand as string))
+        .map(([key, value]) => (
           <Box sx={cardRowStyle} key={key}>
             <Typography style={cardLabelStyle} component="span">{propertyLabels[key] || key}:</Typography>
-            <Typography style={cardContentStyle} component="span">{value !== undefined && value !== null ? String(value) : ""}</Typography>
+            <Typography style={cardContentStyle} component="span">{getPropertyDisplayValue(key, value)}</Typography>
           </Box>
         ))}
-        {openPropertyPopover && (
+      {openPropertyPopover && (
         <EditPropertyPopover
           open={openPropertyPopover}
           onClose={handlePropertyPopoverClose}
@@ -962,7 +816,7 @@ const handleAdditionalDetailsPopoverSave = async (fields: Partial<AdditionalDeta
           propertyTypeOptions={mdmsData?.propertyTypeOptions ?? []}
         />
       )}
-      </Box>
+    </Box>
 
       {/* Assessment card */}
       <Box sx={cardStyle}>
@@ -974,12 +828,26 @@ const handleAdditionalDetailsPopoverSave = async (fields: Partial<AdditionalDeta
             </Button>
           )}
         </Box>
-        {Object.entries(assessment).map(([key, value]) => (
-          <Box sx={cardRowStyle} key={key}>
-            <Typography style={cardLabelStyle} component="span">{assessmentLabels[key] || key}:</Typography>
-            <Typography style={cardContentStyle} component="span">{value !== undefined && value !== null ? String(value) : ""}</Typography>
-          </Box>
-        ))}
+        
+        {Object.entries(assessment).map(([key, value]) => {
+          // Extract the ternary operation into an independent variable
+          const unitValue = typeof unit === "string" ? unit : undefined;
+          
+          return (
+            <Box sx={cardRowStyle} key={key}>
+              <Typography style={cardLabelStyle} component="span">
+                {typeof assessmentLabels[key] === "function"
+                  ? (assessmentLabels[key] as (unit?: string) => string)(unitValue)
+                  : assessmentLabels[key] || key}
+                :
+              </Typography>
+              <Typography style={cardContentStyle} component="span">
+                {formatValueForLog(value)}
+              </Typography>
+            </Box>
+          );
+        })}
+
         {openAssessmentPopover && (
           <EditAssessmentPopover
             open={openAssessmentPopover}
@@ -1003,17 +871,24 @@ const handleAdditionalDetailsPopoverSave = async (fields: Partial<AdditionalDeta
             </Button>
           )}
         </Box>
-        {Object.keys(igsrLabels).map(key => {
+       {Object.keys(igsrLabels).map(key => {
           const typedKey = key as keyof IGRSEditInput;
+          const unitValue = typeof unit === "string" ? unit : undefined;
+
           return (
             <Box sx={cardRowStyle} key={key}>
-              <Typography style={cardLabelStyle} component="span">{igsrLabels[key] || key}:</Typography>
+              <Typography style={cardLabelStyle} component="span">
+                {typeof igsrLabels[key] === "function"
+                  ? (igsrLabels[key] as (unit?: string) => string)(unitValue)
+                  : igsrLabels[key] || key}
+                :
+              </Typography>
               <Typography style={cardContentStyle} component="span">
-                {igsr[typedKey] !== undefined && igsr[typedKey] !== null ? String(igsr[typedKey]) : ""}
+                {formatValueForLog(igsr[typedKey])}
               </Typography>
             </Box>
           );
-        })}
+        })} 
         {openIGSRPopover && (
             <EditIGSRPopover
               open={openIGSRPopover}
@@ -1043,7 +918,7 @@ const handleAdditionalDetailsPopoverSave = async (fields: Partial<AdditionalDeta
         {Object.entries(construction).map(([key, value]) => (
           <Box sx={cardRowStyle} key={key}>
             <Typography style={cardLabelStyle} component="span">{constructionLabels[key] || key}:</Typography>
-            <Typography style={cardContentStyle} component="span">{value !== undefined && value !== null ? String(value) : ""}</Typography>
+            <Typography style={cardContentStyle} component="span">{formatValueForLog(value)}</Typography>
           </Box>
         ))}
        {openConstructionPopover && (
@@ -1081,7 +956,7 @@ const handleAdditionalDetailsPopoverSave = async (fields: Partial<AdditionalDeta
               {Object.entries(floorFields).map(([key, value]) => (
                 <Box sx={cardRowStyle} key={key}>
                   <Typography style={cardLabelStyle} component="span">{floorLabels[key] || key}:</Typography>
-                  <Typography style={cardContentStyle} component="span">{value !== undefined && value !== null ? String(value) : ""}</Typography>
+                  <Typography style={cardContentStyle} component="span">{formatValueForLog(value)}</Typography>
                 </Box>
               ))}
               {openFloorPopover && editingFloorIndex === idx && (
@@ -1132,7 +1007,7 @@ const handleAdditionalDetailsPopoverSave = async (fields: Partial<AdditionalDeta
           />
         )}
       </Box>
-
+      
       {/* Additional Details card */}
       <Box sx={cardStyle}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -1149,17 +1024,21 @@ const handleAdditionalDetailsPopoverSave = async (fields: Partial<AdditionalDeta
             <Typography style={cardContentStyle} component="span">{additionalDetails.fieldName}</Typography>
           </Box>
         )}
-        {additionalDetails.fieldValue && Object.keys(additionalDetails.fieldValue).length > 0
-          ? Object.entries(additionalDetails.fieldValue).map(([key, value]) =>
-            value !== undefined && value !== null && value !== "" && (
+      {additionalDetails.fieldValue && Object.keys(additionalDetails.fieldValue).length > 0
+        ? Object.entries(additionalDetails.fieldValue)
+            .filter(([_, value]) => value !== undefined && value !== null && value !== "")
+            .map(([key, value]) => (
               <Box sx={cardRowStyle} key={key}>
-                <Typography style={cardLabelStyle} component="span">{additionalDetailsLabels[key] || key.replace(/_/g, " ")}:</Typography>
-                <Typography style={cardContentStyle} component="span">{typeof value === "boolean" ? (value ? "Yes" : "No") : String(value)}</Typography>
+                <Typography style={cardLabelStyle} component="span">
+                  {additionalDetailsLabels[key] || key.replaceAll("_", " ")}:
+                </Typography>
+                <Typography style={cardContentStyle} component="span">
+                  {getAdditionalDetailsDisplayValue(value)}
+                </Typography>
               </Box>
-            )
-          )
-          : <Typography sx={{ pt: 2, pb: 2 }}>No additional details available</Typography>
-        }
+            ))
+        : <Typography sx={{ pt: 2, pb: 2 }}>No additional details available</Typography>
+      }
         {openAdditionalDetailsPopover && (
           <EditAdditionalDetailsPopover
             open={openAdditionalDetailsPopover}

@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Box, CircularProgress, IconButton, type SxProps, type Theme } from "@mui/material";
-// import ArticleOutlinedIcon from '@mui/icons-material/ArticleOutlined';
+
 import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
 import { useGetFileFromFilestoreQuery } from '../../api/getFileFromFilestore'
 

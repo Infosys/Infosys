@@ -1,3 +1,5 @@
+// import type { WidthFull } from "@mui/icons-material";
+
 // Styles for the main container of the application tracking component
 export const containerStyle = (isMobile: boolean) => ({
   width: { xs: "calc(100% - 12px)", sm: "auto" },
@@ -7,14 +9,16 @@ export const containerStyle = (isMobile: boolean) => ({
   mx: "auto",
   borderRadius: "25px",
   mt: isMobile ? "32px" : "0px",
-  mb: isMobile ? "8px" : "0px",
+  mb: isMobile ? "3px" : "0px",
   minWidth: 0,
 });
 
 // Styles for the circular step indicator in the timeline
 export const timelineCircleStyle = {
-  width: "28px",
-  height: "28px",
+  width: "32px",
+  height: "32px",
+  minWidth: "fit-content" ,
+  minheight: "fit-content" ,
   borderRadius: "50%",
   border: "2px solid #c2c2c2ff",
   background: "#ffffffff",
@@ -43,7 +47,7 @@ export const timelineVerticalBarStyle = {
 export const commentTitleStyle = {
   fontSize: 14,
   color: "#0B4B66",
-  fontWeight: 700,
+  fontWeight: 500,
   mb: "2px",
 };
 
@@ -51,6 +55,7 @@ export const commentTitleStyle = {
 export const commentTextStyle = {
   fontSize: 13,
   color: "#1a1a1a",
+  width: "100%",
   fontWeight: 400,
   lineHeight: 1.6,
   mb: "2px",
@@ -157,28 +162,4 @@ export const fieldModifiedStyle = {
   fontSize: "13px",
   color: "#325252",
   mb: "6px",
-};
-
-// Styles for the GIS (Geographic Information System) info box
-export const gisBoxStyle = {
-  mt: "4px",
-  mb: "2px",
-};
-
-// Styles for the GIS reference text box
-export const gisReferanceStyle = {
-  color: "#1a1a1a",
-  fontSize: "12px",
-  background: "#f6fafb",
-  px: "6px",
-  py: "4px",
-  borderRadius: "6px",
-  mb: "4px",
-  display: "inline-block",
-};
-
-// Styles for the GIS reference ID text
-export const gisreferanceIdStyle = {
-  color: "#4257b4",
-  fontWeight: 400,
 };

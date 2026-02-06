@@ -17,8 +17,7 @@ import {
   reasonFieldSx,
   toggleRowSx,
 } from "../../styles/ApplicationInboxReassignmentBox/ApplicationInboxReassignmentBoxStyle";
-import { useGetAgentsQuery } from "../../api/getAndReassignAgentApi";
-import { useReassignApplicationMutation } from "../../api/getAndReassignAgentApi";
+import { useGetAgentsQuery, useReassignApplicationMutation } from "../../api/getAndReassignAgentApi";
 import MenuItem from "@mui/material/MenuItem";
 import { useState } from "react";
 

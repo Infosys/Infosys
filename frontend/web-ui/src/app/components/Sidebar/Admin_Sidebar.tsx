@@ -94,7 +94,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
               sx={style.primaryListItem(open)}
             >
               <Tooltip
-                title={!open ? item.label : ''}
+                title={open ? '' : item.label}
                 placement="right"
                 arrow
               >
@@ -137,7 +137,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
               disablePadding
               sx={style.secondaryListItem(open)}
             >
-              <Tooltip title={!open ? item.label : ''} placement="right" arrow>
+              <Tooltip title={open ? '' : item.label} placement="right" arrow>
                 <ListItemButton
                   ref={isProfile ? profileButtonRef : undefined}
                   onClick={() => {

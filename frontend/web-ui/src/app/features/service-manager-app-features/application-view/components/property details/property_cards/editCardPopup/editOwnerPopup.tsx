@@ -4,7 +4,6 @@
 // The component is reusable and receives its field configuration, labels, and validation schema via props.
 import React, { useState, useEffect } from 'react';
 import { Dialog, Box, Typography, Button, TextField, FormControlLabel, Checkbox, MenuItem } from '@mui/material';
-// import { ZodType } from "zod";
 import { ownerSchema } from "../../../../zod/validationSchemas"; // adjust path if needed
 
 // Type for the editable owner fields, matching the expected API request body
@@ -32,6 +31,7 @@ interface EditOwnerPopoverProps {
   onSave: (fields: Partial<OwnerEditInput>) => void; // Callback to save the edited fields
   schema: typeof ownerSchema; // Zod schema for validation
   genderOptions: Array<{ id: string; name: string }>;
+  guardianRelationshipOptions: Array<{ id: string; name: string }>;
 }
 
 
@@ -43,6 +43,7 @@ const EditOwnerPopover: React.FC<EditOwnerPopoverProps> = ({
   onSave,
   schema,
   genderOptions,
+  guardianRelationshipOptions
 }) => {
   // Local state for the editable fields in the form
   const [localFields, setLocalFields] = useState(fields);
@@ -73,11 +74,15 @@ const EditOwnerPopover: React.FC<EditOwnerPopoverProps> = ({
       ...localFields,
       [key]: value,
     });
-    if (!result.success) {
-      const fieldErrors = result.error.flatten().fieldErrors;
-      setErrors(Object.fromEntries(Object.entries(fieldErrors).map(([k, v]) => [k, v?.[0] || ""])));
-    } else {
+    if (result.success) {
       setErrors({});
+    } else {
+      const fieldErrors: Record<string, string> = {};
+      result.error.issues.forEach(issue => {
+        const key = issue.path.at(-1)?.toString() || 'unknown';
+        if (!fieldErrors[key]) fieldErrors[key] = issue.message;
+      });
+      setErrors(fieldErrors);
     }
   };
 
@@ -85,16 +90,21 @@ const EditOwnerPopover: React.FC<EditOwnerPopoverProps> = ({
   const handleSave = () => {
     console.log("EditOwnerPopover handleSave localFields:", localFields);
     const result = schema.safeParse(localFields);
-    if (!result.success) {
-      const fieldErrors = result.error.flatten().fieldErrors;
-      setErrors(Object.fromEntries(Object.entries(fieldErrors).map(([k, v]) => [k, v?.[0] || ""])));
-      console.log("Validation errors:", fieldErrors);
+    if (result.success) {
+      setErrors({});
+      console.log("Calling onSave from EditOwnerPopover with:", localFields);
+      onSave(localFields);
+      onClose();
       return;
     }
-    setErrors({});
-    console.log("Calling onSave from EditOwnerPopover with:", localFields);
-    onSave(localFields);
-    onClose();
+    
+    const fieldErrors: Record<string, string> = {};
+    result.error.issues.forEach(issue => {
+      const key = issue.path.at(-1)?.toString() || 'unknown';
+      if (!fieldErrors[key]) fieldErrors[key] = issue.message;
+    });
+    setErrors(fieldErrors);
+    console.log("Validation errors:", fieldErrors);
   };
 
 
@@ -104,10 +114,12 @@ const EditOwnerPopover: React.FC<EditOwnerPopoverProps> = ({
       onClose={onClose}
       fullWidth
       maxWidth="sm"
-      BackdropProps={{
-        sx: { backgroundColor: 'rgba(0,0,0,0.3)' }
+      slotProps={{
+        backdrop: {
+          sx: { backgroundColor: 'rgba(0,0,0,0.3)' }
+        },
+        paper: { sx: { p: 4, minWidth: 400, borderRadius: 3, boxShadow: 6 } }
       }}
-      PaperProps={{ sx: { p: 4, minWidth: 400, borderRadius: 3, boxShadow: 6 } }}
     >
       {/* Title for the dialog */}
       <Typography variant="h6" sx={{ mb: 2, fontStyle: 'italic' }}>
@@ -115,55 +127,88 @@ const EditOwnerPopover: React.FC<EditOwnerPopoverProps> = ({
       </Typography>
       <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {/* Render editable owner fields dynamically based on localFields */}
-        {Object.entries(localFields).map(([key, value]) =>
-          key === "isPrimaryOwner" ? (
+        {Object.entries(localFields).map(([key, value]) => {
+          if (key === "isPrimaryOwner") {
             // Render a checkbox for the boolean field
-            <FormControlLabel
-              key={key}
-              label={labels[key as keyof OwnerEditInput] || "Is Primary Owner"}
-              control={
-                <Checkbox
-                  checked={!!value}
-                  onChange={handleChange(key as keyof OwnerEditInput)}
-                  color="primary"
-                />
-              }
-            />
-          ) : key === "Gender" ? (
-            <TextField
+            return (
+              <FormControlLabel
+                key={key}
+                label={labels[key as keyof OwnerEditInput] || "Is Primary Owner"}
+                control={
+                  <Checkbox
+                    checked={!!value}
+                    onChange={handleChange(key as keyof OwnerEditInput)}
+                    color="primary"
+                  />
+                }
+              />
+            );
+          }
+          
+          if (key === "Gender") {
+            return (
+              <TextField
+                key={key}
+                select
+                label={labels[key as keyof OwnerEditInput] || "Gender"}
+                value={value ?? ""}
+                onChange={handleChange(key as keyof OwnerEditInput)}
+                fullWidth
+                error={!!errors[key]}
+                helperText={errors[key]}
+              >
+                <MenuItem value="" disabled>
+                  <em >Select Gender</em>
+                </MenuItem>
+                {genderOptions.map(option => (
+                  <MenuItem key={option.id} value={option.name}>
+                    {option.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+            );
+          }
+          if (key === "GuardianType") {
+            return (
+              <TextField
               key={key}
               select
-              label={labels[key as keyof OwnerEditInput] || "Gender"}
+              label={labels[key as keyof OwnerEditInput] || "Guardian Type"}
               value={value ?? ""}
               onChange={handleChange(key as keyof OwnerEditInput)}
               fullWidth
               error={!!errors[key]}
               helperText={errors[key]}
             >
-              <MenuItem value="">
-                <em>Select Gender</em>
+              <MenuItem value="" disabled>
+                <em>Select Guardian Relationship</em>
               </MenuItem>
-              {genderOptions.map(option => (
+              {guardianRelationshipOptions.map(option => (
                 <MenuItem key={option.id} value={option.name}>
                   {option.name}
                 </MenuItem>
               ))}
             </TextField>
-          ) : (
-            // Render a text or number field for other owner details
+            );
+          }
+          
+          // Render a text or number field for other owner details
+          return (
             <TextField
               key={key}
-              label={labels[key as keyof OwnerEditInput] || key}
+              label={labels[key as keyof OwnerEditInput] || key}  
               value={value === undefined || value === null ? "" : String(value)}
               onChange={handleChange(key as keyof OwnerEditInput)}
               fullWidth
               error={!!errors[key]}
               helperText={errors[key]}
               type={key === "ownershipShare" || key === "AdhaarNo" ? "number" : "text"}
-              inputProps={key === "AdhaarNo" ? { maxLength: 12 } : undefined}
+              slotProps={{
+                htmlInput: key === "AdhaarNo" ? { maxLength: 12 } : undefined
+              }}
             />
-          )
-        )}
+          );
+        })}
         {/* Save button to submit the form */}
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
           <Button

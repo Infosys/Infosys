@@ -9,7 +9,7 @@ import {
   ListItemIcon,
   ListItemText,
   IconButton,
-  Divider,
+  // Divider,
   Tooltip
 } from '@mui/material';
 import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined';
@@ -99,13 +99,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
               sx={style.primaryListItem(open)}
             >
               <Tooltip
-                title={!open ? item.label : ''}
+                title={open ? '' : item.label}
                 placement="right"
                 arrow
               >
                 <ListItemButton
                   onClick={() => onSelectNav(item.key)}
-                  sx={style.navListItemButton(selectedNav === item.key, open, undefined)}
+                  sx={style.navListItemButton(selectedNav === item.key, open)}
                 >
                   <ListItemIcon sx={style.listItemIcon(open)}>
                     {item.icon}
@@ -129,7 +129,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Spacer to push secondary items to the bottom of the sidebar */}
       <Box sx={style.bottomSpacer} />
 
-      <Divider sx={style.dividerStyle(open)} />
+      {/* <Divider sx={style.dividerStyle(open)} /> */}
 
       {/* Secondary navigation section (bottom of sidebar) */}
       <List disablePadding sx={style.navList}>
@@ -142,7 +142,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               disablePadding
               sx={style.secondaryListItem(open)}
             >
-              <Tooltip title={!open ? item.label : ''} placement="right" arrow>
+              <Tooltip title={open ? '' : item.label} placement="right" arrow>
                 <ListItemButton
                   ref={isProfile ? profileButtonRef : undefined}
                   onClick={() => {
@@ -152,7 +152,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       onProfileClick(profileButtonRef.current);
                     }
                   }}
-                  sx={style.navListItemButtonSecondary(isSelected, open, undefined)}
+                  sx={style.navListItemButtonSecondary(isSelected, open)}
                 >
                   <ListItemIcon sx={style.listItemIconSecondary(open)}>
                     {item.icon}

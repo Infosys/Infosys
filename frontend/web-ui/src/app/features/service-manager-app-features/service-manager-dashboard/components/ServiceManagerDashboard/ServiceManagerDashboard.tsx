@@ -151,12 +151,14 @@ const ServiceManagerDashboard: React.FC<ServiceManagerDashboardProps> = () => {
           <Typography variant="h5" sx={sectionTitle}>
             Agent Directory
           </Typography>
+
           {/* Search bar for filtering agents */}
           <SearchBarWithFilter
             searchValue={searchValue}
             onSearchChange={handleSearchChange}
             filterLabel="Filter"
           />
+          
           <Box sx={scrollableAgentsContainer}>
             {/* Show loading, error, empty, or list of agents */}
             {agentsLoading ? (

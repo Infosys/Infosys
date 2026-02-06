@@ -4,7 +4,7 @@
 export const searchBarStyle = {
   background: "#f9ebe3",
   borderRadius: "24px",
-  height: "48px",
+  height: "38px",
   mb: 2,
   fontFamily: "Roboto, sans-serif",
 };
@@ -12,8 +12,8 @@ export const searchBarStyle = {
 // Style for the input element inside the search bar
 export const inputPropsStyle = {
   borderRadius: "24px",
-  height: "48px",
-  fontSize: "17px",
+  height: "38px",
+  fontSize: "15px",
   fontWeight: 400,
   color: "#5b5752",
   background: "transparent",

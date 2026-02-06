@@ -2,15 +2,16 @@
 // This file sets up a pre-configured Axios HTTP client with authentication and tenant handling
 import axios from 'axios';
 import { authService } from './AuthService';
+import env from '../../../../config/env';
 
 
 // Tenant ID for multi-tenant API requests
-const TENANT_ID = import.meta.env.VITE_TENANT_ID;
+const TENANT_ID = env.TENANT_ID;
 
 
 // Create an Axios instance with base URL and default headers
 const httpClient = axios.create({
-  baseURL: import.meta.env.VITE_ONBOARDING_HOST,
+  baseURL: env.ONBOARDING_HOST,
   headers: {
     'Content-Type': 'application/json',
     'X-Tenant-ID': TENANT_ID,

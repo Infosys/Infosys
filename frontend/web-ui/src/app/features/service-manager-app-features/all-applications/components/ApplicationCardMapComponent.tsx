@@ -52,8 +52,11 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
   useEffect(() => {
     if (!containerRef.current || !isInView || mapInstanceRef.current) return;
 
+    const container = containerRef.current;
+    if (!container) return;
+
     const mapInstance = new maplibregl.Map({
-      container: containerRef.current!,
+      container: container,
       center: [longitude, latitude],
       zoom: zoom,
       interactive: false,

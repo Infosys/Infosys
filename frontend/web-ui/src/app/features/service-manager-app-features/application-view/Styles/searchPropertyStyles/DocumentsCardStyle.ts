@@ -89,30 +89,31 @@ export const SelectButtonStyle: SxProps<Theme> = {
 // ...existing code...
 
 // Styles for each individual document row in the list
-export const EachDocumentRowStyle: SxProps<Theme> = { 
+export const EachDocumentRowStyle: SxProps<Theme> = {
   display: "flex",
-  alignItems: "center",
+  alignItems: { xs: "stretch", sm: "center" },
   minWidth: "90%",
   border: "1px solid #000000ff",
   borderRadius: 2,
-  // justifyContent: "space-between",
+  justifyContent: "space-between",
+  flexDirection: { xs: "column", sm: "row" },
   width: "100%",
-  gap: 2,
+  gap: { xs: 2, sm: 2 },
   padding: "10px",
-  }
+};
 
 // Styles for the icon container on the right side of a document row
 export const RightIconStyle: SxProps<Theme> = {
   display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "center",
-  ml: "auto",            // push to the far right inside the row
-  // border: "1px solid #000",
+  flexDirection: { xs: "column", sm: "row" },
+  alignItems: { xs: "flex-start", sm: "center" },
+  justifyContent: { xs: "flex-start", sm: "flex-end" },
+  gap: { xs: 1, sm: 2 },
+  ml: { xs: 0, sm: 2, md: 4, lg: 8 },
   borderRadius: 1,
   px: 1,
   py: 0.5,
-}
+};
 
 // Styles for a document row, with optional last-row logic
 export const documentRowStyle = (_isLastRow: boolean): SxProps<Theme> => ({
@@ -255,7 +256,7 @@ export const rejectedTextStyle: SxProps<Theme> = {
   fontSize: 18,
   lineHeight: 1,
   mb: 0.5,
-  mr: 1.0,
+  mr: 1,
   ml: 1,
 }
 
@@ -277,8 +278,6 @@ export const verifiedTextStyle: SxProps<Theme> = {
 export const verifiedIconBoxStyle: SxProps<Theme> = {
   width: 17,
   height: 17,
-  borderRadius: '50%',
-  border: '2px solid #ffffffff',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',

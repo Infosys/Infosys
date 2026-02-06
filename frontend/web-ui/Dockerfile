@@ -1,42 +1,48 @@
+
 # Node build stage
 FROM node:alpine3.21 AS build
 WORKDIR /app
 
-# Copy .npmrc for private registry configuration
+# Private registry settings
 COPY .npmrc ./
 
-# Copy package files for dependency installation
+# Dependencies
 COPY package*.json ./
-
-# Install dependencies
 RUN npm install
 
-# Copy source code and configuration files
+# Source + build
 COPY . .
-
-# Build the application
 RUN npm run build
 
 # Nginx production stage
 FROM nginx:1.27-alpine
+
+# Ensure entrypoint hooks directory exists (usually present in nginx:alpine)
+RUN mkdir -p /docker-entrypoint.d
+
+# Serve built app
 WORKDIR /usr/share/nginx/html
-
-# Remove default nginx content
 RUN rm -rf ./*
-
-# Copy built application from build stage
 COPY --from=build /app/dist .
 
-# Set proper permissions for nginx to read files
-RUN chmod -R 755 /usr/share/nginx/html
+# Set proper permissions for static files
+RUN chmod -R 755 /usr/share/nginx/html && \
+    find /usr/share/nginx/html -type f -exec chmod 644 {} \;
 
-# Copy nginx configuration and mime types
+# Nginx config
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY mime.types /etc/nginx/mime.types
 
-# Expose the port that nginx is configured to listen on
+# Runtime config generator
+COPY generate-config.sh /docker-entrypoint.d/generate-config.sh
+RUN chmod +x /docker-entrypoint.d/generate-config.sh \
+    && apk add --no-cache dos2unix \
+    && dos2unix /docker-entrypoint.d/generate-config.sh \
+    && apk del dos2unix
+
+# Expose the port Nginx listens on (ensure this matches nginx.conf `listen`)
 EXPOSE 5173
 
-# Start nginx
-ENTRYPOINT ["nginx", "-g", "daemon off;"]
- 
+# IMPORTANT: keep nginx's default entrypoint and command
+# nginx:alpine has ENTRYPOINT ["/docker-entrypoint.sh"]
+# It will run *.sh in /docker-entrypoint.d and then start nginx

@@ -1,19 +1,14 @@
 
 // CommissionerProperties component displays property approval details, map, and actions for a given application
-import _React, { useState, useEffect } from 'react';
 import MapComponent from './MapComponent';
 import PropertyTaxCalculator from './PropertyTaxCalculator';
-import { Box, Typography, Select, MenuItem, CircularProgress, Alert } from '@mui/material';
+import { Box, Typography, Select, MenuItem, CircularProgress, Alert, Snackbar } from '@mui/material';
 import { JurisdictionDropdown } from '../../../../components/JurisdictionDropdown/JurisdictionDropdown';
 import { jurisdictionDropdownStyles } from '../../../../styles/HomePageStyle/HomePageStyle';
-import { useDispatch, useSelector } from 'react-redux';
-// import { } from '../../../service-manager-app-features/application-view/api/applicationApi';
-import { selectApplicationError, selectApplicationLoading, setApplicationData, setApplicationError, setApplicationLoading } from '../../../service-manager-app-features/application-view/redux/apiSlice';
-import { loadingContainer } from '../../all-applications/styles/AllApplicationStyle';
-// import type { Property } from '../../../service-manager-app-features/application-view/model/applicationByIdModel';
+import { loadingContainer } from '../../commissioner-all-applications/styles/AllApplicationStyle';
 import SelectorTab, { type TabType } from '../../../service-manager-app-features/application-view/components/SelectorTab/SelectorTab';
-import { useGetApplicationByApplicationIdQuery } from '../../../service-manager-app-features/application-view/api/applicationApi';
-
+import { useGetApplicationByApplicationIdQuery, useUpdateApplicationStatusMutation } from '../api/cmPropertyApprovalApi';
+import { useState } from 'react';
 
 export interface CommissionerPropertyProps {
   applicationID: string;
@@ -24,33 +19,85 @@ export const CommissionerProperties: React.FC<CommissionerPropertyProps> = ({ ap
   // State for the currently active tab (property, tax, etc.)
   const [activeTab, setActiveTab] = useState<TabType>('property');
   // State for the selected action (accept, reject, reassign)
-  const [action, setAction] = useState('');
-  // const [, setProperty] = useState<Property | null>(null);
+  const [action, setAction] = useState<'approve' | 'reject' | 'reassign' | ''>('');
 
-  // Redux dispatch and selectors for loading/error state
-  const dispatch = useDispatch();
-  // const application = useSelector(selectApplication);
-  const isLoading = useSelector(selectApplicationLoading);
-  const error = useSelector(selectApplicationError);
+  // Snackbar state
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error';
+  }>({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
 
   // Fetch application data using RTK Query
   const { data, error: apiError, isLoading: apiLoading } = useGetApplicationByApplicationIdQuery(applicationID);
-  // const [acceptApplication, { isLoading: acceptLoading }] = useAcceptApplicationMutation();
 
-  // Update Redux state when API call changes
-  useEffect(() => {
-    dispatch(setApplicationLoading(apiLoading));
-    if (data) dispatch(setApplicationData(data));
-    if (apiError) dispatch(setApplicationError(apiError));
-  }, [data, apiLoading, apiError, dispatch]);
+  // ADD THIS LINE - Call the mutation hook here at component level
+  const [updateApplicationStatus, { isLoading: isUpdating }] = useUpdateApplicationStatusMutation();
 
   // Handle tab change event
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
   };
 
+  // Handle action change
+  const handleActionChange = async (selectedAction: string) => {
+    setAction(selectedAction as 'approve' | 'reject' | 'reassign' | '');
+
+    // Only proceed for approve/reject actions
+    if (selectedAction === 'approve' || selectedAction === 'reject') {
+      try {
+        // CHANGE THIS - use the mutation function, not the hook
+        const result = await updateApplicationStatus({
+          applicationId: applicationID,
+          action: selectedAction,
+          approved: selectedAction === 'approve',
+          comments: selectedAction === 'approve'
+            ? 'Application approved successfully'
+            : 'Application rejected'
+        }).unwrap();
+
+        // Show success message
+        setSnackbar({
+          open: true,
+          message: result.message || `Application ${selectedAction}d successfully`,
+          severity: 'success'
+        });
+
+        // Reset action after success
+        setTimeout(() => setAction(''), 2000);
+
+      } catch (error: any) {
+        console.error('Failed to update application status:', error);
+
+        // Show error message
+        setSnackbar({
+          open: true,
+          message: error?.data?.message || `Failed to ${selectedAction} application`,
+          severity: 'error'
+        });
+
+        // Reset action on error
+        setAction('');
+      }
+    }
+
+    // Handle reassign separately
+    if (selectedAction === 'reassign') {
+      console.log('Reassign functionality not yet implemented');
+    }
+  };
+
+  // Close snackbar
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
   // Show loading spinner while fetching data
-  if (isLoading) {
+  if (apiLoading) {
     return (
       <Box sx={loadingContainer}>
         <CircularProgress size={60} sx={{ color: '#C84C0E' }} />
@@ -59,12 +106,11 @@ export const CommissionerProperties: React.FC<CommissionerPropertyProps> = ({ ap
   }
 
   // Show error alert if there is an error
-  if (error) {
+  if (apiError) {
     const errorMessage =
-      'status' in error
-        ? `Error: ${error.status}`
-        : error.message || 'Failed to load applications';
-
+      'status' in apiError
+        ? `Error: ${apiError.status}`
+        : apiError.message || 'Failed to load applications';
     return (
       <Box>
         <Alert severity="error">{errorMessage}</Alert>
@@ -140,7 +186,7 @@ export const CommissionerProperties: React.FC<CommissionerPropertyProps> = ({ ap
 
         </Box>
 
-        {/* Main content area: action select, map, tax calculator, and tabs */}
+        {/* Main content area: action select, map and tabs */}
         <Box
           sx={{
             gridTemplateColumns: '1fr var(--right-panel-width)',
@@ -159,10 +205,11 @@ export const CommissionerProperties: React.FC<CommissionerPropertyProps> = ({ ap
           }}>
             <Select
               value={action}
-              onChange={e => setAction(e.target.value)}
+              onChange={(e) => handleActionChange(e.target.value)}
               size="small"
+              disabled={isUpdating}
               sx={{
-                bgcolor: '#0b5a7a',
+                bgcolor: isUpdating ? '#0b5a7a80' : '#0b5a7a',
                 color: '#fff',
                 borderRadius: '8px',
                 cursor: 'pointer',
@@ -176,6 +223,9 @@ export const CommissionerProperties: React.FC<CommissionerPropertyProps> = ({ ap
               }}
               displayEmpty
               renderValue={(selected) => {
+                if (isUpdating) {
+                  return <span>Processing...</span>;
+                }
                 if (!selected) {
                   return <span>Act on this Application</span>;
                 }
@@ -185,7 +235,7 @@ export const CommissionerProperties: React.FC<CommissionerPropertyProps> = ({ ap
                 PaperProps: { sx: { bgcolor: '#fff', color: '#0f172a' } }
               }}
             >
-              <MenuItem value="accept">Accept</MenuItem>
+              <MenuItem value="approve">Approve</MenuItem>
               <MenuItem value="reject">Reject</MenuItem>
               <MenuItem value="reassign">Reassign</MenuItem>
             </Select>
@@ -198,7 +248,12 @@ export const CommissionerProperties: React.FC<CommissionerPropertyProps> = ({ ap
               alignItems: "center",
               justifyContent: "space-around"
             }}>
-            <MapComponent />
+            <MapComponent
+              coordinates={data?.data.Property.GISData.Latitude && data?.data.Property.GISData.Longitude ? {
+                latitude: data?.data.Property.GISData.Latitude,
+                longitude: data?.data.Property.GISData.Longitude
+              } : null}
+            />
             <PropertyTaxCalculator
               propertyName="Gandhi Nagar Complex"
               propertyId="BLR-2024-001"
@@ -209,6 +264,22 @@ export const CommissionerProperties: React.FC<CommissionerPropertyProps> = ({ ap
           <SelectorTab activeTab={activeTab} onTabChange={handleTabChange} propertyId={data?.data?.ID ?? null} />
         </Box>
       </Box>
+      {/* Snackbar for success/error notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+          variant="filled"
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
